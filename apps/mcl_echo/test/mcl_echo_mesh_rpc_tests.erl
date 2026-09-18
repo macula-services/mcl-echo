@@ -2,15 +2,15 @@
 %% actual per-call logic a real inbound CALL frame would reach, exercised
 %% directly rather than through a live mesh connection this suite has no
 %% need to stand up.
--module(hecate_echo_mesh_rpc_tests).
+-module(mcl_echo_mesh_rpc_tests).
 
 -include_lib("eunit/include/eunit.hrl").
 
 setup() ->
-    {ok, Pid} = hecate_echo_limiter:start_link(),
+    {ok, Pid} = mcl_echo_limiter:start_link(),
     Pid.
 
-%% Synchronous: see hecate_echo_limiter_tests's own teardown/1 for why.
+%% Synchronous: see mcl_echo_limiter_tests's own teardown/1 for why.
 teardown(Pid) ->
     Ref = erlang:monitor(process, Pid),
     unlink(Pid),
@@ -38,46 +38,46 @@ echoes_a_bare_text_payload_unchanged() ->
     %% by the platform for a bare top-level payload).
     Payload = <<"hello">>,
     ?assertEqual({reply, <<"hello">>, undefined},
-                 hecate_echo_mesh_rpc:handle_request(Payload, undefined)).
+                 mcl_echo_mesh_rpc:handle_request(Payload, undefined)).
 
 echoes_a_map_payload_unchanged() ->
     Payload = #{<<"greeting">> => <<"hi">>},
     ?assertEqual({reply, #{<<"greeting">> => <<"hi">>}, undefined},
-                 hecate_echo_mesh_rpc:handle_request(Payload, undefined)).
+                 mcl_echo_mesh_rpc:handle_request(Payload, undefined)).
 
 strips_the_platform_injected_caller_key_from_a_map_payload() ->
     %% `caller' is injected by macula_station_link's own dispatch code,
     %% never something the actual caller put in their own message --
     %% echoing it back would show them a field they never sent.
     Payload = #{<<"greeting">> => <<"hi">>, caller => <<"some-node-id">>},
-    {reply, Reply, undefined} = hecate_echo_mesh_rpc:handle_request(Payload, undefined),
+    {reply, Reply, undefined} = mcl_echo_mesh_rpc:handle_request(Payload, undefined),
     ?assertEqual(#{<<"greeting">> => <<"hi">>}, Reply),
     ?assertNot(maps:is_key(caller, Reply)).
 
 refuses_a_payload_over_the_size_cap() ->
     Oversized = binary:copy(<<"x">>, 5000),
     ?assertEqual({error, payload_too_large, undefined},
-                 hecate_echo_mesh_rpc:handle_request(Oversized, undefined)).
+                 mcl_echo_mesh_rpc:handle_request(Oversized, undefined)).
 
 a_map_payload_is_rate_limited_per_caller() ->
     Caller = unique_caller(),
     Payload = fun() -> #{<<"v">> => 1, caller => Caller} end,
-    Results = [hecate_echo_mesh_rpc:handle_request(Payload(), undefined)
+    Results = [mcl_echo_mesh_rpc:handle_request(Payload(), undefined)
                || _ <- lists:seq(1, 20)],
     ?assert(lists:all(fun({reply, _, undefined}) -> true; (_) -> false end, Results)),
     ?assertEqual({error, rate_limited, undefined},
-                 hecate_echo_mesh_rpc:handle_request(Payload(), undefined)).
+                 mcl_echo_mesh_rpc:handle_request(Payload(), undefined)).
 
 distinct_callers_are_not_limited_by_each_others_traffic() ->
     CallerA = unique_caller(),
     CallerB = unique_caller(),
     PayloadFor = fun(C) -> #{<<"v">> => 1, caller => C} end,
-    [hecate_echo_mesh_rpc:handle_request(PayloadFor(CallerA), undefined)
+    [mcl_echo_mesh_rpc:handle_request(PayloadFor(CallerA), undefined)
      || _ <- lists:seq(1, 20)],
     ?assertEqual({error, rate_limited, undefined},
-                 hecate_echo_mesh_rpc:handle_request(PayloadFor(CallerA), undefined)),
+                 mcl_echo_mesh_rpc:handle_request(PayloadFor(CallerA), undefined)),
     ?assertMatch({reply, _, undefined},
-                 hecate_echo_mesh_rpc:handle_request(PayloadFor(CallerB), undefined)).
+                 mcl_echo_mesh_rpc:handle_request(PayloadFor(CallerB), undefined)).
 
 unique_caller() ->
     N = erlang:unique_integer([positive, monotonic]),

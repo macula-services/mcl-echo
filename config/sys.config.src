@@ -3,26 +3,50 @@
 %% half-configured realm announces itself where nobody can attribute it, which
 %% looks exactly like a healthy node.
 [
-    {hecate_om, [
-        {service_cert_path, "/etc/hecate/secrets/service-cert.pem"},
-        %% Without this, hecate_om_identity:load_keypair/0 returns `undefined`
-        %% forever and keypair/0 stays {error, no_keypair} -- a service that
-        %% declares a handler-bearing capability() then silently never
-        %% advertises it, on every republish tick, permanently ("an
+    {mcl_om, [
+        %% Without this, mcl_om_identity:load_node_key/0 returns `undefined'
+        %% forever and identity_key/0 stays {error, no_identity_key} -- a
+        %% service that declares a handler-bearing capability() then silently
+        %% never advertises it, on every republish tick, permanently ("an
         %% ephemeral service cannot sign and is correctly not advertised",
-        %% hecate_om_capabilities's own moduledoc). Confirmed live 2026-08-31
-        %% on a service generated from an earlier copy of this template that
-        %% lacked this line. Point it at the same mounted secrets volume
-        %% service_cert_path already uses -- no new infrastructure needed.
-        {identity_key_path, "/etc/hecate/secrets/identity.key"},
-        {health_port,       ${HECATE_HEALTH_PORT}},
+        %% mcl_om_capabilities's own moduledoc). Point it at the mounted
+        %% secrets volume.
+        {identity_key_path, "/etc/mcl/secrets/identity.key"},
+        {health_port,       ${MCL_HEALTH_PORT}},
         {capability_topic,  <<"_mesh.cap.">>},
+        %% The wire namespace: `Org/echo'. DEPLOY CONFIG, not code --
+        %% every realm runs its own echo under its own org. The realm tag
+        %% must be sha256 of the org name (the realm-name-org
+        %% convention), which mcl_echo_service asserts at boot: a deploy
+        %% that drifts one of the two crashes instead of advertising
+        %% where nobody can find it. The io.macula fleet deploys org
+        %% `io.macula' under the io.macula realm.
+        {org,               <<"${MCL_ORG}">>},
         %% THE REALM IS AN APPLICATION ENV, NOT A SHELL VARIABLE, and this file
-        %% is the only place the two meet. hecate_om_identity:realm() reads
-        %% application:get_env(hecate_om, realm); exporting HECATE_REALM in the
+        %% is the only place the two meet. mcl_om_identity:realm() reads
+        %% application:get_env(mcl_om, realm); exporting MCL_REALM in the
         %% shell and expecting that to be enough has cost a sibling service an
-        %% hour, because nothing translates between the two by itself.
-        {realm,             <<"${HECATE_REALM}">>}
+        %% hour, because nothing translates between the two by itself. The
+        %% realm tag is sha256 of the org name (64-hex) -- for the io.macula
+        %% fleet: sha256("io.macula") =
+        %% abb81b5a614b63551b400b810648c0c8a78efad845442630c94b46cc95d2fcd1.
+        {realm,             <<"${MCL_REALM}">>}
+    ]},
+    %% ==========================================================================
+    %% THE PQ CRYPTO PROFILE, WITHOUT WHICH THIS NODE DOES NOT PEER
+    %% ==========================================================================
+    %%
+    %% ⚠ MANDATORY. The macula app starts before the service reads anything,
+    %% and without this block it boots on the classical profile while every
+    %% PQ station closes the CONNECT/HELLO handshake as puzzle_invalid --
+    %% forever, silently. The 11.x client model: a puzzle-8 identity key
+    %% (generated and persisted by mcl_om_identity when the path above is
+    %% missing) and the pq_hybrid crypto profile every wire signature is
+    %% checked under. mcl_om is a library; each service's own release
+    %% carries this pair.
+    {macula, [
+        {crypto_profile, pq_hybrid},
+        {puzzle_difficulty, 8}
     ]},
     {kernel, [{logger_level, info}]}
 ].

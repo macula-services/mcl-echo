@@ -1,25 +1,25 @@
 %% @doc The service contract, asserted locally.
 %%
-%% hecate_om resolves its six callbacks BY NAME at startup, on a live node, so a
+%% mcl_om resolves its six callbacks BY NAME at startup, on a live node, so a
 %% service that forgets one dies with `undef' where nobody is watching. The
-%% primary defence is the `-behaviour(hecate_om_service)' attribute on the
+%% primary defence is the `-behaviour(mcl_om_service)' attribute on the
 %% service module, which turns a missing callback into a compile error under
 %% warnings_as_errors.
 %%
 %% What this suite adds is everything the compiler cannot see: that the attribute
 %% has not been quietly dropped, that the values inside those callbacks are the
-%% shapes hecate_om will destructure, and that the names and version this service
-%% reports are the ones it actually has. Nothing local boots hecate_om, so
+%% shapes mcl_om will destructure, and that the names and version this service
+%% reports are the ones it actually has. Nothing local boots mcl_om, so
 %% asserting the shape by hand is the closest available thing to a rehearsal.
--module(hecate_echo_service_tests).
+-module(mcl_echo_service_tests).
 
 -include_lib("eunit/include/eunit.hrl").
 
--define(APP, hecate_echo).
--define(SERVICE, hecate_echo_service).
+-define(APP, mcl_echo).
+-define(SERVICE, mcl_echo_service).
 
 %% Belt and braces with the behaviour attribute, and it survives the attribute
-%% being removed. If hecate_om ever adds a SEVENTH required callback this test
+%% being removed. If mcl_om ever adds a SEVENTH required callback this test
 %% keeps passing and the deploy still breaks, which is the honest limit of a
 %% local assertion about a remote contract.
 exports_every_required_callback_test() ->
@@ -35,7 +35,7 @@ info_carries_the_three_keys_test() ->
     ?assert(is_binary(Name)),
     ?assert(is_binary(Vsn)),
     ?assert(is_binary(Desc)),
-    ?assertEqual(<<"hecate-echo">>, Name).
+    ?assertEqual(<<"mcl-echo">>, Name).
 
 %% THE TWO NAMES MUST AGREE. The OTP application is snake_case because it is an
 %% Erlang atom; the repository, the container image and the name this service
@@ -58,15 +58,90 @@ info_version_matches_the_application_test() ->
 health_is_green_test() ->
     ?assertEqual(ok, ?SERVICE:health()).
 
-%% Without `hecate_om_identity' running, `realm/0' returns `{error,
+%% Without `mcl_om_identity' running, `realm/0' returns `{error,
 %% not_booted}' -- `capabilities/0' must crash rather than silently fall
 %% through to advertising on the wrong realm, so this asserts the crash,
 %% not a return value.
-announces_io_macula_echo_test() ->
-    ?assertError({hecate_echo_realm_mismatch, {error, not_booted}},
+capabilities_crash_before_the_identity_boots_test() ->
+    ?assertError({mcl_echo_realm_mismatch, {error, not_booted}},
                  ?SERVICE:capabilities()).
 
-identity_spec_has_the_shape_hecate_om_expects_test() ->
+%% The positive path, with a REAL mcl_om_identity booted on a
+%% realm/org pair that is consistent (the realm tag is sha256 of the
+%% org name): exactly one capability, named as the wire contract's own
+%% name -- the org-qualified wire name comes from the org, not from
+%% the capability name. Any realm/org pair works; this test uses one
+%% of its own making, which is the whole point of the config-driven
+%% contract.
+capabilities_with_a_booted_identity_is_the_one_echo_capability_test_() ->
+    {setup,
+     fun start_identity_on_a_consistent_realm_and_org/0,
+     fun stop_identity_and_restore_env/1,
+     fun(_Pid) ->
+         ?_assertEqual([#{name => <<"echo">>, version => 1,
+                          handler => {mcl_echo_mesh_rpc, []}, auth => open}],
+                       ?SERVICE:capabilities())
+     end}.
+
+%% The crash the consistency assert exists for: an org/realm pair where
+%% the realm tag is NOT sha256 of the org (a deploy drift) must crash
+%% at boot, never silently advertise under a namespace no caller uses.
+capabilities_crash_on_an_inconsistent_realm_and_org_test_() ->
+    {setup,
+     fun start_identity_on_an_inconsistent_realm_and_org/0,
+     fun stop_identity_and_restore_env/1,
+     fun(_Pid) ->
+         ?_assertError({mcl_echo_realm_org_mismatch, _, _, _},
+                       ?SERVICE:capabilities())
+     end}.
+
+-define(TEST_ORG, <<"acme.test">>).
+-define(TEST_REALM,
+        <<16#AABBCCDDEEFF00112233445566778899AABBCCDDEEFF00112233445566778899:256>>).
+
+start_identity_on_a_consistent_realm_and_org() ->
+    start_identity_with(macula_realm:id(?TEST_ORG), ?TEST_ORG).
+
+start_identity_on_an_inconsistent_realm_and_org() ->
+    start_identity_with(?TEST_REALM, ?TEST_ORG).
+
+start_identity_with(Realm, Org) ->
+    Running = ensure_identity_not_running(),
+    Saved = {application:get_env(mcl_om, realm),
+             application:get_env(mcl_om, org)},
+    ok = application:set_env(mcl_om, realm, Realm),
+    ok = application:set_env(mcl_om, org, Org),
+    {ok, Pid} = mcl_om_identity:start_link(),
+    {Pid, Running, Saved}.
+
+stop_identity_and_restore_env({Pid, Running, Saved}) ->
+    try gen_server:stop(Pid) catch _:_ -> ok end,
+    {SavedRealm, SavedOrg} = Saved,
+    restore_env(realm, SavedRealm),
+    restore_env(org, SavedOrg),
+    restore_identity(Running).
+
+ensure_identity_not_running() ->
+    case whereis(mcl_om_identity) of
+        undefined -> undefined;
+        Old ->
+            unlink(Old),
+            Ref = monitor(process, Old),
+            exit(Old, kill),
+            receive
+                {'DOWN', Ref, process, Old, _Reason} -> ok
+            after 2_000 -> ok
+            end,
+            running
+    end.
+
+restore_env(_Key, undefined) -> ok;
+restore_env(Key, {ok, Value}) -> ok = application:set_env(mcl_om, Key, Value).
+
+restore_identity(undefined) -> ok;
+restore_identity(running)   -> {ok, _} = mcl_om_identity:start_link(), ok.
+
+identity_spec_has_the_shape_mcl_om_expects_test() ->
     #{scope := Scope, actions := Actions,
       resources := Resources, ttl_days := Ttl} = ?SERVICE:identity_spec(),
     ?assert(is_binary(Scope)),
@@ -83,12 +158,12 @@ authority_matches_what_is_announced_test() ->
     ?assertEqual([], Actions),
     ?assertEqual([], Resources).
 
-%% The supervisor starts and stops cleanly on its own, without hecate_om.
-%% `io.macula.echo' itself is now advertised by `hecate_om_capabilities'
+%% The supervisor starts and stops cleanly on its own, without mcl_om.
+%% `io.macula.echo' itself is now advertised by `mcl_om_capabilities'
 %% (a separate, already-running process in a real boot), not by a child
 %% of this supervisor -- so there is exactly one child to check.
 supervisor_starts_and_stops_test() ->
-    {ok, Pid} = hecate_echo_sup:start_link(),
+    {ok, Pid} = mcl_echo_sup:start_link(),
     ?assert(is_process_alive(Pid)),
     Children = supervisor:which_children(Pid),
     ?assertEqual(1, length(Children)),

@@ -9,7 +9,7 @@
 %%
 %% Keyed by caller NodeId when the platform actually hands one to a
 %% handler, which it only does when the payload is a map (see
-%% `hecate_echo_mesh_rpc' for why most real traffic here is NOT a map, and
+%% `mcl_echo_mesh_rpc' for why most real traffic here is NOT a map, and
 %% therefore falls back to `?GLOBAL_KEY').
 %%
 %% Fixed-window, not sliding or token-bucket: `Window = Now div WindowMs'
@@ -19,14 +19,14 @@
 %% specifically because `macula_response' spawns one fresh, independent
 %% process per inbound call, so a burst from one caller runs genuinely
 %% concurrently, not serialized through any single gen_server.
--module(hecate_echo_limiter).
+-module(mcl_echo_limiter).
 
 -behaviour(gen_server).
 
 -export([start_link/0, allow/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
 
--define(TABLE, hecate_echo_limiter_table).
+-define(TABLE, mcl_echo_limiter_table).
 -define(WINDOW_MS, 10000).
 -define(PER_CALLER_MAX, 20).
 -define(GLOBAL_MAX, 300).

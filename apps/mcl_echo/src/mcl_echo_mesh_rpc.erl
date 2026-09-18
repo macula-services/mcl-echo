@@ -1,20 +1,20 @@
-%% @doc `io.macula.echo' -- the hello-world target every Macula SDK's own
-%% quickstart README calls first, on a fresh identity that has joined
-%% nothing yet. Advertised via the standard `hecate_om_capabilities' path
-%% (see `hecate_echo_service:capabilities/0' for the realm this runs
-%% under and why it is asserted rather than assumed); this module is only
-%% the per-call handler.
+%% @doc The echo handler -- the hello-world target every Macula SDK's own
+%% quickstart README calls first. Advertised via the standard
+%% `mcl_om_capabilities' path as `Org/echo', the org (and realm) being
+%% deploy config -- see `mcl_echo_service:capabilities/0' for the
+%% consistency this module's service asserts rather than assumes. This
+%% module is only the per-call handler.
 %%
-%% THE PLATFORM GIVES THIS PROCEDURE NOTHING FOR FREE. `io.macula.echo'
-%% is deliberately public and unauthenticated, and `macula_station_link''s
+%% THE PLATFORM GIVES THIS PROCEDURE NOTHING FOR FREE. The echo is
+%% deliberately public and unauthenticated, and `macula_station_link''s
 %% own inbound-call dispatch carries no rate limiting or backpressure at
 %% any layer -- traced directly, not assumed. Two defenses are applied
 %% here, in the handler itself: a hard payload-size cap, and a
-%% request-rate limit (see `hecate_echo_limiter'). "Let it crash" is the
+%% request-rate limit (see `mcl_echo_limiter'). "Let it crash" is the
 %% right default for a service trusting known, cooperative callers; this
 %% is not that -- it is the one procedure on the mesh a stranger is
 %% invited to call with zero prior trust established.
--module(hecate_echo_mesh_rpc).
+-module(mcl_echo_mesh_rpc).
 
 -behaviour(macula_response).
 
@@ -27,7 +27,7 @@
 -define(MAX_PAYLOAD_EXTERNAL_SIZE, 4096).
 
 %% @doc `macula_response' callback. No per-call state: rate limiting
-%% lives in `hecate_echo_limiter''s own persistent table, not here --
+%% lives in `mcl_echo_limiter''s own persistent table, not here --
 %% `macula_response' spawns a fresh, independent process per inbound
 %% call, so state threaded through THIS module's own State would reset
 %% every single call and could never actually limit anything.
@@ -44,7 +44,7 @@ handle_request(Payload, State) ->
 reply_for(too_large, _Payload, State) ->
     {error, payload_too_large, State};
 reply_for(ok, Payload, State) ->
-    reply_after_rate_check(hecate_echo_limiter:allow(limiter_key(Payload)), Payload, State).
+    reply_after_rate_check(mcl_echo_limiter:allow(limiter_key(Payload)), Payload, State).
 
 reply_after_rate_check(deny, _Payload, State) ->
     {error, rate_limited, State};

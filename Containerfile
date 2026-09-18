@@ -1,4 +1,4 @@
-# hecate-echo
+# mcl-echo
 #
 # Always-on io.macula.echo, the mesh's hello-world target every SDK quickstart calls
 #
@@ -24,7 +24,7 @@ WORKDIR /build
 # recorded glibc trap: the fetched artifact loads on the build host and fails on
 # alpine at runtime.
 #
-# openssl-dev/zstd-dev/snappy-dev/lz4-dev: hecate_om pulls in rocksdb (via
+# openssl-dev/zstd-dev/snappy-dev/lz4-dev: mcl_om pulls in rocksdb (via
 # barrel_docdb) and khepri/ra transitively, UNCONDITIONALLY -- confirmed on a
 # storeless, producer-only service (no store_id/0 or data_dir/0 exported),
 # which still failed to build without these. Not specific to a service that
@@ -55,7 +55,7 @@ FROM docker.io/alpine:3.22
 # repository page and does not inherit its visibility. A service that shipped
 # private by accident failed its first pull with a bare "unauthorized", which
 # names nothing and sends you looking in the wrong place.
-LABEL org.opencontainers.image.source="https://github.com/hecate-services/hecate-echo"
+LABEL org.opencontainers.image.source="https://github.com/macula-services/mcl-echo"
 # zstd-libs/snappy/lz4-libs: the RUNTIME shared libraries for rocksdb's
 # compression backends, compiled against in the builder stage above via
 # their -dev packages. Missing here crashes the release outright on
@@ -66,20 +66,20 @@ LABEL org.opencontainers.image.source="https://github.com/hecate-services/hecate
 RUN apk add --no-cache ncurses-libs libstdc++ libgcc openssl ca-certificates curl \
         zstd-libs snappy lz4-libs
 WORKDIR /app
-COPY --from=builder /build/_build/prod/rel/hecate_echo ./
+COPY --from=builder /build/_build/prod/rel/mcl_echo ./
 
 ENV HOME=/app
 ENV RELX_REPLACE_OS_VARS=true
 
-ENV HECATE_NODE_NAME=hecate_echo
-ENV HECATE_NODE_HOST=127.0.0.1
-ENV HECATE_COOKIE=hecate_echo
-ENV HECATE_HEALTH_PORT=8461
+ENV MCL_NODE_NAME=mcl_echo
+ENV MCL_NODE_HOST=127.0.0.1
+ENV MCL_COOKIE=mcl_echo
+ENV MCL_HEALTH_PORT=8461
 
-VOLUME ["/etc/hecate/secrets"]
+VOLUME ["/etc/mcl/secrets"]
 
 EXPOSE 8461
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD curl -fsS "http://127.0.0.1:${HECATE_HEALTH_PORT}/health" || exit 1
+    CMD curl -fsS "http://127.0.0.1:${MCL_HEALTH_PORT}/health" || exit 1
 
-CMD ["/app/bin/hecate_echo", "foreground"]
+CMD ["/app/bin/mcl_echo", "foreground"]

@@ -2,10 +2,10 @@
 %%
 %% One child: the rate-limiter table owner, which must be up before any
 %% call can be answered. `io.macula.echo' itself is advertised by
-%% `hecate_om_capabilities' (see `hecate_echo_service:capabilities/0'),
+%% `mcl_om_capabilities' (see `mcl_echo_service:capabilities/0'),
 %% which supervises and periodically re-advertises its own handler --
 %% this supervisor has nothing left to do for that.
--module(hecate_echo_sup).
+-module(mcl_echo_sup).
 
 -behaviour(supervisor).
 
@@ -15,8 +15,8 @@ start_link() -> supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
     Children = [
-        #{id => hecate_echo_limiter,
-          start => {hecate_echo_limiter, start_link, []},
+        #{id => mcl_echo_limiter,
+          start => {mcl_echo_limiter, start_link, []},
           restart => permanent,
           shutdown => 5000,
           type => worker}

@@ -1,0 +1,17 @@
+{application, mcl_echo, [
+    {description, "Always-on echo, the mesh's hello-world target every SDK quickstart calls"},
+    {vsn, "0.1.0"},
+    {registered, [mcl_echo_sup]},
+    {mod, {mcl_echo_app, []}},
+    {applications, [
+        kernel,
+        stdlib,
+        crypto,
+        %% Mesh SDK, realm identity, capabilities, health.
+        mcl_om
+    ]},
+    {env, []},
+    {modules, []},
+    {licenses, ["Apache-2.0"]},
+    {links, [{"GitHub", "https://github.com/macula-services/mcl-echo"}]}
+]}.

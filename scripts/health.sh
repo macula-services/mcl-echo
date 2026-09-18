@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Ask a running hecate-echo how it is.
+# Ask a running mcl-echo how it is.
 #
 # Defaults to the local node on the port the image exposes. Pass a host to reach
 # one on another host, for example:
 #
 #   scripts/health.sh a-remote-host
-#   HECATE_HEALTH_PORT=8461 scripts/health.sh a-remote-host
+#   MCL_HEALTH_PORT=8461 scripts/health.sh a-remote-host
 #
 # THREE OUTCOMES, NOT TWO, because they need different responses from whoever is
 # reading. Unreachable means the container is not running or the port is wrong.
 # Unhealthy means the node is up and telling you something is wrong with it, and
-# hecate_om answers that with a 503 carrying a reason. Collapsing the two sends
+# mcl_om answers that with a 503 carrying a reason. Collapsing the two sends
 # you to look in the wrong place.
 #
 #   0  healthy
@@ -20,7 +20,7 @@
 set -euo pipefail
 
 HOST="${1:-127.0.0.1}"
-PORT="${HECATE_HEALTH_PORT:-8461}"
+PORT="${MCL_HEALTH_PORT:-8461}"
 URL="http://${HOST}:${PORT}/health"
 
 # No -f, so a 503 arrives as a body to be shown rather than as a curl failure

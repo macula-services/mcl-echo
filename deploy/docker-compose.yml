@@ -1,10 +1,13 @@
-# hecate-echo — how to run this service.
+# mcl-echo — how to run this service.
 #
 # Runnable as-is. It carries what the SERVICE knows about itself: its image, its
 # port, the environment variables its own code reads, and its health check.
 #
-#   HECATE_REALM=<64-hex> MACULA_STATION_SEEDS=https://station.example:4433 \
-#     docker compose -p hecate-echo -f deploy/docker-compose.yml up -d
+#   MCL_ORG=io.macula \
+#     MCL_REALM=$(sha256 of the org name, 64-hex) \
+#     MACULA_STATION_SEEDS=station.example:4433 \
+#     MACULA_STATION_NODE_IDS=<64-hex node id of that station> \
+#     docker compose -p mcl-echo -f deploy/docker-compose.yml up -d
 #
 # IF YOU DEPLOY THROUGH SOMETHING ELSE, keep this file anyway and let the other
 # thing carry PLACEMENT: which host, which station, which realm, which secret
@@ -13,9 +16,9 @@
 # nothing checking them.
 
 services:
-  hecate-echo:
-    image: ghcr.io/hecate-services/hecate-echo:latest
-    container_name: hecate-echo
+  mcl-echo:
+    image: ghcr.io/macula-services/mcl-echo:latest
+    container_name: mcl-echo
     restart: unless-stopped
     # HOST NETWORKING IS NOT LAZINESS. macula stations are reachable over IPv6
     # only, and a default docker bridge has no IPv6, so a bridged container
@@ -29,12 +32,17 @@ services:
     environment:
       # No default. A service that guesses its realm announces itself where
       # nobody can attribute it, and that looks exactly like a healthy node.
-      - HECATE_REALM=${HECATE_REALM:?set HECATE_REALM to the 64-hex realm tag}
+      - MCL_ORG=${MCL_ORG:?set MCL_ORG to the wire namespace (the realm's name)}
+      # The realm tag must be sha256 of the org name -- the service crashes
+      # at boot if the two drift apart.
+      - MCL_REALM=${MCL_REALM:?set MCL_REALM to the 64-hex realm tag}
       # No default either: naming a realm costs nothing, dialling somebody's
-      # production station from every dev clone does.
-      - MACULA_STATION_SEEDS=${MACULA_STATION_SEEDS:?set MACULA_STATION_SEEDS to a station URL}
-      - HECATE_NODE_NAME=hecate_echo
-      - HECATE_NODE_HOST=127.0.0.1
-      - HECATE_COOKIE=hecate_echo
+      # production station from every dev clone does. The 11.x dial is PINNED:
+      # every seed host pairs with its station's node id (D5).
+      - MACULA_STATION_SEEDS=${MACULA_STATION_SEEDS:?set MACULA_STATION_SEEDS to "host[:port][,host[:port]...]"}
+      - MACULA_STATION_NODE_IDS=${MACULA_STATION_NODE_IDS:?set MACULA_STATION_NODE_IDS to the matching 64-hex node ids, comma-separated}
+      - MCL_NODE_NAME=mcl_echo
+      - MCL_NODE_HOST=127.0.0.1
+      - MCL_COOKIE=mcl_echo
       # Host networking means a port already bound on this host fails SILENTLY.
-      - HECATE_HEALTH_PORT=8461
+      - MCL_HEALTH_PORT=8461

@@ -1,6 +1,6 @@
-## Node identity and runtime flags for hecate_echo.
--name ${HECATE_NODE_NAME}@${HECATE_NODE_HOST}
--setcookie ${HECATE_COOKIE}
+## Node identity and runtime flags for mcl_echo.
+-name ${MCL_NODE_NAME}@${MCL_NODE_HOST}
+-setcookie ${MCL_COOKIE}
 
 +K true
 
