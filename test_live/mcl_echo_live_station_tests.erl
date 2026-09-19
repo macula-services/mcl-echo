@@ -270,8 +270,21 @@ run_real() ->
     application:set_env(mcl_om, realm_trust, #{Realm => ?REAL_REALM_KEY}),
     {ok, _} = application:ensure_all_started(mcl_echo),
 
-    %% A separate consumer identity/pool, pinning the same real realm
-    %% key a verifying caller would.
+    %% MCL_LIVE_HOLD=1: the clip mode — boot the service, claim, and
+    %% HOLD. No consumer of the test's own: the human's
+    %% scripts/mcl_echo_call is the only caller, so a live take has no
+    %% race with a built-in pong. The service stays up for the full
+    %% demo budget, then stops.
+    case os:getenv("MCL_LIVE_HOLD") of
+        false -> consumer_verification(Realm);
+        _     -> hold_for_the_operator()
+    end.
+
+%% The default path: a genuinely separate consumer identity/pool,
+%% pinning the same real realm key a verifying caller would, waits for
+%% the operator's issuance and asserts the pong — the self-verifying
+%% rehearsal.
+consumer_verification(Realm) ->
     {ok, ConsumerKey} = macula_node_keys:generate(
                           identity, profile(),
                           #{puzzle_difficulty =>
@@ -291,6 +304,20 @@ run_real() ->
 
     {ok, Reply} = Result,
     ?assertEqual(<<"pong">>, mcl_om_wire:field(ping, Reply)).
+
+%% The clip mode: nothing to assert, just stay up — the operator's
+%% desk clicks and terminal calls are the whole choreography.
+hold_for_the_operator() ->
+    io:format("mcl_echo_live: HOLD mode — the operator's desk decides; ",
+              []),
+    io:format("scripts/mcl_echo_call is the caller~n", []),
+    timer:sleep(hold_budget_ms()).
+
+hold_budget_ms() ->
+    case os:getenv("MCL_LIVE_HOLD_BUDGET_MS") of
+        false -> 20 * 60 * 1000;
+        Value -> list_to_integer(Value)
+    end.
 
 %% MCL_LIVE_DEMO=1 keeps the service up and waits a LONG budget so a
 %% human can run the whole flow by hand: claim (boot) -> call fails ->

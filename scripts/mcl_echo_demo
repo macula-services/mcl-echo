@@ -31,7 +31,7 @@ RUN_PATTERN="as live_test eunit --dir test_live"
 start() {
   stop || true
   cd "$DIR"
-  MCL_LIVE_REALM=1 MCL_LIVE_DEMO=1 MCL_BOX="$BOX_LABEL" \
+  MCL_LIVE_REALM=1 MCL_LIVE_DEMO=1 MCL_LIVE_HOLD=1 MCL_BOX="$BOX_LABEL" \
     setsid sh -c "rebar3 $RUN_PATTERN" > "$LOGFILE" 2>&1 &
   echo $! > "$PIDFILE"
   sleep 3

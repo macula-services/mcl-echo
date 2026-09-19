@@ -138,14 +138,37 @@ run(Procedure) ->
                      verify => webpki,
                      realm_trust => #{Realm => ?REAL_REALM_KEY}}),
     ok = wait_healthy(Pool, 60),
-    Reply = macula:call(Pool, Realm, Procedure,
-                        #{<<"ping">> => <<"pong">>}, 15_000),
+    Reply = call_with_transient_retry(Pool, Realm, Procedure, 5),
     io:format("~p~n", [Reply]),
     _ = close_quietly(Pool),
     case Reply of
         {ok, _}          -> halt(0);
         {error, _Reason} -> halt(1)
     end.
+
+%% Right after admission the first live call can hit a transient
+%% (timeout on a fresh route, temporary_relay_failure) while the
+%% advertise path warms up — retry THOSE, not resolution errors: a
+%% not-admitted procedure must keep failing fast and visibly.
+call_with_transient_retry(_Pool, _Realm, _Procedure, 0) ->
+    erlang:error(call_never_succeeded);
+call_with_transient_retry(Pool, Realm, Procedure, Attempts) ->
+    case macula:call(Pool, Realm, Procedure,
+                     #{<<"ping">> => <<"pong">>}, 15_000) of
+        {ok, _} = Success ->
+            Success;
+        {error, timeout} ->
+            retry_transient(Pool, Realm, Procedure, Attempts, timeout);
+        {error, {call_error, <<"temporary_relay_failure">>, _}} ->
+            retry_transient(Pool, Realm, Procedure, Attempts, temporary_relay_failure);
+        {error, _Reason} = Failure ->
+            Failure
+    end.
+
+retry_transient(Pool, Realm, Procedure, Attempts, Reason) ->
+    io:format("transient ~p, retrying...~n", [Reason]),
+    timer:sleep(2_000),
+    call_with_transient_retry(Pool, Realm, Procedure, Attempts - 1).
 
 wait_healthy(_Pool, 0) ->
     erlang:error(seed_never_healthy);
