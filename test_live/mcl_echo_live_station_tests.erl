@@ -149,7 +149,13 @@
           16#D60D01D3A15D043B6B0203010001:112>>).
 
 the_booted_service_answers_a_real_echo_call_test_() ->
-    {timeout, 120, fun run/0}.
+    {timeout, demo_timeout(), fun run/0}.
+
+demo_timeout() ->
+    case os:getenv("MCL_LIVE_DEMO") of
+        false -> 120;
+        _     -> 1200
+    end.
 
 run() ->
     case os:getenv("MCL_LIVE_REALM") of
