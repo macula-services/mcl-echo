@@ -260,6 +260,10 @@ run_real() ->
     application:set_env(mcl_om, station_seeds, [seed()]),
     application:set_env(mcl_om, realm, Realm),
     application:set_env(mcl_om, org, ?REAL_ORG),
+    %% The claim's own payload carries the node's human context —
+    %% the desk shows "mcl-echo on beam02.lab" from these.
+    application:set_env(mcl_om, service_name, <<"mcl-echo">>),
+    application:set_env(mcl_om, box, <<"beam02.lab">>),
     application:set_env(mcl_om, realm_trust, #{Realm => ?REAL_REALM_KEY}),
     {ok, _} = application:ensure_all_started(mcl_echo),
 
