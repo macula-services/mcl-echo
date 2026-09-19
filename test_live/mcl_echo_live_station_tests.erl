@@ -261,9 +261,11 @@ run_real() ->
     application:set_env(mcl_om, realm, Realm),
     application:set_env(mcl_om, org, ?REAL_ORG),
     %% The claim's own payload carries the node's human context —
-    %% the desk shows "mcl-echo on beam02.lab" from these.
+    %% the desk shows "mcl-echo on beam02.lab" from these. MCL_BOX
+    %% overrides the box label for a demo clip (the service really
+    %% runs wherever this test runs; the label is the story).
     application:set_env(mcl_om, service_name, <<"mcl-echo">>),
-    application:set_env(mcl_om, box, <<"beam02.lab">>),
+    application:set_env(mcl_om, box, os:getenv("MCL_BOX", <<"beam02.lab">>)),
     application:set_env(mcl_om, realm_trust, #{Realm => ?REAL_REALM_KEY}),
     {ok, _} = application:ensure_all_started(mcl_echo),
 
@@ -342,10 +344,26 @@ advertised_or_wait(_Other, Consumer, Key, N) ->
     timer:sleep(2_000),
     find_advertised(Consumer, Key, N - 1).
 
+%% Once an ad has landed, call — but a freshly-routed relay can hiccup
+%% on the first attempt (temporary_relay_failure), and the demo budget
+%% exists so a human's desk clicks are the only deadline. Retry
+%% transient call errors instead of failing the test (and taking the
+%% service down) on the first hiccup.
 call_once_advertised(ok, Consumer, Realm, Org) ->
-    mcl_om_capabilities:call_capability(
-      Consumer, Realm, Org, <<"echo">>,
-      #{<<"ping">> => <<"pong">>}, 15_000, #{}).
+    call_until_advertised(Consumer, Realm, Org, 15).
+
+call_until_advertised(_Consumer, _Realm, _Org, 0) ->
+    erlang:error(call_never_succeeded);
+call_until_advertised(Consumer, Realm, Org, Attempts) ->
+    case mcl_om_capabilities:call_capability(
+           Consumer, Realm, Org, <<"echo">>,
+           #{<<"ping">> => <<"pong">>}, 15_000, #{}) of
+        {ok, _} = Success ->
+            Success;
+        {error, _Reason} ->
+            timer:sleep(2_000),
+            call_until_advertised(Consumer, Realm, Org, Attempts - 1)
+    end.
 
 profile() ->
     {ok, P} = macula_crypto_profile:configured(),

@@ -1,0 +1,75 @@
+#!/bin/sh
+# Demo driver for the mcl-echo live service: start / stop / status /
+# restart the REAL-realm instance whose boot claim lands on the realm
+# operator's Providers desk.
+#
+# The service runs wherever this script runs (the box with the PQ
+# toolchain), boots under org `mcl-echo' in the io.macula realm,
+# claims its delegation over the wire, and then waits — with the
+# DEMO budget — for the operator to Admit + issue on the desk. The
+# desk's box label is the demo's story, set by MCL_BOX (default
+# beam02.lab).
+#
+# Usage:
+#   scripts/mcl_echo_demo start     # claim lands; desk shows pending
+#   scripts/mcl_echo_demo status    # tail the service log
+#   scripts/mcl_echo_demo stop      # kill the service
+#   scripts/mcl_echo_demo restart
+#
+# The run window is ~20 minutes (MCL_LIVE_DEMO=1); `start` again if
+# it expires mid-take. The identity at MCL_LIVE_IDENTITY (default
+# /tmp/mcl_echo_live_realm.key) persists across restarts, so every
+# run is the same node re-claiming.
+set -eu
+
+DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+PIDFILE=/tmp/mcl_echo_demo.pid
+LOGFILE=/tmp/mcl_echo_demo.log
+BOX_LABEL=${MCL_BOX:-beam02.lab}
+RUN_PATTERN="as live_test eunit --dir test_live"
+
+start() {
+  stop || true
+  cd "$DIR"
+  MCL_LIVE_REALM=1 MCL_LIVE_DEMO=1 MCL_BOX="$BOX_LABEL" \
+    setsid sh -c "rebar3 $RUN_PATTERN" > "$LOGFILE" 2>&1 &
+  echo $! > "$PIDFILE"
+  sleep 3
+  if kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+    echo "mcl-echo demo started (pid $(cat "$PIDFILE"), label $BOX_LABEL)"
+    echo "log: $LOGFILE"
+  else
+    rm -f "$PIDFILE"
+    echo "start failed; log: $LOGFILE" >&2
+    tail -20 "$LOGFILE" >&2
+    exit 1
+  fi
+}
+
+stop() {
+  if [ -f "$PIDFILE" ]; then
+    pid=$(cat "$PIDFILE")
+    kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
+    rm -f "$PIDFILE"
+  fi
+  pkill -f "$RUN_PATTERN" 2>/dev/null || true
+  echo "mcl-echo demo stopped"
+}
+
+status() {
+  if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+    echo "running (pid $(cat "$PIDFILE"))"
+  else
+    echo "not running"
+  fi
+  echo "--- last log lines: $LOGFILE"
+  tail -20 "$LOGFILE" 2>/dev/null || true
+}
+
+case ${1:-status} in
+  start) start ;;
+  stop) stop ;;
+  restart) stop; start ;;
+  status) status ;;
+  *) echo "usage: $0 {start|stop|restart|status}" >&2; exit 2 ;;
+esac
