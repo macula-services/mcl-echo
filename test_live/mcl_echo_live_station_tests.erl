@@ -260,10 +260,11 @@ run_real() ->
     application:set_env(mcl_om, station_seeds, [seed()]),
     application:set_env(mcl_om, realm, Realm),
     application:set_env(mcl_om, org, ?REAL_ORG),
-    %% The claim's own payload carries the node's human context —
-    %% the desk shows "mcl-echo on beam02.lab" from these. MCL_BOX
-    %% overrides the box label for a demo clip (the service really
-    %% runs wherever this test runs; the label is the story).
+    %% The claim's own payload carries the node's human context — the
+    %% desk's Service column shows the service_name, its Node column
+    %% the box, from these two labels. MCL_BOX overrides the box label
+    %% for a demo clip (the service really runs wherever this test
+    %% runs; the label is the story).
     application:set_env(mcl_om, service_name, <<"mcl-echo">>),
     application:set_env(mcl_om, box, os:getenv("MCL_BOX", <<"beam02.lab">>)),
     application:set_env(mcl_om, realm_trust, #{Realm => ?REAL_REALM_KEY}),
