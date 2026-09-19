@@ -1,13 +1,20 @@
-%% mcl_echo_call — the terminal demo caller: call mcl-echo/echo in the
-%% io.macula realm. Before the realm's desk admits the node, the call
-%% resolves no provider; after Admit + issue it answers pong.
-%%
-%%   MCL_LIVE_CALL=1 rebar3 as live_test eunit --module mcl_echo_call
-%%
-%% The realm key below is the io.macula realm's PUBLIC half (the
-%% realm_trust pin), not secret.
+%%%-------------------------------------------------------------------
+%%% @doc The terminal caller: call mcl-echo/echo in the io.macula realm.
+%%%
+%%% A plain CLI script (`rebar3 escriptize`), NOT a test: before the
+%%% realm's desk admits the node the call resolves no provider; after
+%%% Admit + issue it answers pong.
+%%%
+%%%   ./scripts/mcl_echo_call
+%%%
+%%% The realm key below is the io.macula realm's PUBLIC half (the
+%%% realm_trust pin), not secret.
+%%%-------------------------------------------------------------------
 -module(mcl_echo_call).
--include_lib("eunit/include/eunit.hrl").
+
+-export([main/0]).
+
+-define(DEFAULT_PROCEDURE, <<"mcl-echo/echo">>).
 
 -define(SEED_HOST, <<"pq.station-fi-helsinki.macula.io">>).
 -define(SEED_PORT, 4433).
@@ -114,10 +121,10 @@
           16#C621C8C2AFC47C4C8B9458863F4824A6806420D15F90127062BB96A92D392816:256,
           16#D60D01D3A15D043B6B0203010001:112>>).
 
-demo_call_test_() ->
-    {timeout, 60, fun run/0}.
+main() ->
+    run(?DEFAULT_PROCEDURE).
 
-run() ->
+run(Procedure) ->
     {ok, _} = application:ensure_all_started(macula),
     {ok, Profile} = macula_crypto_profile:configured(),
     {ok, Key} = macula_node_keys:generate(
@@ -128,17 +135,17 @@ run() ->
                    [#{host => ?SEED_HOST, port => ?SEED_PORT,
                       expected_node_id => ?SEED_NODE_ID}],
                    #{node_identity => Key,
+                     verify => webpki,
                      realm_trust => #{Realm => ?REAL_REALM_KEY}}),
     ok = wait_healthy(Pool, 60),
-    Reply = macula:call(Pool, Realm, <<"mcl-echo/echo">>,
+    Reply = macula:call(Pool, Realm, Procedure,
                         #{<<"ping">> => <<"pong">>}, 15_000),
     io:format("~p~n", [Reply]),
-    ?assertMatch({ok, _}, Reply),
     _ = close_quietly(Pool),
-    ok.
-
-close_quietly(Pool) ->
-    try macula_client:close(Pool) catch _:_ -> ok end.
+    case Reply of
+        {ok, _}          -> halt(0);
+        {error, _Reason} -> halt(1)
+    end.
 
 wait_healthy(_Pool, 0) ->
     erlang:error(seed_never_healthy);
@@ -150,3 +157,6 @@ healthy_or_wait({ok, #{healthy_links := H}}, _Pool, _N) when H > 0 ->
 healthy_or_wait(_Status, Pool, N) ->
     timer:sleep(100),
     wait_healthy(Pool, N - 1).
+
+close_quietly(Pool) ->
+    try macula_client:close(Pool) catch _:_ -> ok end.
