@@ -269,7 +269,7 @@ run_real() ->
                          realm_trust => #{Realm => ?REAL_REALM_KEY}}),
     ok = wait_healthy(Consumer, 200),
 
-    Result = call_when_advertised(Consumer, Realm, ?REAL_ORG),
+    Result = call_when_advertised(Consumer, Realm, ?REAL_ORG, demo_budget()),
     {ok, _Reply} = Result,
 
     _ = close_quietly(Consumer),
@@ -278,6 +278,16 @@ run_real() ->
 
     {ok, Reply} = Result,
     ?assertEqual(<<"pong">>, mcl_om_wire:field(ping, Reply)).
+
+%% MCL_LIVE_DEMO=1 keeps the service up and waits a LONG budget so a
+%% human can run the whole flow by hand: claim (boot) -> call fails ->
+%% admit+issue on the realm desk -> call succeeds. Without it the
+%% budget is the ordinary 30 attempts.
+demo_budget() ->
+    case os:getenv("MCL_LIVE_DEMO") of
+        false -> 30;
+        _     -> 450
+    end.
 
 real_identity_path() ->
     case os:getenv("MCL_LIVE_IDENTITY") of
@@ -304,8 +314,11 @@ load_or_generate_identity(Path) ->
 %% record lands. Wait for that record (the honest "the capability is
 %% genuinely advertised" signal), then call.
 call_when_advertised(Consumer, Realm, Org) ->
+    call_when_advertised(Consumer, Realm, Org, 30).
+
+call_when_advertised(Consumer, Realm, Org, Budget) ->
     Key = macula_record:procedure_key(Realm, <<Org/binary, "/echo">>),
-    call_once_advertised(find_advertised(Consumer, Key, 30), Consumer,
+    call_once_advertised(find_advertised(Consumer, Key, Budget), Consumer,
                          Realm, Org).
 
 find_advertised(_Consumer, _Key, 0) ->
