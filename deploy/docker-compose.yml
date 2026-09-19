@@ -3,8 +3,8 @@
 # Runnable as-is. It carries what the SERVICE knows about itself: its image, its
 # port, the environment variables its own code reads, and its health check.
 #
-#   MCL_ORG=io.macula \
-#     MCL_REALM=$(sha256 of the org name, 64-hex) \
+#   MCL_ORG=mcl-echo \
+#     MCL_REALM=<sha256 of the realm name io.macula, 64-hex> \
 #     MACULA_STATION_SEEDS=station.example:4433 \
 #     MACULA_STATION_NODE_IDS=<64-hex node id of that station> \
 #     docker compose -p mcl-echo -f deploy/docker-compose.yml up -d
@@ -30,12 +30,17 @@ services:
       # recreates the container. Harmless otherwise.
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
-      # No default. A service that guesses its realm announces itself where
+      # No default. A service that guesses its org announces itself where
       # nobody can attribute it, and that looks exactly like a healthy node.
-      - MCL_ORG=${MCL_ORG:?set MCL_ORG to the wire namespace (the realm's name)}
-      # The realm tag must be sha256 of the org name -- the service crashes
-      # at boot if the two drift apart.
+      # One org per service (plan C): mcl-echo under the io.macula realm.
+      - MCL_ORG=${MCL_ORG:?set MCL_ORG to the service org (mcl-echo)}
+      # The realm tag is sha256 of the REALM name (io.macula), independent
+      # of the org since the org-per-service cutover.
       - MCL_REALM=${MCL_REALM:?set MCL_REALM to the 64-hex realm tag}
+      # Informational labels the realm's operator sees on this service's
+      # provider-authorization row.
+      - MCL_SERVICE_NAME=${MCL_SERVICE_NAME:-mcl-echo}
+      - MCL_BOX=${MCL_BOX:-}
       # No default either: naming a realm costs nothing, dialling somebody's
       # production station from every dev clone does. The 11.x dial is PINNED:
       # every seed host pairs with its station's node id (D5).

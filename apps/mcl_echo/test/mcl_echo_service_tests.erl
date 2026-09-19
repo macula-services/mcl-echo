@@ -67,15 +67,14 @@ capabilities_crash_before_the_identity_boots_test() ->
                  ?SERVICE:capabilities()).
 
 %% The positive path, with a REAL mcl_om_identity booted on a
-%% realm/org pair that is consistent (the realm tag is sha256 of the
-%% org name): exactly one capability, named as the wire contract's own
-%% name -- the org-qualified wire name comes from the org, not from
-%% the capability name. Any realm/org pair works; this test uses one
-%% of its own making, which is the whole point of the config-driven
-%% contract.
+%% well-formed realm/org pair (any 32-byte realm tag + any valid org
+%% segment; the org and realm are decoupled since the
+%% one-org-per-service cutover): exactly one capability, named as the
+%% wire contract's own name -- the org-qualified wire name comes from
+%% the org, not from the capability name.
 capabilities_with_a_booted_identity_is_the_one_echo_capability_test_() ->
     {setup,
-     fun start_identity_on_a_consistent_realm_and_org/0,
+     fun start_identity_on_a_wellformed_realm_and_org/0,
      fun stop_identity_and_restore_env/1,
      fun(_Pid) ->
          ?_assertEqual([#{name => <<"echo">>, version => 1,
@@ -83,27 +82,39 @@ capabilities_with_a_booted_identity_is_the_one_echo_capability_test_() ->
                        ?SERVICE:capabilities())
      end}.
 
-%% The crash the consistency assert exists for: an org/realm pair where
-%% the realm tag is NOT sha256 of the org (a deploy drift) must crash
-%% at boot, never silently advertise under a namespace no caller uses.
-capabilities_crash_on_an_inconsistent_realm_and_org_test_() ->
+%% The crashes the configured-ness assert exists for: an unset org
+%% (the `_` placeholder) or a malformed org must crash at boot, never
+%% silently advertise under a namespace no caller uses -- and since
+%% the realm-side org binding happens at admission, there is no
+%% hash-coupling left to drift.
+capabilities_crash_on_an_unset_org_test_() ->
     {setup,
-     fun start_identity_on_an_inconsistent_realm_and_org/0,
+     fun start_identity_on_an_unset_org/0,
      fun stop_identity_and_restore_env/1,
      fun(_Pid) ->
-         ?_assertError({mcl_echo_realm_org_mismatch, _, _, _},
-                       ?SERVICE:capabilities())
+         ?_assertError({mcl_echo_org_unset, _}, ?SERVICE:capabilities())
+     end}.
+
+capabilities_crash_on_an_invalid_org_test_() ->
+    {setup,
+     fun start_identity_on_an_invalid_org/0,
+     fun stop_identity_and_restore_env/1,
+     fun(_Pid) ->
+         ?_assertError({mcl_echo_org_invalid, _}, ?SERVICE:capabilities())
      end}.
 
 -define(TEST_ORG, <<"acme.test">>).
 -define(TEST_REALM,
         <<16#AABBCCDDEEFF00112233445566778899AABBCCDDEEFF00112233445566778899:256>>).
 
-start_identity_on_a_consistent_realm_and_org() ->
-    start_identity_with(macula_realm:id(?TEST_ORG), ?TEST_ORG).
-
-start_identity_on_an_inconsistent_realm_and_org() ->
+start_identity_on_a_wellformed_realm_and_org() ->
     start_identity_with(?TEST_REALM, ?TEST_ORG).
+
+start_identity_on_an_unset_org() ->
+    start_identity_with(?TEST_REALM, <<"_">>).
+
+start_identity_on_an_invalid_org() ->
+    start_identity_with(?TEST_REALM, <<"Bad Org">>).
 
 start_identity_with(Realm, Org) ->
     Running = ensure_identity_not_running(),

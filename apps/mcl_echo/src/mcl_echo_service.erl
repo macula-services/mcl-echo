@@ -27,15 +27,14 @@ health() -> ok.
 %% The echo capability, advertised through the standard
 %% `mcl_om_capabilities' path. The 11.x wire refuses a procedure without
 %% an org namespace (`no_org_namespace'), so the wire name is `Org/echo':
-%% the org (and with it the realm) are DEPLOY CONFIG, not code -- every
-%% realm runs its own echo under its own name. The io.macula fleet
-%% deploys org `io.macula' under the io.macula realm, the realm's own
-%% namespace (org-namespace migration plan, section D); another realm
-%% configures its own pair and gets the same service. The bare
-%% `io.macula.echo' literal every 10.x quickstart hardcodes keeps
-%% working on the CLASSICAL fleet (hecate-echo, untouched); PQ callers
-%% use the org-qualified name -- the SDK quickstart sweep is the
-%% migration plan's own caller item.
+%% the org (and the realm the org lives in) are DEPLOY CONFIG, not code.
+%% Per the provider-authorization flow's decisions (macula-realm,
+%% PLAN_PROVIDER_AUTHORIZATION_FLOW.md): one org per service, named
+%% after the repo -- this fleet deploys org `mcl-echo' under the
+%% io.macula realm, and the realm issues the D25 delegation for this
+%% node after admission. The bare `io.macula.echo' literal every 10.x
+%% quickstart hardcodes keeps working on the CLASSICAL fleet
+%% (hecate-echo, untouched); PQ callers use the org-qualified name.
 %%
 %% `mcl_om_capabilities' resolves ONE realm and ONE org for the whole
 %% batch, from this node's own live identity. A realm mismatch between
@@ -43,38 +42,49 @@ health() -> ok.
 %% indistinguishable from "nobody is listening"), which is the exact
 %% failure this service exists to stop happening -- and an org drift
 %% would silently rename the wire procedure to a name no caller uses,
-%% the same failure one layer up. So the two are asserted CONSISTENT
-%% with each other, crash-loud, rather than trusted to a config pair
-%% nothing would notice going wrong: the realm tag must be
-%% `macula_realm:id/1' of the org (sha256 of its name) -- the
-%% realm-name-org convention the wire namespace is built on. A deploy
-%% that drifts one of the two crashes at boot instead of advertising
-%% where nobody can find it. `capabilities/0' runs as an argument to
-%% `mcl_om_capabilities:register/1' inside `mcl_om:boot/2', by which
-%% point `mcl_om_identity' is already up (OTP application-start
+%% the same failure one layer up. So the two are asserted CONFIGURED
+%% and well-formed, crash-loud, rather than trusted to a config pair
+%% nothing would notice going wrong: the realm must be a 32-byte tag
+%% and the org a valid wire segment (never the `_` placeholder). The
+%% OLD sha256(org) == realm coupling died with the realm-name-org
+%% convention: under one-org-per-service the realm is io.macula for
+%% every mcl-* org, and the pairing is enforced at ADMISSION on the
+%% realm side (org bound at admission), not by hashing the name.
+%% A deploy that drifts one of the two crashes at boot instead of
+%% advertising where nobody can find it. `capabilities/0' runs as an
+%% argument to `mcl_om_capabilities:register/1' inside `mcl_om:boot/2',
+%% by which point `mcl_om_identity' is already up (OTP application-start
 %% ordering starts it ahead of the service module's own boot), so
 %% there is no race to guard against here, only config values to check.
 capabilities() ->
-    ok = assert_realm_org_consistency(),
+    ok = assert_realm_org_configured(),
     [#{name => <<"echo">>,
        version => 1,
        handler => {mcl_echo_mesh_rpc, []},
        auth => open}].
 
-assert_realm_org_consistency() ->
+assert_realm_org_configured() ->
     checked_realm(mcl_om_identity:realm(), mcl_om_identity:org()).
 
 checked_realm({error, not_booted}, _Org) ->
     error({mcl_echo_realm_mismatch, {error, not_booted}});
 checked_realm({ok, Realm}, Org) ->
-    checked_tag(macula_realm:id(Org), Realm, Org);
+    checked_tag(Realm, Org);
 checked_realm(Realm, Org) ->
     error({mcl_echo_realm_mismatch, Realm, Org}).
 
-checked_tag(Realm, Realm, _Org) ->
-    ok;
-checked_tag(Tag, Realm, Org) ->
-    error({mcl_echo_realm_org_mismatch, Realm, Org, Tag}).
+checked_tag(<<_:256>>, Org) ->
+    checked_org(Org);
+checked_tag(Realm, Org) ->
+    error({mcl_echo_realm_org_mismatch, Realm, Org}).
+
+checked_org(<<"_">>) ->
+    error({mcl_echo_org_unset, unconfigured_org});
+checked_org(Org) ->
+    case re:run(Org, <<"^[a-z0-9][a-z0-9._-]*$">>, [{capture, none}]) of
+        match    -> ok;
+        nomatch  -> error({mcl_echo_org_invalid, Org})
+    end.
 
 %% THE AUTHORITY THIS SERVICE ASKS THE REALM FOR, and deliberately nothing more.
 %% Ask for exactly the topics you publish and subscribe to. Popped, an attacker
