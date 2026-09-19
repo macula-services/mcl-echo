@@ -5,3 +5,4 @@ erl_crash.dump
 
 # Runtime store data (rocksdb/barrel write a default dir during tests).
 data/
+_checkouts/
