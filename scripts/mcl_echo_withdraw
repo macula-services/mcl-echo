@@ -1,0 +1,17 @@
+#!/bin/sh
+# The terminal withdraw for a demo reset: bury the stale D25 chain in
+# the DHT after the realm's ledger wipe, so the service cannot keep
+# advertising on the old grant. Calls the realm's own admin withdraw
+# RPC over the mesh; MACULA_ADMIN_TOKEN is a secret from the
+# environment only.
+#
+#   MACULA_ADMIN_TOKEN=<secret> ./scripts/mcl_echo_withdraw <node_id_hex> [org]
+#
+# Runs against the BUILT ebin/priv trees (rebar3 compile first) — the
+# QUIC NIFs are real files there; an escript archive cannot dlopen them.
+set -eu
+DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+exec erl -noshell +sbtu +A1 \
+  -macula crypto_profile pq_hybrid -macula puzzle_difficulty 8 \
+  -pa "$DIR"/_build/default/lib/*/ebin \
+  -run mcl_echo_withdraw main -extra "$@"

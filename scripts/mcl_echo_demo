@@ -27,6 +27,13 @@ PIDFILE=/tmp/mcl_echo_demo.pid
 LOGFILE=/tmp/mcl_echo_demo.log
 BOX_LABEL=${MCL_BOX:-beam02.lab}
 RUN_PATTERN="as live_test eunit --dir test_live"
+# The demo node's own id — stable while the identity file lives
+# (MCL_LIVE_IDENTITY, default /tmp/mcl_echo_live_realm.key).
+NODE_ID=${MCL_NODE_ID:-00466bb80a8dc7cd2564fa5dadb489bfa8e57ca19be4a85f278571f4edcd8e6f}
+# Where the realm repo lives on this box (for mesh_ops.exs).
+# The box running the realm (reset-realm.sh lives in its compose dir).
+REALM_BOX=${MCL_REALM_BOX:-root@macula.io}
+REALM_COMPOSE_DIR=${MCL_REALM_COMPOSE_DIR:-/root/macula-portal-compose}
 
 start() {
   stop || true
@@ -66,10 +73,26 @@ status() {
   tail -20 "$LOGFILE" 2>/dev/null || true
 }
 
+# The fresh-take reset: wipe the realm's ledger (reset-realm.sh on the
+# box) AND tombstone the stale D25 chain in the DHT. The ledger wipe
+# alone is not enough — the published delegation lives 6h on the wire
+# and the org key survives on the realm's identity volume, so the
+# service would still advertise and answer. The withdraw buries the
+# wire grant; the next claim starts from a truly empty state.
+reset() {
+  stop || true
+  ssh "$REALM_BOX" "cd $REALM_COMPOSE_DIR && ./scripts/reset-realm.sh"
+  sleep 20
+  TOKEN=$(ssh "$REALM_BOX" "grep -o '^MACULA_ADMIN_TOKEN=.*' $REALM_COMPOSE_DIR/.env | cut -d= -f2-")
+  MACULA_ADMIN_TOKEN="$TOKEN" "$DIR/scripts/mcl_echo_withdraw" "$NODE_ID" mcl-echo
+  echo "demo state reset: ledger wiped, wire grant tombstoned — start the service for a fresh claim"
+}
+
 case ${1:-status} in
   start) start ;;
   stop) stop ;;
   restart) stop; start ;;
   status) status ;;
-  *) echo "usage: $0 {start|stop|restart|status}" >&2; exit 2 ;;
+  reset) reset ;;
+  *) echo "usage: $0 {start|stop|restart|status|reset}" >&2; exit 2 ;;
 esac
