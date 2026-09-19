@@ -266,7 +266,7 @@ run_real() ->
     %% for a demo clip (the service really runs wherever this test
     %% runs; the label is the story).
     application:set_env(mcl_om, service_name, <<"mcl-echo">>),
-    application:set_env(mcl_om, box, os:getenv("MCL_BOX", <<"beam02.lab">>)),
+    application:set_env(mcl_om, box, box_label()),
     application:set_env(mcl_om, realm_trust, #{Realm => ?REAL_REALM_KEY}),
     {ok, _} = application:ensure_all_started(mcl_echo),
 
@@ -306,6 +306,15 @@ real_identity_path() ->
     case os:getenv("MCL_LIVE_IDENTITY") of
         false -> "/tmp/mcl_echo_live_realm.key";
         Path  -> Path
+    end.
+
+%% os:getenv returns a LIST, never a binary — handing the charlist to
+%% the claim payload produced a wire value the realm could not read as
+%% text (measured: the desk's Node column came back empty). Convert.
+box_label() ->
+    case os:getenv("MCL_BOX") of
+        false -> <<"beam02.lab">>;
+        Value -> unicode:characters_to_binary(Value)
     end.
 
 load_or_generate_identity(Path) ->
