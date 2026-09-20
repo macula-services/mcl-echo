@@ -154,7 +154,17 @@ the_booted_service_answers_a_real_echo_call_test_() ->
 demo_timeout() ->
     case os:getenv("MCL_LIVE_DEMO") of
         false -> 120;
-        _     -> 1200
+        _     -> demo_budget_seconds()
+    end.
+
+%% MCL_LIVE_DEMO=1 gives the operator a long, HUMAN window — 20
+%% minutes was measured too tight for a rehearsed clip (a reset, a
+%% pause and two takes blew it). MCL_LIVE_DEMO_TIMEOUT_S overrides
+%% per take; the default is one hour.
+demo_budget_seconds() ->
+    case os:getenv("MCL_LIVE_DEMO_TIMEOUT_S") of
+        false -> 3600;
+        Value -> list_to_integer(Value)
     end.
 
 run() ->
@@ -315,7 +325,7 @@ hold_for_the_operator() ->
 
 hold_budget_ms() ->
     case os:getenv("MCL_LIVE_HOLD_BUDGET_MS") of
-        false -> 20 * 60 * 1000;
+        false -> 55 * 60 * 1000;
         Value -> list_to_integer(Value)
     end.
 

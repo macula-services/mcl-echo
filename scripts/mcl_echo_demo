@@ -16,8 +16,8 @@
 #   scripts/mcl_echo_demo stop      # kill the service
 #   scripts/mcl_echo_demo restart
 #
-# The run window is ~20 minutes (MCL_LIVE_DEMO=1); `start` again if
-# it expires mid-take. The identity at MCL_LIVE_IDENTITY (default
+# The run window is ~1 hour (MCL_LIVE_DEMO=1; MCL_LIVE_DEMO_TIMEOUT_S
+# overrides); `start` again if it expires mid-take. The identity at MCL_LIVE_IDENTITY (default
 # /tmp/mcl_echo_live_realm.key) persists across restarts, so every
 # run is the same node re-claiming.
 set -eu
