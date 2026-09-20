@@ -62,6 +62,58 @@ macula-demo's `topologies/eu/stations.csv`: `helsinki`, `falkenstein`,
 it dialled before calling, so a session reports the route it took rather than
 the one it meant to take.
 
+### The six-caller fan-out
+
+One session per station, one line each, fired at the same time:
+
+    ./scripts/mcl_echo_call nuremberg
+    ./scripts/mcl_echo_call falkenstein
+    ./scripts/mcl_echo_call frankfurt
+    ./scripts/mcl_echo_call helsinki
+    ./scripts/mcl_echo_call paris
+    ./scripts/mcl_echo_call amsterdam
+
+`falkenstein`, `helsinki` and `frankfurt` are mcl-echo's own seeds; the other
+three are stations it never dials. The split is three seed and three non-seed
+deliberately, because a result that holds on both halves says something a
+result from the seeds alone does not.
+
+Everything the run depends on is printed rather than assumed, and the banner is
+what a session reports back:
+
+    station        falkenstein (station-de-falkenstein.macula.io)
+    station nodeid 00df68247d119685f94030afdb203ab7a2a105fb6093a964dbf0509a57e86435
+    procedure      mcl-echo/echo
+    realm          io.macula (abb81b5a614b63551b400b810648c0c8a78efad845442630c94b46cc95d2fcd1)
+    caller nodeid  006a9f092dcc55a5899e2a4f5d93a5dba4bc0706a9b15f40b66ee3a63c24d73a
+    payload        #{<<"ping">> => <<"pong">>} (24 bytes local external_size, cap 4096)
+    tls            an UNVERIFIED dial warning follows: expected, ...
+    result         {ok, ...}
+
+The realm is computed with `macula_realm:id/1` and the payload is printed from
+the same macro the call sends, so both lines are evidence and not a second
+claim that could drift from the first. The caller node id is minted fresh every
+run and **is the rate-limit key**, which is why it is on the banner: six
+sessions sending maps get six separate 20-per-10s buckets, and a `rate_limited`
+result is only readable if you know which bucket it came from.
+
+The `verify => webpki` the caller passes cannot take effect in macula 11.4.0:
+`macula_peering_conn:start_dial/1` reads only `alpn` and `timeout_ms` off the
+dial target and hardcodes `{verify, none}`. What names the station on this path
+is the D16 handshake pin, `expected_node_id`, which is required and which the
+station's challenge must derive to. The warning is expected; the option stays so
+the intent is on the record.
+
+The script refuses rather than guesses on two things, because a run that differs
+from its neighbours without saying so costs more than it reports:
+
+- **exit 3**, the tree is not compiled. Without it the `-pa` glob stays literal
+  and `erl` fails deep in the boot with nothing naming the cause.
+- **exit 4**, `mise` is missing. `.tool-versions` pins the OTP these beams and
+  their NIFs were built with, and it is not the first `erl` on `PATH`, so an
+  unpinned run would quietly use a different VM from the build and from the
+  other five callers.
+
 The 11.x dial is pinned (D5), so a station is only reachable together with the
 node id minted for that box. That is why the name alone is not enough and the
 table carries both. The fleet is IPv6 only: a host with no IPv6 path reaches
@@ -87,6 +139,9 @@ It asks the realm for no authority beyond its own scope: the echo is
 deliberately public (`auth => open`), not gated by a UCAN grant.
 
 ## Running it
+
+The OTP is pinned in `.tool-versions` and is not the first `erl` on `PATH` here,
+so prefix with `mise exec --` (the caller script does this for you):
 
     rebar3 compile
     rebar3 eunit

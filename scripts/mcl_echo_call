@@ -11,9 +11,38 @@
 #
 # Runs against the BUILT ebin/priv trees (rebar3 compile first) — the
 # QUIC NIFs are real files there; an escript archive cannot dlopen them.
+#
+# TWO THINGS ARE REFUSED RATHER THAN GUESSED, because the interesting
+# use of this script is several terminals firing at once and a run that
+# differs from its neighbours without saying so costs more than it
+# reports:
+#
+#   * an uncompiled tree. Without it the -pa glob stays literal and erl
+#     fails deep inside the boot with nothing naming the real cause.
+#   * an unpinned runtime. .tool-versions pins the OTP these beams and
+#     their NIFs were built with, and it is NOT the first erl on PATH
+#     here; `mise exec' resolves the pinned one, so every caller runs
+#     the same VM as every other and as the build.
 set -eu
 DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-exec erl -noshell +sbtu +A1 \
+
+if [ ! -d "$DIR/_build/default/lib/mcl_echo/ebin" ]; then
+  echo "mcl_echo is not compiled: $DIR/_build/default/lib/mcl_echo/ebin is missing" >&2
+  echo "build it first:  cd $DIR && mise exec -- rebar3 compile" >&2
+  exit 3
+fi
+
+if ! command -v mise >/dev/null 2>&1; then
+  echo "mise not found, and this script will not run erl without it: the OTP" >&2
+  echo "pinned in $DIR/.tool-versions is not the first erl on PATH, so an" >&2
+  echo "unpinned run would silently use a different VM from the one that" >&2
+  echo "built these beams and from the other callers in a fan-out." >&2
+  exit 4
+fi
+
+# cd first: mise resolves .tool-versions from the working directory.
+cd "$DIR"
+exec mise exec -- erl -noshell +sbtu +A1 \
   -macula crypto_profile pq_hybrid -macula puzzle_difficulty 8 \
   -pa "$DIR"/_build/default/lib/*/ebin \
   -run mcl_echo_call main -extra "$@"

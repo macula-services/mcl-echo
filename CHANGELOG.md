@@ -5,6 +5,40 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- `scripts/mcl_echo_call` prints the whole route before it calls, not just the
+  station and procedure: station host, the station node id the dial is pinned
+  to, the procedure, the realm in name and tag form, this caller's own node id,
+  and the payload term with its local `erlang:external_size/1`. A fan-out is
+  read back from six terminals at once, and a session that reports the route it
+  meant to take rather than the one it took makes the whole run unreadable. The
+  realm is computed with `macula_realm:id/1` and the payload printed from the
+  same macro the call sends, so neither line can drift from what happened.
+- The caller node id is on the banner because it **is** the rate-limit key.
+  `macula_station_link:with_caller/2` merges the wire-authenticated caller into
+  the payload only when the payload is a map, so the map payload is what gives
+  each caller its own 20-per-10s bucket instead of the shared 300-per-10s global
+  one. A `rate_limited` result is only readable next to the id it was counted
+  against.
+- The caller script refuses instead of guessing on two preconditions, both of
+  which turn into six separate debugging sessions when they fail quietly: an
+  uncompiled tree now exits 3 by name rather than letting a literal `-pa` glob
+  fail deep in the boot, and a missing `mise` exits 4 rather than running
+  whatever `erl` is first on `PATH`. `.tool-versions` pins the OTP these beams
+  and their NIFs were built with and it is not that `erl`.
+
+### Notes
+
+- `verify => webpki` in the caller is inert in macula 11.4.0:
+  `macula_peering_conn:start_dial/1` reads only `alpn` and `timeout_ms` off the
+  dial target and hardcodes `{verify, none}` into the QUIC dial. The station is
+  named on this path by the required D16 `expected_node_id` handshake pin
+  instead. The UNVERIFIED-dial warning on every run is expected; the option is
+  kept so the intent is recorded. Not repaired here, macula is not this repo.
+
 ## [0.1.0]
 
 ### Added
