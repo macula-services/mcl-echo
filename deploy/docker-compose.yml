@@ -5,6 +5,7 @@
 #
 #   MCL_ORG=mcl-echo \
 #     MCL_REALM=<sha256 of the realm name io.macula, 64-hex> \
+#     MCL_REALM_KEY=<hex of the io.macula realm's public signing key> \
 #     MACULA_STATION_SEEDS=station.example:4433 \
 #     MACULA_STATION_NODE_IDS=<64-hex node id of that station> \
 #     docker compose -p mcl-echo -f deploy/docker-compose.yml up -d
@@ -37,6 +38,13 @@ services:
       # The realm tag is sha256 of the REALM name (io.macula), independent
       # of the org since the org-per-service cutover.
       - MCL_REALM=${MCL_REALM:?set MCL_REALM to the 64-hex realm tag}
+      # The trust anchor. MCL_REALM above is an identifier; this is the
+      # realm's public signing key, hex encoded, and the two are not
+      # interchangeable. Without it nothing org-namespaced resolves, the
+      # boot claim never reaches the realm, and the container runs green
+      # and unreachable. Public material, so it belongs here rather than
+      # in the secrets volume. ~6.2k characters for io.macula.
+      - MCL_REALM_KEY=${MCL_REALM_KEY:?set MCL_REALM_KEY to the hex-encoded public realm signing key}
       # Informational labels the realm's operator sees on this service's
       # provider-authorization row.
       - MCL_SERVICE_NAME=${MCL_SERVICE_NAME:-mcl-echo}

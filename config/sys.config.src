@@ -36,7 +36,24 @@
         %% realm tag is sha256 of the realm name (64-hex) -- for the io.macula
         %% fleet: sha256("io.macula") =
         %% abb81b5a614b63551b400b810648c0c8a78efad845442630c94b46cc95d2fcd1.
-        {realm,             <<"${MCL_REALM}">>}
+        {realm,             <<"${MCL_REALM}">>},
+        %% ⚠ THE TRUST ANCHOR, AND IT IS A DIFFERENT THING FROM THE LINE
+        %% ABOVE. MCL_REALM is an IDENTIFIER (sha256 of the realm name).
+        %% This is the realm's public SIGNING KEY, hex encoded; mcl_om
+        %% decodes it and pins it as macula:connect/2's `realm_trust'.
+        %%
+        %% Without it, every org-namespaced advertisement this service
+        %% resolves is refused with `no_realm_key', direct dial answers
+        %% `{unresolved, no_trusted_advertisement}', and the boot claim
+        %% never reaches the realm: no pending row on the Providers desk,
+        %% no delegation, nothing callable. The node stays green and
+        %% answers /health throughout. That is exactly what happened on
+        %% beam00, and mcl_om >= 0.3.0 now refuses to start a pool without
+        %% it rather than letting a service look healthy and be unreachable.
+        %%
+        %% Public material: it is the half everyone verifies against. It
+        %% does NOT belong in the secrets volume.
+        {realm_key,         <<"${MCL_REALM_KEY}">>}
     ]},
     %% ==========================================================================
     %% THE PQ CRYPTO PROFILE, WITHOUT WHICH THIS NODE DOES NOT PEER

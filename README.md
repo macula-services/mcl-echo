@@ -106,6 +106,7 @@ a different libc.
 |----------|---------|---------|
 | `MCL_ORG` | required | The wire namespace: the echo advertises as `MCL_ORG/echo`. One org per service, named after the repo: `mcl-echo`. Must match `^[a-z0-9][a-z0-9._-]*$`. Independent of the realm. |
 | `MCL_REALM` | required | 64-hex realm tag: `sha256` of the **realm** name, `io.macula`. Not a hash of the org. Reaches the node as an application env, never a bare shell variable: `config/sys.config.src` is the only place the two meet. |
+| `MCL_REALM_KEY` | required | The **trust anchor**: the io.macula realm's public signing key, hex encoded. A different thing from `MCL_REALM`, which is only an identifier. Every org-namespaced advertisement is verified against this key, so without it nothing resolves, the boot claim never reaches the realm, and the service runs green and unreachable. Public material, not a secret. Requires `mcl_om >= 0.3.0`, which refuses to start a pool without it. |
 | `MACULA_STATION_SEEDS` | required | Station hosts to dial, `host[:port]`, comma-separated. No default: naming a realm costs nothing, dialling a production station from every dev clone does. |
 | `MACULA_STATION_NODE_IDS` | required | The matching 64-hex station node ids, comma-separated, index-paired with the seeds. The 11.x dial is pinned (D5): mcl_om refuses to boot a pool with an unpinned seed. |
 | `MCL_HEALTH_PORT` | `8461` | Health endpoint. Host networking makes a collision a silent bind failure, so check the host before changing.  |
