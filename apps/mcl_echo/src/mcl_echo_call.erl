@@ -5,7 +5,16 @@
 %%% realm's desk admits the node the call resolves no provider; after
 %%% Admit + issue it answers pong.
 %%%
-%%%   ./scripts/mcl_echo_call
+%%%   ./scripts/mcl_echo_call [station]
+%%%
+%%% THE STATION IS AN ARGUMENT because several callers at once are the
+%%% interesting case. Pinned to one station, six sessions all enter the
+%%% mesh through the same box and a fan-out test measures one route six
+%%% times. Name the station and each caller takes its own way in.
+%%% `mcl_echo_stations:names/0' lists them; the default is helsinki.
+%%%
+%%% The station dialled is printed before the call, so a session can
+%%% report which way in it actually took rather than which it intended.
 %%%
 %%% The realm key below is the io.macula realm's PUBLIC half (the
 %%% realm_trust pin), not secret.
@@ -20,18 +29,30 @@
 
 
 main() ->
-    run(?DEFAULT_PROCEDURE).
+    run(station_arg(init:get_plain_arguments()), ?DEFAULT_PROCEDURE).
 
-run(Procedure) ->
+station_arg([])           -> mcl_echo_stations:default();
+station_arg([Name | _])   -> Name.
+
+run(Station, Procedure) ->
+    dial(mcl_echo_stations:pin(Station), Station, Procedure).
+
+%% An unknown name is a typo at a terminal, not a mesh failure: say so and
+%% list the real ones rather than dialling something arbitrary.
+dial({error, {unknown_station, Name}}, _Station, _Procedure) ->
+    io:format("unknown station ~ts~nknown stations: ~p~n",
+              [Name, mcl_echo_stations:names()]),
+    halt(2);
+dial({ok, #{host := Host} = Seed}, Station, Procedure) ->
+    io:format("station ~p (~ts), procedure ~ts~n", [Station, Host, Procedure]),
     {ok, _} = application:ensure_all_started(macula),
     {ok, Profile} = macula_crypto_profile:configured(),
     {ok, Key} = macula_node_keys:generate(
                   identity, Profile,
                   #{puzzle_difficulty => macula_node_keys:puzzle_difficulty()}),
-    Realm = macula_realm:id(<<"io.macula">>),
+    Realm = macula_realm:id(?MCL_ECHO_REALM_NAME),
     {ok, Pool} = macula_client:connect(
-                   [#{host => ?MCL_ECHO_SEED_HOST, port => ?MCL_ECHO_SEED_PORT,
-                      expected_node_id => ?MCL_ECHO_SEED_NODE_ID}],
+                   [Seed],
                    #{node_identity => Key,
                      verify => webpki,
                      realm_trust => #{Realm => ?MCL_ECHO_REAL_REALM_KEY}}),

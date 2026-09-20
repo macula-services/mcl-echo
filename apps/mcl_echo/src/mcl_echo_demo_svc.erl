@@ -49,8 +49,8 @@ main() ->
     receive after infinity -> ok end.
 
 seed() ->
-    #{host => ?MCL_ECHO_SEED_HOST, port => ?MCL_ECHO_SEED_PORT,
-      expected_node_id => ?MCL_ECHO_SEED_NODE_ID}.
+    {ok, Seed} = mcl_echo_stations:pin(mcl_echo_stations:default()),
+    Seed.
 
 identity_path() ->
     case os:getenv("MCL_LIVE_IDENTITY") of

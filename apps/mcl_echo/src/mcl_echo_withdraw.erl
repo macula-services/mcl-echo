@@ -31,9 +31,9 @@ main() ->
                   identity, Profile,
                   #{puzzle_difficulty => macula_node_keys:puzzle_difficulty()}),
     Realm = macula_realm:id(?MCL_ECHO_REALM_NAME),
+    {ok, Seed} = mcl_echo_stations:pin(mcl_echo_stations:default()),
     {ok, Pool} = macula_client:connect(
-                   [#{host => ?MCL_ECHO_SEED_HOST, port => ?MCL_ECHO_SEED_PORT,
-                      expected_node_id => ?MCL_ECHO_SEED_NODE_ID}],
+                   [Seed],
                    #{node_identity => Key,
                      verify => webpki,
                      realm_trust => #{Realm => ?MCL_ECHO_REAL_REALM_KEY}}),

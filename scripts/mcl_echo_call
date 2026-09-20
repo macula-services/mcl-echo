@@ -3,6 +3,12 @@
 # io.macula realm. Before the realm's desk admits the node the call
 # resolves no provider; after Admit + issue it answers pong.
 #
+#   ./scripts/mcl_echo_call [station]
+#
+# The station is the way in to the mesh, and several callers at once
+# should each take their own: pinned to one, a fan-out test measures a
+# single route many times. Default helsinki; the module lists the rest.
+#
 # Runs against the BUILT ebin/priv trees (rebar3 compile first) — the
 # QUIC NIFs are real files there; an escript archive cannot dlopen them.
 set -eu
@@ -10,4 +16,4 @@ DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 exec erl -noshell +sbtu +A1 \
   -macula crypto_profile pq_hybrid -macula puzzle_difficulty 8 \
   -pa "$DIR"/_build/default/lib/*/ebin \
-  -run mcl_echo_call main
+  -run mcl_echo_call main -extra "$@"

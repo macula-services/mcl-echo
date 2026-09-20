@@ -1,12 +1,13 @@
-%% mcl_echo_io_macula.hrl — the REAL io.macula realm's public pins:
-%% the Helsinki station seed and the realm signing key's public half
-%% (realm_trust). Public material only — safe in source. Shared by the
-%% demo's terminal callers so the pin lives in exactly one place.
-
--define(MCL_ECHO_SEED_HOST, <<"pq.station-fi-helsinki.macula.io">>).
--define(MCL_ECHO_SEED_PORT, 4433).
--define(MCL_ECHO_SEED_NODE_ID,
-                <<16#004d1f470097ccf8826ce291900e882fdb1f20375e53901facaec0f23eb4efd8:256>>).
+%% mcl_echo_io_macula.hrl: the REAL io.macula realm's public pins, being
+%% the realm signing key's public half (realm_trust) and the realm's own
+%% name. Public material only, safe in source. Shared by the demo's
+%% terminal callers so the pins live in exactly one place.
+%%
+%% THE STATION PINS ARE NOT HERE ANY MORE. This file used to carry one
+%% hardcoded helsinki seed, under the pq. name the cutover has since
+%% retired, and every terminal tool dialled it. The six stations and their
+%% node ids now live in mcl_echo_stations, which lets a caller name the
+%% way in: see that module for why one shared pin breaks a fan-out test.
 -define(MCL_ECHO_REAL_REALM_KEY,
                 <<16#1A6B9042FEC6F6D17AE36139FF5598B268AB03A77187D28E0E2AF9DEC071FC55:256,
           16#4BBCF4C79DBAA4E9761496E2EFEAAB34EABAE67E975735684A6A6DC355235701:256,

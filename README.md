@@ -48,7 +48,24 @@ the loud version of the exact bug this service exists to stop.
 
 The realm tag is `macula_realm:id(<<"io.macula">>)`, and every SDK carries the
 same helper. `scripts/mcl_echo_call` is the worked example, seed pin and realm
-trust pin included.
+trust pin included:
+
+    ./scripts/mcl_echo_call                # default, helsinki
+    ./scripts/mcl_echo_call falkenstein    # pick the way in
+
+The station is the caller's route into the mesh, and **several callers at once
+should each take their own**. Pinned to one station, six sessions all enter
+through the same box and a fan-out measures a single route six times.
+`mcl_echo_stations` holds the six pins, host and node id together, taken from
+macula-demo's `topologies/eu/stations.csv`: `helsinki`, `falkenstein`,
+`frankfurt`, `nuremberg`, `paris`, `amsterdam`. The script prints the station
+it dialled before calling, so a session reports the route it took rather than
+the one it meant to take.
+
+The 11.x dial is pinned (D5), so a station is only reachable together with the
+node id minted for that box. That is why the name alone is not enough and the
+table carries both. The fleet is IPv6 only: a host with no IPv6 path reaches
+none of them.
 
 The handler replies with the payload unchanged, minus the platform-injected
 `caller` key. Two guards apply, both implemented in the handler because the

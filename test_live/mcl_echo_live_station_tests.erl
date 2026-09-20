@@ -27,9 +27,14 @@
 %% org_directory and the org-signed procedure_delegation naming the
 %% service's node id.
 %%
-%% Runs against pq.station-fi-helsinki.macula.io -- nuremberg currently
-%% publishes no station_endpoint, so a direct-dial resolution through
-%% it misses (a live-fleet finding, not this repo's).
+%% Dials whichever station mcl_echo_stations:default/0 names, so this
+%% test and the terminal callers share one pin table rather than each
+%% carrying a copy that goes stale on its own.
+%%
+%% An older note here said nuremberg publishes no station_endpoint, so a
+%% direct-dial resolution through it misses. That was recorded against
+%% the pre-cutover estate and is UNVERIFIED against the PQ fleet. Do not
+%% design around it without measuring it again.
 %%
 %% Lives in test_live/, NOT test/ -- excluded from the default
 %% `rebar3 eunit' and CI's main gate on purpose. Run explicitly:
@@ -37,11 +42,6 @@
 %%   MCL_LIVE_REALM=1 rebar3 as live_test eunit --dir test_live
 -module(mcl_echo_live_station_tests).
 -include_lib("eunit/include/eunit.hrl").
-
--define(SEED_HOST, <<"pq.station-fi-helsinki.macula.io">>).
--define(SEED_PORT, 4433).
--define(SEED_NODE_ID,
-        <<16#004d1f470097ccf8826ce291900e882fdb1f20375e53901facaec0f23eb4efd8:256>>).
 
 %% The REAL io.macula realm: the wire tag and the realm signing key's
 %% PUBLIC half (the realm_trust pin every caller holds — read off the
@@ -421,8 +421,8 @@ tmp_path() ->
     filename:join("/tmp", <<"mcl_echo_live_", Name/binary, ".key">>).
 
 seed() ->
-    #{host => ?SEED_HOST, port => ?SEED_PORT,
-      expected_node_id => ?SEED_NODE_ID}.
+    {ok, Seed} = mcl_echo_stations:pin(mcl_echo_stations:default()),
+    Seed.
 
 %% The D25 chain, published through a scratch pool with its own
 %% identity: the realm-signed org_directory and the org-signed
