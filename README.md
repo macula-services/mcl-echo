@@ -2,26 +2,69 @@
 
 **Always-on echo, the mesh's hello-world target every SDK quickstart calls**
 
-## Status: the first mcl service, pending its live check on the PQ fleet
+## Status: live on the PQ fleet
 
 The service boots, joins the mesh, answers `/health` on 8461, and advertises
 the echo capability through the standard `mcl_om_capabilities` path
 (`mcl_echo_service:capabilities/0`). The 11.x wire refuses a procedure
-without an org namespace, so the wire name is `Org/echo`: the org — and with
-it the realm — is **deploy config, not code**. Every realm runs its own echo
-under its own name; the io.macula fleet deploys org `io.macula` under the
-io.macula realm (the realm's own namespace), and the SDK quickstarts on the
-PQ fleet call `io.macula/echo`. The bare `io.macula.echo` literal every 10.x
-quickstart hardcodes keeps working on the classical fleet (hecate-echo,
-untouched).
+without an org namespace, so the wire name is `Org/echo`: the org is
+**deploy config, not code**.
 
-The service asserts the pair is consistent before advertising: the realm tag
-must be `macula_realm:id/1` of the org (sha256 of its name). A realm mismatch
-between advertiser and caller is silent on the wire (`unknown_next_peer`,
-indistinguishable from nobody listening) and an org drift would silently
-rename the wire procedure to a name no caller uses — so a config pair that
-drifted crashes this service loudly at boot instead of recreating that bug
-quietly.
+One org per service, named after the repo
+(`PLAN_PROVIDER_AUTHORIZATION_FLOW.md`, macula-realm). This fleet deploys org
+`mcl-echo` under the **io.macula** realm, so the wire procedure is
+`mcl-echo/echo`. The org and the realm are independent: every `mcl-*` service
+carries its own org and they all sit in the io.macula realm. The realm issues
+this node's D25 delegation after admission.
+
+`mcl_om_capabilities` registers the org-qualified procedure and nothing else.
+The bare `io.macula.echo` literal every 10.x quickstart hardcodes is **not**
+advertised here. It keeps working on the classical fleet (hecate-echo), which
+is a separate deployment.
+
+Before advertising, `mcl_echo_service:capabilities/0` asserts that both values
+are configured and well formed: the realm tag is a 32-byte binary, and the org
+is a valid wire segment (`^[a-z0-9][a-z0-9._-]*$`) and not the `_` placeholder
+`mcl_om_identity` returns when nothing set it. It does **not** check that the
+realm is a hash of the org. That coupling belonged to the old realm-name-org
+convention and is gone; the org is bound to the node at admission, on the realm
+side.
+
+Both checks crash the node at boot rather than letting it drift. A realm
+mismatch between advertiser and caller is silent on the wire
+(`unknown_next_peer`, indistinguishable from nobody listening), and an org
+drift silently renames the wire procedure to a name no caller uses. Crashing is
+the loud version of the exact bug this service exists to stop.
+
+## Calling it
+
+| | |
+|---|---|
+| Realm name | `io.macula` |
+| Realm tag | `abb81b5a614b63551b400b810648c0c8a78efad845442630c94b46cc95d2fcd1` |
+| Procedure | `mcl-echo/echo` |
+
+    macula:call(Pool, Realm, <<"mcl-echo/echo">>, Payload, Timeout)
+
+The realm tag is `macula_realm:id(<<"io.macula">>)`, and every SDK carries the
+same helper. `scripts/mcl_echo_call` is the worked example, seed pin and realm
+trust pin included.
+
+The handler replies with the payload unchanged, minus the platform-injected
+`caller` key. Two guards apply, both implemented in the handler because the
+platform provides neither:
+
+- **Payload cap**, 4096 bytes measured by `erlang:external_size/1` so it bounds
+  every payload shape and not only binaries. Over it: `payload_too_large`.
+- **Fixed-window rate limit** (`mcl_echo_limiter`): a 10 second window, 20 calls
+  per caller, 300 globally. Over it: `rate_limited`.
+
+⚠ **A caller is only attributable when the payload is a map.** The
+wire-authenticated caller node id is merged in by
+`macula_station_link:with_caller/2` for map payloads only, so a bare text
+payload (what the 10.x quickstarts send) falls into the one shared global
+bucket. Several callers testing at once with text payloads share a single
+300-per-10s counter instead of getting 20 each. Send a map.
 
 It asks the realm for no authority beyond its own scope: the echo is
 deliberately public (`auth => open`), not gated by a UCAN grant.
@@ -44,8 +87,8 @@ a different libc.
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
-| `MCL_ORG` | required | The wire namespace: the echo advertises as `MCL_ORG/echo`. Must be the realm's name. |
-| `MCL_REALM` | required | 64-hex realm tag, the `sha256` of the org's name — the service crashes at boot if the two drift apart. |
+| `MCL_ORG` | required | The wire namespace: the echo advertises as `MCL_ORG/echo`. One org per service, named after the repo: `mcl-echo`. Must match `^[a-z0-9][a-z0-9._-]*$`. Independent of the realm. |
+| `MCL_REALM` | required | 64-hex realm tag: `sha256` of the **realm** name, `io.macula`. Not a hash of the org. Reaches the node as an application env, never a bare shell variable: `config/sys.config.src` is the only place the two meet. |
 | `MACULA_STATION_SEEDS` | required | Station hosts to dial, `host[:port]`, comma-separated. No default: naming a realm costs nothing, dialling a production station from every dev clone does. |
 | `MACULA_STATION_NODE_IDS` | required | The matching 64-hex station node ids, comma-separated, index-paired with the seeds. The 11.x dial is pinned (D5): mcl_om refuses to boot a pool with an unpinned seed. |
 | `MCL_HEALTH_PORT` | `8461` | Health endpoint. Host networking makes a collision a silent bind failure, so check the host before changing.  |
