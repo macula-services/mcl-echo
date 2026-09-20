@@ -90,6 +90,18 @@ what a session reports back:
     tls            an UNVERIFIED dial warning follows: expected, ...
     result         {ok, ...}
 
+Between `result` and `links after` the run prints a `route` block: every DHT
+lookup and every station call the SDK actually made, in order. That comes from
+`macula_direct_dial`'s own `dial_io` seam, not from a label this script writes
+about its own input. `macula:call/5` never names the station it resolved to, so
+a harness that logs its argument logs nothing; `call/6` is handed a `find_records`
+(advertisement lookup), a `find_record` (station endpoint lookup) and a
+`call_station`, and the station given to `call_station` is the **resolved** one,
+pinned as `expected_node_id` on that dial. A step that never appears says as
+much as one that does: no `find_record` line means resolution never reached the
+station endpoint lookup, and no `call_station_to` line means it never reached a
+provider at all.
+
 The realm is computed with `macula_realm:id/1` and the payload is printed from
 the same macro the call sends, so both lines are evidence and not a second
 claim that could drift from the first. The caller node id is minted fresh every
@@ -103,6 +115,17 @@ dial target and hardcodes `{verify, none}`. What names the station on this path
 is the D16 handshake pin, `expected_node_id`, which is required and which the
 station's challenge must derive to. The warning is expected; the option stays so
 the intent is on the record.
+
+Each session's pool holds a **single seed, its own assigned station**, never a
+shared six-seed list, and `station_discovery => #{enabled => false}` with
+`link_selection => first_success` are passed explicitly rather than left to a
+default. That matters more than it looks. Pool-routed DHT lookups order links
+with `maps:values` over a seed-keyed map, so a shared seed list sorts the same
+way in every session and all six would send their lookups to the same box,
+reproducibly, looking stable rather than wrong. One seed each makes both legs
+that session's station, so "from six different stations" is true of the lookup
+leg as well as the call leg. It also leaves `first_success` nothing to choose
+between, so the six callers differ in the station and in nothing else.
 
 The script refuses rather than guesses on two things, because a run that differs
 from its neighbours without saying so costs more than it reports:

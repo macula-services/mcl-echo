@@ -54,6 +54,14 @@
 
 -export([main/0]).
 
+%% Exported so the seam's SHAPE can be checked without spending a call on
+%% the mesh. `macula_direct_dial:dial_io/2' refuses a wrong key set or a
+%% wrong arity with `function_clause' raised in the caller, at call time,
+%% which a clean compile does not catch: a harness that only crashes once
+%% it is pointed at a live station is the failure this whole script
+%% exists to avoid.
+-export([recording_dial_io/0]).
+
 -define(DEFAULT_PROCEDURE, <<"mcl-echo/echo">>).
 
 %% A MAP, not bare text -- see the caller-node-id note above. Held in one
@@ -116,12 +124,116 @@ dial({ok, #{host := Host, expected_node_id := Pin} = Seed}, Station, Procedure) 
     print_links("links before", Pool, Pin),
     Reply = call_with_transient_retry(Pool, Realm, Procedure, 5),
     io:format("result         ~p~n", [Reply]),
+    print_route(),
     print_links("links after", Pool, Pin),
     _ = close_quietly(Pool),
     case Reply of
         {ok, _}          -> halt(0);
         {error, _Reason} -> halt(1)
     end.
+
+%% WHICH STATION ANSWERED, from the SDK's own seam. `macula:call/5'
+%% never names the station it resolved to, so a harness that logs its own
+%% argument logs nothing: it restates the request and calls it an answer.
+%% `macula:call/5' is exactly `macula_direct_dial:call/5', which is
+%% `call/6' with no options, and `call/6' takes a `dial_io' (see that
+%% module's "Dial I/O" section). The `call_station' function in it is
+%% handed the RESOLVED station and the node id pinned as
+%% `expected_node_id' for that dial, so what is recorded below is a
+%% pinned answer rather than a hopeful label.
+%%
+%% BOTH LEGS ARE RECORDED, because they can land on different boxes and
+%% the failures being chased live in the first one. `find_records' is the
+%% advertisement lookup (`macula_direct_dial:advertised_stations/3'),
+%% `find_record' the station-endpoint lookup, and `call_station' the call
+%% itself.
+%%
+%% TWO TRAPS, from that module's own contract. The seam is per call, not
+%% per pool. And `dial_io/2' REPLACES the defaults with the given map
+%% rather than merging it: it requires every key the call needs
+%% (`call/6' asks for exactly `find_records', `find_record' and
+%% `call_station'), and refuses any key outside `dial_io()' or at the
+%% wrong arity with `function_clause' raised in the caller. So: exactly
+%% those three keys, at arities 3, 3 and 8, each delegating to the
+%% default it shadows.
+-define(TRACE, mcl_echo_call_route).
+
+%% THE SEAM OWNS ITS TABLE, so it cannot be built without one. Separating
+%% the two cost a crash in the offline shape check: the recording funs are
+%% called from inside the SDK, so a missing table surfaces as a `badarg'
+%% in `ets:insert/2' several frames down in `macula_direct_dial', which is
+%% a wretched thing to hand six sessions. Idempotent because a transient
+%% retry builds the io again, and the steps accumulate across attempts on
+%% purpose: each pass over the DHT is worth seeing.
+%%
+%% Public and named: the funs run in whichever process the pool drives
+%% them from, not necessarily this one. Owned by the caller's process,
+%% which lives for the whole run.
+ensure_trace() ->
+    trace_table(ets:whereis(?TRACE)).
+
+trace_table(undefined) ->
+    ?TRACE = ets:new(?TRACE, [ordered_set, public, named_table]),
+    ok;
+trace_table(_Tid) ->
+    ok.
+
+record_step(Event) ->
+    true = ets:insert(?TRACE, {erlang:unique_integer([monotonic, positive]), Event}),
+    ok.
+
+recording_dial_io() ->
+    ok = ensure_trace(),
+    #{find_records =>
+          fun(P, K, T) -> found_records(hex(K), macula:find_records(P, K, T)) end,
+      find_record =>
+          fun(P, K, T) -> found_record(hex(K), macula:find_record(P, K, T)) end,
+      call_station =>
+          fun(P, Station, Target, R, Proc, Pay, T, O) ->
+              record_step({call_station_to, seed_label(Station), hex(Target)}),
+              called(hex(Target),
+                     macula:call_station(P, Station, Target, R, Proc, Pay, T, O))
+          end}.
+
+%% One clause set per leg rather than one shared summary: a call reply is
+%% an arbitrary term and may well be a list, which a shared "is it a
+%% list" summary would report as a record count.
+found_records(Key, {ok, Recs} = Result) ->
+    record_step({find_records, Key, {ok, length(Recs), records}}),
+    Result;
+found_records(Key, {error, Reason} = Result) ->
+    record_step({find_records, Key, {error, Reason}}),
+    Result.
+
+found_record(Key, {ok, _Rec} = Result) ->
+    record_step({find_record, Key, {ok, one_record}}),
+    Result;
+found_record(Key, {error, Reason} = Result) ->
+    record_step({find_record, Key, {error, Reason}}),
+    Result.
+
+called(Target, {ok, _Reply} = Result) ->
+    record_step({call_station_answered, Target, ok}),
+    Result;
+called(Target, {error, Reason} = Result) ->
+    record_step({call_station_answered, Target, {error, Reason}}),
+    Result.
+
+seed_label(#{host := H, port := P}) ->
+    iolist_to_binary(io_lib:format("~ts:~p", [H, P]));
+seed_label(Seed) when is_binary(Seed) ->
+    Seed;
+seed_label(Seed) when is_list(Seed) ->
+    unicode:characters_to_binary(Seed).
+
+%% The route as it was walked, in order. A step that never appears is as
+%% informative as one that does: no `find_record' line means resolution
+%% never got as far as the station-endpoint lookup, and no
+%% `call_station_to' line means it never reached a provider at all.
+print_route() ->
+    io:format("route          ~p step(s), in order~n", [ets:info(?TRACE, size)]),
+    lists:foreach(fun({_Seq, Event}) -> io:format("               ~p~n", [Event]) end,
+                  ets:tab2list(?TRACE)).
 
 %% WHICH STATION ANSWERED, read off the pool rather than taken from the
 %% argument a second time. `macula_client:links/1' reports each link's
@@ -180,7 +292,8 @@ hex(Bin) -> binary:encode_hex(Bin, lowercase).
 call_with_transient_retry(_Pool, _Realm, _Procedure, 0) ->
     erlang:error(call_never_succeeded);
 call_with_transient_retry(Pool, Realm, Procedure, Attempts) ->
-    case macula:call(Pool, Realm, Procedure, ?PAYLOAD, 15_000) of
+    case macula_direct_dial:call(Pool, Realm, Procedure, ?PAYLOAD, 15_000,
+                                 #{dial_io => recording_dial_io()}) of
         {ok, _} = Success ->
             Success;
         {error, timeout} ->

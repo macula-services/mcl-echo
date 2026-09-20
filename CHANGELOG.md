@@ -17,6 +17,18 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   meant to take rather than the one it took makes the whole run unreadable. The
   realm is computed with `macula_realm:id/1` and the payload printed from the
   same macro the call sends, so neither line can drift from what happened.
+- Echo calls go through `macula_direct_dial:call/6` with a recording `dial_io`,
+  so the run prints the route the SDK actually walked: each advertisement
+  lookup (`find_records`), each station endpoint lookup (`find_record`) and each
+  station call (`call_station`), in order. `macula:call/5` never names the
+  station it resolved to, so a harness logging its own argument was logging the
+  request and calling it an answer. The station handed to `call_station` is the
+  resolved one, pinned as `expected_node_id` on that dial. The seam replaces the
+  SDK's defaults rather than merging with them and refuses a wrong key set or
+  arity with `function_clause` at call time, which a clean compile does not
+  catch, so the map's shape is checked against a dummy pool with no mesh
+  contact; the seam also owns its own trace table, because a missing one
+  surfaced as a `badarg` several frames deep inside `macula_direct_dial`.
 - The caller node id is on the banner because it **is** the rate-limit key.
   `macula_station_link:with_caller/2` merges the wire-authenticated caller into
   the payload only when the payload is a map, so the map payload is what gives
