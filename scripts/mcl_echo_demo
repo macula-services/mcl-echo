@@ -1,36 +1,33 @@
 #!/bin/sh
-# Demo driver for the mcl-echo live service: start / stop / status /
-# restart the REAL-realm instance whose boot claim lands on the realm
-# operator's Providers desk.
+# Demo driver for the mcl-echo service: start / stop / status /
+# restart / reset the REAL-realm instance whose boot claim lands on
+# the realm operator's Providers desk.
 #
 # The service runs wherever this script runs (the box with the PQ
 # toolchain), boots under org `mcl-echo' in the io.macula realm,
-# claims its delegation over the wire, and then waits — with the
-# DEMO budget — for the operator to Admit + issue on the desk. The
-# desk's box label is the demo's story, set by MCL_BOX (default
-# beam02.lab).
+# claims its delegation over the wire, and stays up until stopped —
+# a plain long-running process, no window, no budget. The desk's box
+# label is the demo's story, set by MCL_BOX (default beam02.lab).
 #
 # Usage:
 #   scripts/mcl_echo_demo start     # claim lands; desk shows pending
 #   scripts/mcl_echo_demo status    # tail the service log
 #   scripts/mcl_echo_demo stop      # kill the service
 #   scripts/mcl_echo_demo restart
+#   scripts/mcl_echo_demo reset     # fresh take: ledger wipe + wire-grant tombstone
 #
-# The run window is ~1 hour (MCL_LIVE_DEMO=1; MCL_LIVE_DEMO_TIMEOUT_S
-# overrides); `start` again if it expires mid-take. The identity at MCL_LIVE_IDENTITY (default
-# /tmp/mcl_echo_live_realm.key) persists across restarts, so every
-# run is the same node re-claiming.
+# The identity at MCL_LIVE_IDENTITY (default /tmp/mcl_echo_live_realm.key)
+# persists across restarts, so every run is the same node re-claiming.
 set -eu
 
 DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PIDFILE=/tmp/mcl_echo_demo.pid
 LOGFILE=/tmp/mcl_echo_demo.log
 BOX_LABEL=${MCL_BOX:-beam02.lab}
-RUN_PATTERN="as live_test eunit --dir test_live"
+RUN_PATTERN="-run mcl_echo_demo_svc main"
 # The demo node's own id — stable while the identity file lives
 # (MCL_LIVE_IDENTITY, default /tmp/mcl_echo_live_realm.key).
 NODE_ID=${MCL_NODE_ID:-00466bb80a8dc7cd2564fa5dadb489bfa8e57ca19be4a85f278571f4edcd8e6f}
-# Where the realm repo lives on this box (for mesh_ops.exs).
 # The box running the realm (reset-realm.sh lives in its compose dir).
 REALM_BOX=${MCL_REALM_BOX:-root@macula.io}
 REALM_COMPOSE_DIR=${MCL_REALM_COMPOSE_DIR:-/root/macula-portal-compose}
@@ -38,8 +35,12 @@ REALM_COMPOSE_DIR=${MCL_REALM_COMPOSE_DIR:-/root/macula-portal-compose}
 start() {
   stop || true
   cd "$DIR"
-  MCL_LIVE_REALM=1 MCL_LIVE_DEMO=1 MCL_LIVE_HOLD=1 MCL_BOX="$BOX_LABEL" \
-    setsid sh -c "rebar3 $RUN_PATTERN" > "$LOGFILE" 2>&1 &
+  MCL_BOX="$BOX_LABEL" \
+    setsid sh -c "erl -noshell +sbtu +A1 \
+      -macula crypto_profile pq_hybrid -macula puzzle_difficulty 8 \
+      -pa '$DIR'/app/mcl_echo/ebin -pa '$DIR'/_build/default/lib/*/ebin \
+      -pa '$DIR'/_build/default/checkouts/*/ebin \
+      $RUN_PATTERN" > "$LOGFILE" 2>&1 &
   echo $! > "$PIDFILE"
   sleep 3
   if kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
