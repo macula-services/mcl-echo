@@ -111,10 +111,14 @@ result is only readable if you know which bucket it came from.
 
 The `verify => webpki` the caller passes cannot take effect in macula 11.4.0:
 `macula_peering_conn:start_dial/1` reads only `alpn` and `timeout_ms` off the
-dial target and hardcodes `{verify, none}`. What names the station on this path
-is the D16 handshake pin, `expected_node_id`, which is required and which the
-station's challenge must derive to. The warning is expected; the option stays so
-the intent is on the record.
+dial target and hardcodes `{verify, none}`. Merged, not released, not running:
+macula's trunk fixes this in `f3575b25`, where `start_dial/1` passes
+`dial_opts(Target)`, but that commit carries no tag and is not an ancestor of
+`v11.4.0`, which is what hex serves and what this service runs. What names the
+station meanwhile is the D16 handshake pin, `expected_node_id`, which is
+required and which the station's challenge must derive to. TLS server
+verification is not the control on this path; the pin is. The warning is
+expected, and the option stays so the intent is on the record.
 
 Each session's pool holds a **single seed, its own assigned station**, never a
 shared six-seed list, and `station_discovery => #{enabled => false}` with

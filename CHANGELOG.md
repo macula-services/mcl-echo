@@ -46,10 +46,14 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - `verify => webpki` in the caller is inert in macula 11.4.0:
   `macula_peering_conn:start_dial/1` reads only `alpn` and `timeout_ms` off the
-  dial target and hardcodes `{verify, none}` into the QUIC dial. The station is
-  named on this path by the required D16 `expected_node_id` handshake pin
-  instead. The UNVERIFIED-dial warning on every run is expected; the option is
-  kept so the intent is recorded. Not repaired here, macula is not this repo.
+  dial target and hardcodes `{verify, none}` into the QUIC dial. Merged, not
+  released, not running: macula's trunk fixes it in `f3575b25`, where
+  `start_dial/1` passes `dial_opts(Target)`, but that commit carries no tag and
+  is not an ancestor of `v11.4.0`, which is what hex serves and what this
+  service runs. The station is named on this path by the required D16
+  `expected_node_id` handshake pin instead, and TLS server verification is not
+  the control there. The UNVERIFIED-dial warning on every run is expected; the
+  option is kept so the intent is recorded.
 
 ## [0.1.0]
 

@@ -40,11 +40,21 @@
 %%% reads only `alpn' and `timeout_ms' off the dial target and
 %%% hardcodes `{verify, none}' into the QUIC dial, so the option
 %%% cannot take effect on this path whatever a caller sets or wherever
-%%% they put it. What names the station here is the D16 handshake pin:
-%%% `expected_node_id' is required, and the station's challenge must
-%%% derive to the node id dialled. The option stays so the intent is on
-%%% the record and a later fix makes it live. Reported for routing, not
-%%% repaired here: macula is not this repo.
+%%% they put it.
+%%%
+%%% MERGED, NOT RELEASED, NOT RUNNING, and the three are worth keeping
+%%% apart. macula's trunk fixes it in `f3575b25', where `start_dial/1'
+%%% passes `dial_opts(Target)' and that function reads the target's own
+%%% `verify'. That commit is on origin/main, carries no tag, and is not
+%%% an ancestor of v11.4.0, which is what hex serves and what this
+%%% service runs. So the option is inert HERE until a release carries
+%%% the fix, and the running artifact is what this comment describes.
+%%%
+%%% What names the station meanwhile is the D16 handshake pin:
+%%% `expected_node_id' is required and the station's challenge must
+%%% derive to the node id dialled. TLS server verification is not the
+%%% control on this path; the pin is, and the option should not read as
+%%% though it were. The option stays so the intent is on the record.
 %%%
 %%% The realm key below is the io.macula realm's PUBLIC half (the
 %%% realm_trust pin), not secret.
