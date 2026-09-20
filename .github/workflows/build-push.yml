@@ -1,8 +1,22 @@
 # Build the OCI image for mcl-echo and push to the registry.
 #
-# Pushes BOTH :latest and the semver tag. The deployed compose tracks :latest
-# under watchtower for zero-touch deploys, and the semver tags stay published so a
-# bad release can be pinned back to a known one.
+# TWO CHANNELS, AND A TAG PUSH MUST NOT TOUCH THE DEPLOY ONE.
+#
+#   push to main : publishes :latest        <- the deploy channel
+#   push of v*   : publishes :<semver> ONLY <- the rollback archive
+#
+# The deployed compose tracks :latest under watchtower for zero-touch deploys,
+# and the semver tags stay published so a bad release can be pinned back to a
+# known one.
+#
+# ⚠ THIS USED TO PUBLISH :latest ON A TAG PUSH AS WELL, because the :latest
+# line was hardcoded in the tags list and only the second line varied. Cutting
+# a release therefore rolled every box watching :latest, seconds later, whether
+# or not anyone meant to deploy it -- watchtower polls :latest and recreates the
+# container without asking. Worse, it made a release unpublishable during any
+# live test: tagging would have swapped the artifact under the test and we would
+# have been measuring two images. A tag now publishes its own semver and nothing
+# else, so cutting a release and deploying one are separate acts again.
 #
 # NOTE ON PUSHING THIS FILE. An HTTPS push that creates or updates anything under
 # .github/workflows/ needs a token carrying the `workflow' scope, and the error
@@ -43,13 +57,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set tag
+      # Emits the COMPLETE tag list, not a fragment of one. The previous
+      # shape computed a single variable and pasted it beside a hardcoded
+      # :latest, which is what made a tag push move :latest: the condition
+      # governed only half the list.
+      - name: Set tags
         id: tag
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            echo "tag=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+            echo "tags=ghcr.io/macula-services/mcl-echo:${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
           else
-            echo "tag=latest" >> "$GITHUB_OUTPUT"
+            echo "tags=ghcr.io/macula-services/mcl-echo:latest" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build and push
@@ -58,6 +76,4 @@ jobs:
           context: .
           file: Containerfile
           push: true
-          tags: |
-            ghcr.io/macula-services/mcl-echo:latest
-            ghcr.io/macula-services/mcl-echo:${{ steps.tag.outputs.tag }}
+          tags: ${{ steps.tag.outputs.tags }}

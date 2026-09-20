@@ -120,10 +120,21 @@ what stops a config table in a README and the real environment drifting.
 
 ## Deployment
 
-CI builds on every push to `main` and pushes
-`ghcr.io/macula-services/mcl-echo:latest` plus the semver tag. Pull `:latest`
-under watchtower and a merge is a deploy, while a rollback is pinning to a
-semver tag.
+CI publishes on two channels, and they are deliberately separate:
+
+| Push | Publishes | Is |
+|------|-----------|-----|
+| to `main` | `ghcr.io/macula-services/mcl-echo:latest` | the deploy channel |
+| a `v*` tag | `ghcr.io/macula-services/mcl-echo:<semver>` only | the rollback archive |
+
+Pull `:latest` under watchtower and a merge is a deploy. A rollback is pinning
+to a semver tag, then back to `:latest` once the fix ships.
+
+**A tag push does not move `:latest`.** It used to, which meant cutting a
+release also deployed it, seconds later, to every box watching `:latest`
+whether anyone intended that or not, and made a release impossible to cut
+during a live test without swapping the artifact under it. Cutting a release
+and deploying one are separate acts.
 
 Two things CI cannot do for you, both of which have bitten:
 
