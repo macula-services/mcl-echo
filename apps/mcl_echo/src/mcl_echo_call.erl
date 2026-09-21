@@ -146,10 +146,26 @@ dial({ok, #{host := Host, expected_node_id := Pin} = Seed}, Station, Procedure) 
 %% argument logs nothing: it restates the request and calls it an answer.
 %% `macula:call/5' is exactly `macula_direct_dial:call/5', which is
 %% `call/6' with no options, and `call/6' takes a `dial_io' (see that
-%% module's "Dial I/O" section). The `call_station' function in it is
-%% handed the RESOLVED station and the node id pinned as
-%% `expected_node_id' for that dial, so what is recorded below is a
-%% pinned answer rather than a hopeful label.
+%% module's "Dial I/O" section).
+%%
+%% ⚠ TWO IDENTITIES, AND THEY ARE DIFFERENT THINGS. A call dials the
+%% serving STATION's endpoint and addresses the request to the PROVIDER.
+%% `macula:call_station(Pool, Station, Target, Realm, Procedure, Payload,
+%% TimeoutMs, Opts)': arg 2 is the dial URL, arg 3 is the Target, which
+%% is the PROVIDER's node id, and the station's pin rides in `Opts' --
+%% `call_station/8' does `maps:with([verify, expected_node_id,
+%% pin_tls_cert], Opts)' on its next line. So all three are recorded
+%% below, separately and by name, because an earlier version recorded
+%% only the Target and this module's own doc called it the station. It
+%% is not: `000e02b5...' is mcl-echo's provider id and names no station
+%% on the fleet. Three sessions caught that independently against
+%% stations.csv on the night of the six-caller run.
+%%
+%% `station_pin' comes from `Opts' and is the value D16 enforces at the
+%% handshake, so it is the station identity, checkable against the
+%% `find_record' endpoint key above it. `unpinned' there would mean a
+%% dial with no pin at all, which 11.x refuses, so it should never
+%% appear and is worth seeing loudly if it does.
 %%
 %% BOTH LEGS ARE RECORDED, because they can land on different boxes and
 %% the failures being chased live in the first one. `find_records' is the
@@ -199,10 +215,22 @@ recording_dial_io() ->
           fun(P, K, T) -> found_record(hex(K), macula:find_record(P, K, T)) end,
       call_station =>
           fun(P, Station, Target, R, Proc, Pay, T, O) ->
-              record_step({call_station_to, seed_label(Station), hex(Target)}),
+              record_step({call_station_to,
+                           #{station_url => seed_label(Station),
+                             station_pin => station_pin(O),
+                             provider    => hex(Target)}}),
               called(hex(Target),
                      macula:call_station(P, Station, Target, R, Proc, Pay, T, O))
           end}.
+
+%% The station identity, from `Opts' where it actually rides. `unpinned'
+%% rather than a missing key: 11.x refuses an unpinned dial, so its
+%% absence here would be a finding rather than a formatting detail.
+station_pin(Opts) ->
+    pin_label(maps:get(expected_node_id, Opts, undefined)).
+
+pin_label(undefined) -> unpinned;
+pin_label(NodeId)    -> hex(NodeId).
 
 %% One clause set per leg rather than one shared summary: a call reply is
 %% an arbitrary term and may well be a list, which a shared "is it a
@@ -221,11 +249,11 @@ found_record(Key, {error, Reason} = Result) ->
     record_step({find_record, Key, {error, Reason}}),
     Result.
 
-called(Target, {ok, _Reply} = Result) ->
-    record_step({call_station_answered, Target, ok}),
+called(Provider, {ok, _Reply} = Result) ->
+    record_step({call_station_answered, #{provider => Provider}, ok}),
     Result;
-called(Target, {error, Reason} = Result) ->
-    record_step({call_station_answered, Target, {error, Reason}}),
+called(Provider, {error, Reason} = Result) ->
+    record_step({call_station_answered, #{provider => Provider}, {error, Reason}}),
     Result.
 
 seed_label(#{host := H, port := P}) ->

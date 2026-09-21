@@ -51,6 +51,21 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   the seed is what binds these dials, and the banner now says `verify=none,
   asked for deliberately` rather than describing a warning it was working around.
 
+- **The route block names the station, not just the provider.** The
+  `call_station` step used to record the dial URL and the Target, and this
+  repo's own docs called the Target "the station". It is not: in
+  `macula:call_station(Pool, Station, Target, ...)` the Target is the
+  **provider**, and the station's pin rides in `Opts`
+  (`maps:with([verify, expected_node_id, pin_tls_cert], Opts)` on the next
+  line). Recorded as written, a caller reports mcl-echo's own provider id as
+  "the station that answered", which names nothing on the fleet. Three sessions
+  caught that independently during the six-caller run. The step now records
+  `station_url`, `station_pin` and `provider` as named fields; `station_pin` is
+  the value D16 enforces at the handshake, so it is the station identity. A dial
+  with no pin records `unpinned` rather than omitting the key, since 11.x
+  refuses an unpinned dial and its absence would be a finding. Shape verified
+  offline against a dead pool, with and without a pin.
+
 ### Notes
 
 - `verify => webpki` in the caller is inert in macula 11.4.0:

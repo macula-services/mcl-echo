@@ -96,8 +96,15 @@ lookup and every station call the SDK actually made, in order. That comes from
 about its own input. `macula:call/5` never names the station it resolved to, so
 a harness that logs its argument logs nothing; `call/6` is handed a `find_records`
 (advertisement lookup), a `find_record` (station endpoint lookup) and a
-`call_station`, and the station given to `call_station` is the **resolved** one,
-pinned as `expected_node_id` on that dial. A step that never appears says as
+`call_station`.
+
+⚠ **A call carries two identities and they are different things:** it dials the
+serving **station**'s endpoint and addresses the request to the **provider**. In
+`macula:call_station(Pool, Station, Target, ...)` the Target is the provider, and
+the station's pin rides in `Opts`. The route block records all three by name,
+`station_url`, `station_pin` and `provider`, because recording only the Target
+and calling it "the station" reports an id that names nothing on the fleet.
+`station_pin` is what D16 enforces at the handshake, so that is the station. A step that never appears says as
 much as one that does: no `find_record` line means resolution never reached the
 station endpoint lookup, and no `call_station_to` line means it never reached a
 provider at all.
