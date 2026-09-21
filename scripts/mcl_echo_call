@@ -40,6 +40,22 @@ if ! command -v mise >/dev/null 2>&1; then
   exit 4
 fi
 
+# THE RUN IDENTIFIES ITSELF. Six terminals comparing results need to agree on
+# which instrument produced them, and the banner used to say that only by
+# ACCIDENT: two commits happened to change lines in it, so a paste could be
+# sorted into a generation after the fact. An accident is a bad thing to depend
+# on. HEAD comes from here because git is the shell's business; the beam md5 is
+# computed in the VM from the file it actually loaded, which is the artifact
+# that runs rather than the one we think it runs.
+#
+# `-dirty' is not cosmetic: a sha alone would name a commit whose source is not
+# what compiled.
+MCL_ECHO_HEAD=$(git -C "$DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)
+if [ -n "$(git -C "$DIR" status --porcelain 2>/dev/null)" ]; then
+  MCL_ECHO_HEAD="$MCL_ECHO_HEAD-dirty"
+fi
+export MCL_ECHO_HEAD
+
 # cd first: mise resolves .tool-versions from the working directory.
 cd "$DIR"
 exec mise exec -- erl -noshell +sbtu +A1 \

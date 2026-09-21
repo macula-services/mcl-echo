@@ -66,6 +66,33 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   refuses an unpinned dial and its absence would be a finding. Shape verified
   offline against a dead pool, with and without a pin.
 
+- **The run identifies its own instrument.** The banner now opens with
+  `instrument HEAD <sha>[-dirty], mcl_echo_call.beam md5 <hash>`. Six terminals
+  comparing results have to agree on which artifact produced them, and the
+  banner was doing that only by ACCIDENT: two commits happened to change lines
+  in it, so a paste could be sorted into a generation after the fact. An
+  accident is a bad thing to depend on. HEAD comes from the shell script because
+  git is the shell's business; the md5 is computed in the VM from
+  `code:which(?MODULE)`, the file the VM actually loaded, rather than the one we
+  assume it loaded. `-dirty` is not cosmetic: a bare sha would name a commit
+  whose source is not what compiled. It prints before the station is resolved,
+  so it appears on every path including an unknown-station typo, and it retires
+  a three-command manual check nobody could be relied on to run.
+
+- **The route block says whether the endpoint record was ordinarily live or
+  served through the tolerance window.** `macula_record:clock/2` refuses a
+  record only at `expires_at + 5 minutes`, so one can be past its own expiry and
+  still be served, and `{ok, _}` cannot tell the two apart. That is exactly the
+  distinction the station serving-window fix concerns: green calls do not show
+  the fix was exercised if every one read a live record. The record is already
+  in hand at `find_record`, so the step now classifies itself as `live` with
+  `ttl_left_s`, `in_tolerance_window` with `past_expiry_s`, or
+  `past_tolerance_should_not_be_served` — that last one named separately
+  because beyond 5 minutes the record should have been refused, so labelling it
+  as the tolerance window would put a false label on an anomaly (clock skew, or
+  a tolerance that is not what we believe). No timing and no box-side read
+  needed afterwards. Proposed by Neptunus.
+
 ### Notes
 
 - `verify => webpki` in the caller is inert in macula 11.4.0:

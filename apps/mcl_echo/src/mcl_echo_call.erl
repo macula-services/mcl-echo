@@ -70,6 +70,11 @@
 %% exists to avoid.
 -export([recording_dial_io/0]).
 
+%% Exported for the same reason: the freshness classifier decides whether a
+%% call went through the tolerance window or read an ordinarily live record,
+%% and that judgement should be checkable without spending a call on the mesh.
+-export([endpoint_freshness/1]).
+
 -define(DEFAULT_PROCEDURE, <<"mcl-echo/echo">>).
 
 %% A MAP, not bare text -- see the caller-node-id note above. Held in one
@@ -82,7 +87,12 @@ main() ->
 station_arg([])           -> mcl_echo_stations:default();
 station_arg([Name | _])   -> Name.
 
+%% The instrument line comes FIRST, before the station is even resolved, so it
+%% prints on every path including an unknown-station typo. A run that cannot
+%% say which artifact produced it is not worth comparing against another.
 run(Station, Procedure) ->
+    io:format("instrument     HEAD ~s, mcl_echo_call.beam md5 ~ts~n",
+              [head_label(), beam_md5()]),
     dial(mcl_echo_stations:pin(Station), Station, Procedure).
 
 %% An unknown name is a typo at a terminal, not a mesh failure: say so and
@@ -242,8 +252,8 @@ found_records(Key, {error, Reason} = Result) ->
     record_step({find_records, Key, {error, Reason}}),
     Result.
 
-found_record(Key, {ok, _Rec} = Result) ->
-    record_step({find_record, Key, {ok, one_record}}),
+found_record(Key, {ok, Rec} = Result) ->
+    record_step({find_record, Key, endpoint_freshness(Rec)}),
     Result;
 found_record(Key, {error, Reason} = Result) ->
     record_step({find_record, Key, {error, Reason}}),
@@ -255,6 +265,58 @@ called(Provider, {ok, _Reply} = Result) ->
 called(Provider, {error, Reason} = Result) ->
     record_step({call_station_answered, #{provider => Provider}, {error, Reason}}),
     Result.
+
+%% WAS THE RECORD ORDINARILY LIVE, OR SERVED THROUGH THE TOLERANCE WINDOW?
+%% `macula_record:clock/2' refuses a record only at
+%% `expires_at + ?CLOCK_TOLERANCE_MS', five minutes, so a record can be PAST
+%% ITS OWN EXPIRY and still be served. A caller cannot tell the two apart from
+%% `{ok, _}' alone, and that is exactly the distinction the station
+%% serving-window fix is about: six green calls do not show the fix was
+%% exercised if every one of them read an ordinarily live record.
+%%
+%% The record is already in hand here, so the route block can classify itself
+%% and no timing or box-side read is needed afterwards. Same time base as
+%% `clock/2': `erlang:system_time(millisecond)'.
+endpoint_freshness(#{expires_at := Expires}) ->
+    freshness(Expires - erlang:system_time(millisecond));
+endpoint_freshness(_NoExpiresAt) ->
+    {ok, one_record, no_expires_at}.
+
+%% The tolerance is `macula_record:?CLOCK_TOLERANCE_MS', 5 minutes. Past THAT,
+%% `clock/2' refuses the record, so a caller should never see one -- and if it
+%% does, calling it `in_tolerance_window' would be a false label on an anomaly
+%% (clock skew between caller and station, or a tolerance that is not what this
+%% comment says). Named separately so it reads as the finding it would be.
+-define(TOLERANCE_MS, 5 * 60 * 1000).
+
+freshness(MarginMs) when MarginMs >= 0 ->
+    {ok, one_record, live, {ttl_left_s, MarginMs div 1000}};
+freshness(MarginMs) when MarginMs > -?TOLERANCE_MS ->
+    {ok, one_record, in_tolerance_window, {past_expiry_s, (-MarginMs) div 1000}};
+freshness(MarginMs) ->
+    {ok, one_record, past_tolerance_should_not_be_served,
+     {past_expiry_s, (-MarginMs) div 1000}}.
+
+%% The instrument that is actually running. `code:which/1' names the file the
+%% VM loaded, so this is the artifact rather than a guess at it; anything other
+%% than a path (`preloaded', `cover_compiled') is reported as such rather than
+%% silently omitted.
+head_label() ->
+    head_or_unknown(os:getenv("MCL_ECHO_HEAD")).
+
+head_or_unknown(false) -> "unknown (not run via scripts/mcl_echo_call)";
+head_or_unknown(Head)  -> Head.
+
+beam_md5() ->
+    md5_of(code:which(?MODULE)).
+
+md5_of(Path) when is_list(Path) ->
+    md5_of_file(file:read_file(Path));
+md5_of(Other) ->
+    iolist_to_binary(io_lib:format("~p", [Other])).
+
+md5_of_file({ok, Bin})    -> binary:encode_hex(crypto:hash(md5, Bin), lowercase);
+md5_of_file({error, Why}) -> iolist_to_binary(io_lib:format("unreadable (~p)", [Why])).
 
 seed_label(#{host := H, port := P}) ->
     iolist_to_binary(io_lib:format("~ts:~p", [H, P]));
