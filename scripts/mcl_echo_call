@@ -3,7 +3,12 @@
 # io.macula realm. Before the realm's desk admits the node the call
 # resolves no provider; after Admit + issue it answers pong.
 #
-#   ./scripts/mcl_echo_call [station]
+#   ./scripts/mcl_echo_call [station] [N]
+#
+# N is how many calls to make IN ONE PROCESS, default 1. It exists to separate
+# cold start from steady state: call 1 pays the prelude and resolution, and
+# calls 2..N tell you what an echo actually costs once the route is up. The
+# summary never averages call 1 into the rest.
 #
 # The station is the way in to the mesh, and several callers at once
 # should each take their own: pinned to one, a fan-out test measures a

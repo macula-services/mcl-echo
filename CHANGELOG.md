@@ -93,6 +93,36 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   a tolerance that is not what we believe). No timing and no box-side read
   needed afterwards. Proposed by Neptunus.
 
+- **A `timing` block, and `N` consecutive calls in one process.** Two questions
+  the harness could not answer: where the seconds go, and what an echo costs
+  once the route is up.
+
+  `./scripts/mcl_echo_call <station> [N]`, N defaulting to 1.
+
+  **Timings are their own block, not folded into the route terms.** The route
+  terms are a semantic record of what the SDK did, and mixing durations in makes
+  each one noisier to scan at the moment someone is looking for `{ok,0,records}`.
+  The trace row carries the timestamp; the printed term is unchanged.
+
+  **The prelude is broken out and labelled one-off**: VM boot and code load
+  (from `erlang:statistics(wall_clock)`, the only way to see what precedes this
+  module's first line), application start, identity key generation with its
+  puzzle, connect, and the wait for a healthy link. None of it is per-call work,
+  and folding it into call 1 would make the first call look expensive for
+  reasons that have nothing to do with calling.
+
+  **Each call clears the trace and prints its own route block**, because whether
+  `find_records` and `find_record` appear on calls 2..N is the finding, and that
+  cannot be read off an accumulating list. Steps still accumulate across a
+  transient retry within one call, on purpose.
+
+  ⛔ **Call 1 is never averaged into the rest.** It pays resolution, and a dial
+  if the route is new; calls 2..N may pay neither. A mean over all N hides
+  exactly the thing being measured. The summary reports call 1, call 2, and
+  min/median/max over 2..N, and says on its own face that N calls from one
+  caller to one provider over one entry station is one route and one pair of
+  endpoints, not a fleet latency figure.
+
 ### Notes
 
 - `verify => webpki` in the caller is inert in macula 11.4.0:

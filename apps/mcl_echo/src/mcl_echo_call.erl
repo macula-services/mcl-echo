@@ -82,34 +82,52 @@
 -define(PAYLOAD, #{<<"ping">> => <<"pong">>}).
 
 main() ->
-    run(station_arg(init:get_plain_arguments()), ?DEFAULT_PROCEDURE).
+    Args = init:get_plain_arguments(),
+    run(station_arg(Args), calls_arg(Args), ?DEFAULT_PROCEDURE).
 
 station_arg([])           -> mcl_echo_stations:default();
 station_arg([Name | _])   -> Name.
 
+%% `./scripts/mcl_echo_call <station> [N]'. N defaults to 1, which keeps a
+%% single-call run byte-identical in shape to every earlier one.
+calls_arg([_Station, N | _]) -> positive_int(N);
+calls_arg(_Args)             -> 1.
+
+positive_int(S) ->
+    checked_count(catch list_to_integer(S), S).
+
+checked_count(N, _S) when is_integer(N), N > 0 -> N;
+checked_count(_NotACount, S) ->
+    io:format("second argument must be a positive call count, got ~ts~n", [S]),
+    halt(2).
+
 %% The instrument line comes FIRST, before the station is even resolved, so it
 %% prints on every path including an unknown-station typo. A run that cannot
 %% say which artifact produced it is not worth comparing against another.
-run(Station, Procedure) ->
+run(Station, Calls, Procedure) ->
     io:format("instrument     HEAD ~s, mcl_echo_call.beam md5 ~ts~n",
               [head_label(), beam_md5()]),
-    dial(mcl_echo_stations:pin(Station), Station, Procedure).
+    dial(mcl_echo_stations:pin(Station), Station, Calls, Procedure).
 
 %% An unknown name is a typo at a terminal, not a mesh failure: say so and
 %% list the real ones rather than dialling something arbitrary.
-dial({error, {unknown_station, Name}}, _Station, _Procedure) ->
+dial({error, {unknown_station, Name}}, _Station, _Calls, _Procedure) ->
     io:format("unknown station ~ts~nknown stations: ~p~n",
               [Name, mcl_echo_stations:names()]),
     halt(2);
-dial({ok, #{host := Host, expected_node_id := Pin} = Seed}, Station, Procedure) ->
+dial({ok, #{host := Host, expected_node_id := Pin} = Seed}, Station, Calls, Procedure) ->
+    {VmMs, _} = erlang:statistics(wall_clock),
+    T0 = mono(),
     io:format("station        ~ts (~ts)~n", [station_label(Station), Host]),
     io:format("station nodeid ~ts~n", [hex(Pin)]),
     io:format("procedure      ~ts~n", [Procedure]),
     {ok, _} = application:ensure_all_started(macula),
+    TApp = mono(),
     {ok, Profile} = macula_crypto_profile:configured(),
     {ok, Key} = macula_node_keys:generate(
                   identity, Profile,
                   #{puzzle_difficulty => macula_node_keys:puzzle_difficulty()}),
+    TKey = mono(),
     Realm = macula_realm:id(?MCL_ECHO_REALM_NAME),
     io:format("realm          ~ts (~ts)~n", [?MCL_ECHO_REALM_NAME, hex(Realm)]),
     io:format("caller nodeid  ~ts~n", [hex(macula_node_keys:key_id(Key))]),
@@ -139,17 +157,16 @@ dial({ok, #{host := Host, expected_node_id := Pin} = Seed}, Station, Procedure) 
                      station_discovery => #{enabled => false},
                      link_selection => first_success,
                      realm_trust => #{Realm => ?MCL_ECHO_REAL_REALM_KEY}}),
+    TConn = mono(),
     ok = wait_healthy(Pool, 60),
+    TReady = mono(),
+    print_prelude_timing(VmMs, T0, TApp, TKey, TConn, TReady),
     print_links("links before", Pool, Pin),
-    Reply = call_with_transient_retry(Pool, Realm, Procedure, 5),
-    io:format("result         ~p~n", [Reply]),
-    print_route(),
+    Calls1 = [one_call(N, Pool, Realm, Procedure) || N <- lists:seq(1, Calls)],
+    print_call_summary(Calls1),
     print_links("links after", Pool, Pin),
     _ = close_quietly(Pool),
-    case Reply of
-        {ok, _}          -> halt(0);
-        {error, _Reason} -> halt(1)
-    end.
+    halt(exit_code(Calls1)).
 
 %% WHICH STATION ANSWERED, from the SDK's own seam. `macula:call/5'
 %% never names the station it resolved to, so a harness that logs its own
@@ -213,8 +230,17 @@ trace_table(undefined) ->
 trace_table(_Tid) ->
     ok.
 
+%% The row carries a timestamp, the printed route TERM does not. Timings live
+%% in their own block (see `print_call_timing/1'): the route terms are a
+%% semantic record of what the SDK did, and folding durations into them would
+%% make each one noisier to scan at the exact moment someone is looking for
+%% `{ok,0,records}'. It would also change those term shapes a third time, and
+%% the banner's generation-identifying property came from their having changed
+%% twice -- though the instrument line now states the generation outright, so
+%% that property is no longer load-bearing.
 record_step(Event) ->
-    true = ets:insert(?TRACE, {erlang:unique_integer([monotonic, positive]), Event}),
+    true = ets:insert(?TRACE, {erlang:unique_integer([monotonic, positive]),
+                               Event, mono()}),
     ok.
 
 recording_dial_io() ->
@@ -329,10 +355,110 @@ seed_label(Seed) when is_list(Seed) ->
 %% informative as one that does: no `find_record' line means resolution
 %% never got as far as the station-endpoint lookup, and no
 %% `call_station_to' line means it never reached a provider at all.
+%% ONE CALL, TIMED AND TRACED ON ITS OWN. The trace is cleared first so each
+%% call's route block is that call's, not a running total: whether
+%% `find_records' and `find_record' appear on calls 2..N is the question this
+%% exists to answer, and it cannot be read off an accumulating list.
+%%
+%% Steps DO accumulate across a transient retry within one call, on purpose --
+%% each pass over the DHT is worth seeing.
+one_call(N, Pool, Realm, Procedure) ->
+    reset_trace(),
+    T0 = mono(),
+    Reply = call_with_transient_retry(Pool, Realm, Procedure, 5),
+    Elapsed = mono() - T0,
+    io:format("~ncall ~p         ~p ms~n", [N, Elapsed]),
+    io:format("  result       ~p~n", [Reply]),
+    print_route(),
+    print_call_timing(T0),
+    {N, Elapsed, Reply}.
+
+reset_trace() ->
+    ok = ensure_trace(),
+    true = ets:delete_all_objects(?TRACE),
+    ok.
+
+%% ⛔ CALL 1 IS NEVER AVERAGED INTO THE REST. It pays resolution, and a dial if
+%% the route is new; calls 2..N may pay neither. A mean over all N hides exactly
+%% the thing being measured, and a single mean latency for an echo is the shape
+%% of number that gets quoted later without its spread.
+%%
+%% ⚠ AND WHAT THIS DOES NOT SHOW: N calls from one caller to one provider over
+%% one entry station is ONE route and one pair of endpoints. It is not a fleet
+%% latency figure and must not be reported as one.
+print_call_summary(Calls) when length(Calls) < 2 ->
+    ok;
+print_call_summary([{1, First, _} | Rest] = Calls) ->
+    Warm = [Ms || {_N, Ms, _R} <- Rest],
+    io:format("~nsummary        call 1 and the rest, deliberately NOT averaged together~n"),
+    io:format("               call 1       ~6w ms   pays resolution, and a dial if the route is new~n",
+              [First]),
+    io:format("               call 2       ~6w ms~n", [hd(Warm)]),
+    io:format("               calls 2..~p   min ~w / median ~w / max ~w ms   (n=~p)~n",
+              [length(Calls), lists:min(Warm), median(Warm), lists:max(Warm), length(Warm)]),
+    io:format("               one route, one pair of endpoints: NOT a fleet figure~n"),
+    ok.
+
+%% Upper of the two middles on an even count. Stated rather than left for
+%% someone to discover it disagrees with their own arithmetic.
+median(L) ->
+    Sorted = lists:sort(L),
+    lists:nth((length(Sorted) div 2) + 1, Sorted).
+
+%% Any failed call fails the run, so a partial failure across N cannot exit 0.
+exit_code(Calls) ->
+    failed_to_code(lists:any(fun({_N, _Ms, {error, _}}) -> true;
+                                (_Ok) -> false
+                             end, Calls)).
+
+failed_to_code(true)  -> 1;
+failed_to_code(false) -> 0.
+
+mono() -> erlang:monotonic_time(millisecond).
+
 print_route() ->
-    io:format("route          ~p step(s), in order~n", [ets:info(?TRACE, size)]),
-    lists:foreach(fun({_Seq, Event}) -> io:format("               ~p~n", [Event]) end,
+    io:format("  route        ~p step(s), in order~n", [ets:info(?TRACE, size)]),
+    lists:foreach(fun({_Seq, Event, _T}) -> io:format("               ~p~n", [Event]) end,
                   ets:tab2list(?TRACE)).
+
+%% Durations, in their own block, one line per step plus what the step was.
+%% `since_call_start_ms' is cumulative and `step_ms' is the gap from the
+%% previous step, because a single cumulative column hides which step was slow
+%% and a single gap column hides where in the call it happened.
+print_call_timing(CallStart) ->
+    io:format("  timing       step_ms / since_call_start_ms~n"),
+    lists:foldl(fun(Row, Prev) -> print_timing_row(Row, Prev, CallStart) end,
+                CallStart, ets:tab2list(?TRACE)),
+    ok.
+
+print_timing_row({_Seq, Event, T}, Prev, CallStart) ->
+    io:format("               ~6w / ~6w  ~s~n",
+              [T - Prev, T - CallStart, step_name(Event)]),
+    T.
+
+%% The step's own label, not its payload: the payload is already in the route
+%% block above and repeating it here would double the width for nothing.
+step_name(Event) when is_tuple(Event) -> atom_to_list(element(1, Event));
+step_name(Event)                      -> io_lib:format("~p", [Event]).
+
+%% WHAT THE PRELUDE IS, and why it is broken out rather than folded into call 1.
+%% None of it is per-call work: it happens once, before any call, and on a
+%% long-lived client it would never be paid again. Folding it into call 1 would
+%% make the first call look expensive for reasons that have nothing to do with
+%% calling.
+%%
+%% `vm_to_first_line' is from `erlang:statistics(wall_clock)', so it covers VM
+%% boot and code loading -- everything before this module's first line, which
+%% cannot be measured from inside it any other way.
+print_prelude_timing(VmMs, T0, TApp, TKey, TConn, TReady) ->
+    io:format("prelude        ms, one-off, NOT per call~n"),
+    lists:foreach(fun({Label, Ms}) -> io:format("               ~6w  ~s~n", [Ms, Label]) end,
+                  [{"vm boot + code load (to this module's first line)", VmMs},
+                   {"application:ensure_all_started(macula)", TApp - T0},
+                   {"identity key generation (puzzle)", TKey - TApp},
+                   {"macula_client:connect", TConn - TKey},
+                   {"wait for a healthy link (handshake)", TReady - TConn},
+                   {"TOTAL prelude after this module started", TReady - T0}]).
 
 %% WHICH STATION ANSWERED, read off the pool rather than taken from the
 %% argument a second time. `macula_client:links/1' reports each link's
