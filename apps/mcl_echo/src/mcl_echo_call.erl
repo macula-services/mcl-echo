@@ -367,11 +367,77 @@ one_call(N, Pool, Realm, Procedure) ->
     T0 = mono(),
     Reply = call_with_transient_retry(Pool, Realm, Procedure, 5),
     Elapsed = mono() - T0,
+    %% AFTER the timed span, deliberately: the probe must not appear in a
+    %% number that is being compared against a run taken without it.
+    Probe = link_probe(Pool),
     io:format("~ncall ~p         ~p ms~n", [N, Elapsed]),
     io:format("  result       ~p~n", [Reply]),
     print_route(),
     print_call_timing(T0),
+    print_probe(Probe),
     {N, Elapsed, Reply}.
+
+%% ⚠ AGNOSTIC LINK-IDENTITY PROBE. Enabled by `MCL_ECHO_LINK_PROBE=1'; off, the
+%% instrument behaves exactly as before.
+%%
+%% The question is whether the connection underneath the entry link is torn
+%% down and re-established across a stall. It does NOT assume which field would
+%% change, and it hardcodes no record position: it collects every pid and
+%% reference the link process is holding and reports the set. A connection that
+%% was re-established leaves a different set; one that was not, does not.
+%%
+%% `macula_station_link:state_field_index/1' exists for exactly this and is
+%% `-ifdef(TEST)', so it is absent from a release build. `sys:get_state/1' is
+%% an ordinary OTP debug facility and read-only. Wrapped, because reaching into
+%% another application's process state is a diagnostic liberty and must not be
+%% able to take the measurement down with it.
+link_probe(Pool) ->
+    probe_enabled(os:getenv("MCL_ECHO_LINK_PROBE"), Pool).
+
+probe_enabled("1", Pool) -> probed(macula_client:links(Pool));
+probe_enabled(_Off, _Pool) -> off.
+
+probed({ok, [#{pid := Pid, connected := Conn, node_id := NodeId} | _]}) ->
+    #{link_pid => Pid, connected => Conn,
+      peer => peer_label(NodeId), held => held_identities(Pid)};
+probed(Other) ->
+    #{links => Other}.
+
+%% Every pid and reference in the link's state AND in the state of every
+%% process it holds, sorted, with no idea which is which.
+%%
+%% ⚠ TWO HOPS, BECAUSE ONE IS NOT ENOUGH. The link holds the peering
+%% connection's pid; the QUIC connection handle lives inside THAT process. A
+%% probe that read only the link would miss a connection re-established
+%% underneath a peering process that itself survived -- which is precisely the
+%% case `macula#9' describes, so a one-hop probe could return a false negative
+%% on the exact question being asked.
+%%
+%% Short timeout and caught per process: some held pids are not OTP processes
+%% and will not answer `sys:get_state'. That is expected and is not a finding.
+held_identities(Pid) ->
+    Ids = state_ids(Pid),
+    Deeper = [I || P <- Ids, is_pid(P), I <- state_ids(P)],
+    lists:sort(lists:usort(Ids ++ Deeper)).
+
+state_ids(Pid) ->
+    try collect_ids(sys:get_state(Pid, 200), [])
+    catch _Class:_Reason -> []
+    end.
+
+collect_ids(T, Acc) when is_pid(T); is_reference(T) -> [T | Acc];
+collect_ids(T, Acc) when is_tuple(T) -> collect_ids(tuple_to_list(T), Acc);
+collect_ids([H | Rest], Acc) -> collect_ids(Rest, collect_ids(H, Acc));
+collect_ids(M, Acc) when is_map(M) -> collect_ids(maps:to_list(M), Acc);
+collect_ids(_Other, Acc) -> Acc.
+
+print_probe(off) ->
+    ok;
+print_probe(#{link_pid := Pid, connected := Conn, held := Held}) ->
+    io:format("  link         pid ~p connected=~p  held ids ~p~n",
+              [Pid, Conn, Held]);
+print_probe(Other) ->
+    io:format("  link         ~p~n", [Other]).
 
 reset_trace() ->
     ok = ensure_trace(),
