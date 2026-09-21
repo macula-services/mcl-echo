@@ -29,6 +29,32 @@ on:
   push:
     branches: [main]
     tags:     ['v*']
+    # ⚠ THE TAG BUILD STILL RUNS. Checked empirically rather than from the
+    # docs, which do not say: GitHub's `on.push` reference states only that
+    # filters combine with AND and is silent on whether path filters are
+    # evaluated for tag pushes. If they were, this block would silently
+    # suppress the SEMVER build on a release tag and take out the rollback
+    # archive -- a worse and quieter failure than the one it prevents.
+    #
+    # macula-io/macula-station's `ci.yml` carries this exact shape, `branches`
+    # and `tags` and `paths-ignore` in one `push` block, and every tag push in
+    # its history triggers it, v0.4.0 through v0.5.0.
+    #
+    # WHAT THAT EVIDENCE DOES NOT COVER, so nobody reads it as more than it is:
+    # every one of those tags points at a commit that touched code. It proves a
+    # tag push fires DESPITE `paths-ignore` being present, which is the case
+    # that matters and the one release tags are. It does NOT isolate a tag cut
+    # on a commit touching only `.md` files -- if path filters were evaluated
+    # for tag pushes, that one tag would be suppressed and this history would
+    # look identical, because none of it tests that. Judged not worth chasing:
+    # release tags are cut on code, and the common case is proven.
+    #
+    # Re-check this if GitHub ever changes that behaviour, because the failure
+    # mode is a release that quietly publishes no image.
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
   workflow_dispatch:
 
 # ONE IMAGE BUILD IN FLIGHT PER REF. Every push to main builds and pushes
