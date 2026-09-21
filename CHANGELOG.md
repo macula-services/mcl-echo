@@ -42,6 +42,15 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   whatever `erl` is first on `PATH`. `.tool-versions` pins the OTP these beams
   and their NIFs were built with and it is not that `erl`.
 
+- **Both terminal tools now ask for `verify => none`** (`mcl_echo_call`,
+  `mcl_echo_withdraw`), matching mcl_om's pool default. `webpki` there was inert
+  under macula 11.4.0, whose dial builder discarded it, and becomes a real X.509
+  chain check under 11.5.0 that a station's leaf does not satisfy. A harness that
+  cannot connect measures nothing, so this is what keeps the six callers able to
+  dial at all once mcl-echo moves to 11.5.0. The D16 `expected_node_id` pin in
+  the seed is what binds these dials, and the banner now says `verify=none,
+  asked for deliberately` rather than describing a warning it was working around.
+
 ### Notes
 
 - `verify => webpki` in the caller is inert in macula 11.4.0:

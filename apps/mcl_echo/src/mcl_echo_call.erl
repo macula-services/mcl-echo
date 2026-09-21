@@ -34,27 +34,25 @@
 %%% the identity generated below -- fresh every run, so the six buckets
 %%% are genuinely six.
 %%%
-%%% THE UNVERIFIED-DIAL WARNING IS EXPECTED and is not this harness
-%%% misconfiguring itself. `verify => webpki' is passed to connect
-%%% below, but `macula_peering_conn:start_dial/1' in macula 11.4.0
-%%% reads only `alpn' and `timeout_ms' off the dial target and
-%%% hardcodes `{verify, none}' into the QUIC dial, so the option
-%%% cannot take effect on this path whatever a caller sets or wherever
-%%% they put it.
+%%% THE UNVERIFIED-DIAL WARNING IS EXPECTED, and `verify => none' below
+%%% is a decision rather than an oversight. What binds this dial to the
+%%% station it names is the D16 handshake pin: `expected_node_id' is
+%%% required and the station's challenge must derive to the node id
+%%% dialled. TLS server verification is not the control on this path;
+%%% the pin is. macula 11.5.0's own `macula_peering_conn:dial_opts/1'
+%%% says the same -- a station's leaf is self-signed or issued by an
+%%% unrelated PKI, and the signed handshake binds the connection, not
+%%% the certificate chain.
 %%%
-%%% MERGED, NOT RELEASED, NOT RUNNING, and the three are worth keeping
-%%% apart. macula's trunk fixes it in `f3575b25', where `start_dial/1'
-%%% passes `dial_opts(Target)' and that function reads the target's own
-%%% `verify'. That commit is on origin/main, carries no tag, and is not
-%%% an ancestor of v11.4.0, which is what hex serves and what this
-%%% service runs. So the option is inert HERE until a release carries
-%%% the fix, and the running artifact is what this comment describes.
-%%%
-%%% What names the station meanwhile is the D16 handshake pin:
-%%% `expected_node_id' is required and the station's challenge must
-%%% derive to the node id dialled. TLS server verification is not the
-%%% control on this path; the pin is, and the option should not read as
-%%% though it were. The option stays so the intent is on the record.
+%%% THIS USED TO SAY `webpki' AND THAT WAS ONLY SAFE BY ACCIDENT.
+%%% macula 11.4.0's `start_dial/1' discarded the caller's value and
+%%% passed a literal `{verify, none}', so the option was decorative and
+%%% this harness connected regardless. 11.5.0 honours the target's
+%%% value, which would have turned `webpki' into a real X.509 chain
+%%% check against the built-in public roots on every station dial, and
+%%% a harness that cannot connect measures nothing. Asking for `none'
+%%% explicitly is what keeps the six callers able to dial at all once
+%%% mcl-echo moves to 11.5.0.
 %%%
 %%% The realm key below is the io.macula realm's PUBLIC half (the
 %%% realm_trust pin), not secret.
@@ -107,12 +105,13 @@ dial({ok, #{host := Host, expected_node_id := Pin} = Seed}, Station, Procedure) 
     io:format("caller nodeid  ~ts~n", [hex(macula_node_keys:key_id(Key))]),
     io:format("payload        ~p (~p bytes local external_size, cap 4096)~n",
               [?PAYLOAD, erlang:external_size(?PAYLOAD)]),
-    io:format("tls            an UNVERIFIED dial warning follows: expected, the "
-              "station is pinned by node id at the handshake (module doc)~n", []),
+    io:format("tls            verify=none, asked for deliberately: an UNVERIFIED "
+              "dial warning follows and the node id pin is the control~n", []),
     {ok, Pool} = macula_client:connect(
                    [Seed],
                    #{node_identity => Key,
-                     verify => webpki,
+                     %% Deliberate, not a default -- see the module doc.
+                     verify => none,
                      %% BOTH STATED, NEITHER DEFAULTED. One seed and
                      %% discovery off means the pool holds exactly one
                      %% entry link, the station named on the command

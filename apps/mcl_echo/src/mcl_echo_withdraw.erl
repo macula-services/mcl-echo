@@ -35,7 +35,14 @@ main() ->
     {ok, Pool} = macula_client:connect(
                    [Seed],
                    #{node_identity => Key,
-                     verify => webpki,
+                     %% `none' deliberately: the D16 `expected_node_id'
+                     %% pin in the seed is what binds this dial, not the
+                     %% certificate chain. `webpki' here was inert under
+                     %% macula 11.4.0 and becomes a real chain check
+                     %% under 11.5.0, which a station's leaf does not
+                     %% satisfy. Matches `mcl_echo_call' and mcl_om's
+                     %% own pool default.
+                     verify => none,
                      realm_trust => #{Realm => ?MCL_ECHO_REAL_REALM_KEY}}),
     ok = wait_healthy(Pool, 60),
     Payload = #{<<"admin_token">> => Token,

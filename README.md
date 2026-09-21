@@ -109,16 +109,23 @@ run and **is the rate-limit key**, which is why it is on the banner: six
 sessions sending maps get six separate 20-per-10s buckets, and a `rate_limited`
 result is only readable if you know which bucket it came from.
 
-The `verify => webpki` the caller passes cannot take effect in macula 11.4.0:
-`macula_peering_conn:start_dial/1` reads only `alpn` and `timeout_ms` off the
-dial target and hardcodes `{verify, none}`. Merged, not released, not running:
-macula's trunk fixes this in `f3575b25`, where `start_dial/1` passes
-`dial_opts(Target)`, but that commit carries no tag and is not an ancestor of
-`v11.4.0`, which is what hex serves and what this service runs. What names the
-station meanwhile is the D16 handshake pin, `expected_node_id`, which is
-required and which the station's challenge must derive to. TLS server
-verification is not the control on this path; the pin is. The warning is
-expected, and the option stays so the intent is on the record.
+The callers ask for **`verify => none`, deliberately**, and the UNVERIFIED-dial
+warning that follows is macula reporting that decision rather than a problem.
+What binds a dial to the station it names is the D16 handshake pin,
+`expected_node_id`, which is required and which the station's challenge must
+derive to. TLS server verification is not the control on this path; the pin is.
+macula 11.5.0's own `macula_peering_conn:dial_opts/1` says the same: a station's
+leaf is self-signed or issued by an unrelated PKI, and the signed handshake binds
+the connection, not the certificate chain.
+
+This said `webpki` until recently, and that was safe only by accident. macula
+11.4.0's `start_dial/1` read just `alpn` and `timeout_ms` off the dial target and
+passed a literal `{verify, none}`, so the option was decorative. 11.5.0 honours
+the target's value, which would have made `webpki` a real X.509 chain check
+against the built-in public roots on every station dial. A harness that cannot
+connect measures nothing, so asking for `none` explicitly is what keeps the six
+callers able to dial once mcl-echo moves to 11.5.0. mcl_om's pool default made
+the same move for the same reason.
 
 Each session's pool holds a **single seed, its own assigned station**, never a
 shared six-seed list, and `station_discovery => #{enabled => false}` with
