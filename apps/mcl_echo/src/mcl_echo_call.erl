@@ -203,12 +203,14 @@ dial({ok, #{host := Host, expected_node_id := Pin} = Seed}, Station, Calls, Proc
 %%
 %% TWO TRAPS, from that module's own contract. The seam is per call, not
 %% per pool. And `dial_io/2' REPLACES the defaults with the given map
-%% rather than merging it: it requires every key the call needs
-%% (`call/6' asks for exactly `find_records', `find_record' and
-%% `call_station'), and refuses any key outside `dial_io()' or at the
-%% wrong arity with `function_clause' raised in the caller. So: exactly
-%% those three keys, at arities 3, 3 and 8, each delegating to the
-%% default it shadows.
+%% rather than merging it: it requires every key the call needs, and
+%% refuses any key outside `dial_io()' or at the wrong arity with
+%% `function_clause' raised in the caller. In macula 12 `call/6' asks for
+%% `find_records', `find_record', `call_station', `resolved_candidate' and
+%% `remember_resolved', at arities 3, 3, 8, 3 and 5, each delegating here to
+%% the default it shadows. 12 added the last two, and a map with only the
+%% first three crashed on its first live call while compiling clean;
+%% `mcl_echo_call_tests' now hands this map to the SDK's own check.
 -define(TRACE, mcl_echo_call_route).
 
 %% THE SEAM OWNS ITS TABLE, so it cannot be built without one. Separating
@@ -258,7 +260,23 @@ recording_dial_io() ->
                              provider    => hex(Target)}}),
               called(hex(Target),
                      macula:call_station(P, Station, Target, R, Proc, Pay, T, O))
+          end,
+      %% The pool's cache of the last candidate that answered. Recorded,
+      %% because a call that skipped the DHT is a different measurement
+      %% from one that walked it.
+      resolved_candidate =>
+          fun(P, R, Proc) ->
+              Cached = macula_client:resolved_candidate(P, R, Proc),
+              record_step({resolved_candidate, cache_state(Cached)}),
+              Cached
+          end,
+      remember_resolved =>
+          fun(P, R, Proc, Candidate, Ttl) ->
+              macula_client:remember_resolved(P, R, Proc, Candidate, Ttl)
           end}.
+
+cache_state({ok, _Candidate, _Seed}) -> hit;
+cache_state(none)                    -> miss.
 
 %% The station identity, from `Opts' where it actually rides. `unpinned'
 %% rather than a missing key: 11.x refuses an unpinned dial, so its
