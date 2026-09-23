@@ -227,6 +227,18 @@ running_otp() ->
                                                   "OTP_VERSION"])),
     string:trim(Version).
 
+%% rebar3 is a tool in the image build, pinned like the images: one release,
+%% verified by sha256. It was fetched from an S3 URL that serves whatever was
+%% published last.
+image_build_pins_rebar3_by_sha256_test() ->
+    {ok, Containerfile} = file:read_file(alongside("Containerfile")),
+    ?assertMatch({match, _},
+                 re:run(Containerfile, "releases/download/3\\.27\\.0/rebar3")),
+    ?assertMatch({match, _},
+                 re:run(Containerfile, "\\b[0-9a-f]{64}  /usr/local/bin/rebar3")),
+    ?assertNotEqual(nomatch, binary:match(Containerfile, <<"sha256sum -c -">>)),
+    ?assertEqual(nomatch, binary:match(Containerfile, <<"s3.amazonaws.com/rebar3">>)).
+
 %% Nothing names a floating image: a lint container of `erlang:28' would pass
 %% the check above only while Docker Hub happens to agree.
 lint_runs_on_no_floating_image_test() ->

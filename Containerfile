@@ -44,7 +44,12 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 ENV MACULA_FORCE_SOURCE_BUILD=1
 
-RUN curl -fsSL https://s3.amazonaws.com/rebar3/rebar3 -o /usr/local/bin/rebar3 \
+# rebar3 pinned to a release and its sha256, the same one mcl-om's scaffold
+# installs: the S3 URL this used serves whatever was published last.
+RUN curl -fsSL https://github.com/erlang/rebar3/releases/download/3.27.0/rebar3 \
+        -o /usr/local/bin/rebar3 \
+    && echo "af85aab41f9fd74bdd6341ebdf6fe9c88077aab9f8eac82371583fa02f2b0bdf  /usr/local/bin/rebar3" \
+        | sha256sum -c - \
     && chmod +x /usr/local/bin/rebar3
 
 # Dependencies resolve from rebar.config alone, so this layer survives every

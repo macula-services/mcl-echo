@@ -9,6 +9,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **The image build installs rebar3 3.27.0 verified by sha256**, the same
+  pin as mcl-om's scaffold, instead of whatever the S3 URL served last.
 - **One OTP, 28.4.3, pinned everywhere, and nothing floats.** The image built
   FROM the floating `erlang:28-alpine`, which Docker Hub moved on 2026-09-22,
   so the macula 12 deploy shipped OTP 28.5 while lint floated on `erlang:28`.
