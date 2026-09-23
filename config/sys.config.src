@@ -66,10 +66,15 @@
     %% (generated and persisted by mcl_om_identity when the path above is
     %% missing) and the pq_hybrid crypto profile every wire signature is
     %% checked under. mcl_om is a library; each service's own release
-    %% carries this pair.
+    %% carries this.
+    %%
+    %% ⚠ NO `puzzle_difficulty' HERE. macula 12 (D30) makes it one
+    %% constant for the fleet, `macula_node_keys:puzzle_difficulty()',
+    %% and REFUSES a `{macula, puzzle_difficulty, _}' setting at
+    %% application start whatever the value: a node that set one would
+    %% believe it had chosen a difficulty that nothing reads.
     {macula, [
-        {crypto_profile, pq_hybrid},
-        {puzzle_difficulty, 8}
+        {crypto_profile, pq_hybrid}
     ]},
     {kernel, [{logger_level, info}]}
 ].

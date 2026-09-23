@@ -64,6 +64,6 @@ export MCL_ECHO_HEAD
 # cd first: mise resolves .tool-versions from the working directory.
 cd "$DIR"
 exec mise exec -- erl -noshell +sbtu +A1 \
-  -macula crypto_profile pq_hybrid -macula puzzle_difficulty 8 \
+  -macula crypto_profile pq_hybrid \
   -pa "$DIR"/_build/default/lib/*/ebin \
   -run mcl_echo_call main -extra "$@"

@@ -12,6 +12,6 @@
 set -eu
 DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 exec erl -noshell +sbtu +A1 \
-  -macula crypto_profile pq_hybrid -macula puzzle_difficulty 8 \
+  -macula crypto_profile pq_hybrid \
   -pa "$DIR"/_build/default/lib/*/ebin \
   -run mcl_echo_withdraw main -extra "$@"

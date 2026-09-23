@@ -37,7 +37,7 @@ start() {
   cd "$DIR"
   MCL_BOX="$BOX_LABEL" \
     setsid sh -c "erl -noshell +sbtu +A1 \
-      -macula crypto_profile pq_hybrid -macula puzzle_difficulty 8 \
+      -macula crypto_profile pq_hybrid \
       -pa '$DIR'/app/mcl_echo/ebin -pa '$DIR'/_build/default/lib/*/ebin \
       -pa '$DIR'/_build/default/checkouts/*/ebin \
       $RUN_PATTERN" > "$LOGFILE" 2>&1 &

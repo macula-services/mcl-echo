@@ -9,6 +9,34 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **Ported to macula 12** (`{macula, "~> 12.0"}`).
+- **`verify => none` removed from every `macula_client:connect/2` call**
+  (`mcl_echo_call`, `mcl_echo_withdraw`). macula 12 refuses `verify` in any
+  value, on a seed, at `connect` and in `call_station` opts — there is one
+  verification mode, the station's own ML-DSA-87 certificate. These call
+  sites use `macula_client` directly, below the facade, so the refusal
+  reads `{error, {seeds, {verify, one_verification_mode}}}`;
+  `{error, {refused, _}}` is the same check reported by `macula:connect/2`
+  and `macula:call_station/8`. The harness
+  banner says that instead of announcing an unverified dial, and the module
+  doc keeps the 11.4/11.5 history because it explains why the option was ever
+  written down. What binds the dial is unchanged: the D16 `expected_node_id`
+  pin, still required on every seed.
+- **`-macula puzzle_difficulty 8` dropped from `scripts/mcl_echo_call`,
+  `scripts/mcl_echo_demo` and `scripts/mcl_echo_withdraw`, and
+  `{puzzle_difficulty, 8}` from `config/sys.config.src` and
+  `config/test.sys.config`.** macula 12 (D30) makes it one fleet constant and
+  raises `{bad_config, {macula, puzzle_difficulty, {not_a_setting, 8}}}` at
+  application start when it is set at all. The value is unchanged at 8 —
+  `macula_node_keys:puzzle_difficulty()` — so no run gets easier or harder.
+- `config/test.sys.config` sets `node_identity_path` so the suite uses its own
+  key file rather than the machine's single stored identity (macula 12).
+- The stale `maps:with([verify, expected_node_id, pin_tls_cert], Opts)` note in
+  `mcl_echo_call` now says what 12 actually does,
+  `maps:with([expected_node_id], Opts)`.
+
+
+
 - `scripts/mcl_echo_call` prints the whole route before it calls, not just the
   station and procedure: station host, the station node id the dial is pinned
   to, the procedure, the realm in name and tag form, this caller's own node id,

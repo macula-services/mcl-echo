@@ -34,25 +34,27 @@
 %%% the identity generated below -- fresh every run, so the six buckets
 %%% are genuinely six.
 %%%
-%%% THE UNVERIFIED-DIAL WARNING IS EXPECTED, and `verify => none' below
-%%% is a decision rather than an oversight. What binds this dial to the
-%%% station it names is the D16 handshake pin: `expected_node_id' is
-%%% required and the station's challenge must derive to the node id
-%%% dialled. TLS server verification is not the control on this path;
-%%% the pin is. macula 11.5.0's own `macula_peering_conn:dial_opts/1'
-%%% says the same -- a station's leaf is self-signed or issued by an
-%%% unrelated PKI, and the signed handshake binds the connection, not
-%%% the certificate chain.
+%%% THE UNVERIFIED-DIAL WARNING IS EXPECTED, and under macula 12 there
+%%% is nothing to ask for: `verify' is REFUSED in any value, on a seed,
+%%% at connect and in `call_station' opts. This module connects through
+%%% `macula_client' directly, BELOW the facade, so its refusal reads
+%%% `{error, {seeds, {verify, one_verification_mode}}}' --
+%%% `{refused, _}' is the tag `macula:connect/2' and
+%%% `macula:call_station/8' use for the same check. What binds
+%%% this dial to the station it names is the D16 handshake pin:
+%%% `expected_node_id' is required and the station's challenge must
+%%% derive to the node id dialled. TLS server verification is not the
+%%% control on this path; the pin is.
 %%%
-%%% THIS USED TO SAY `webpki' AND THAT WAS ONLY SAFE BY ACCIDENT.
-%%% macula 11.4.0's `start_dial/1' discarded the caller's value and
-%%% passed a literal `{verify, none}', so the option was decorative and
-%%% this harness connected regardless. 11.5.0 honours the target's
-%%% value, which would have turned `webpki' into a real X.509 chain
-%%% check against the built-in public roots on every station dial, and
-%%% a harness that cannot connect measures nothing. Asking for `none'
-%%% explicitly is what keeps the six callers able to dial at all once
-%%% mcl-echo moves to 11.5.0.
+%%% 12 VERIFIES THE STATION'S OWN ML-DSA-87 CERTIFICATE AND NOTHING
+%%% ELSE. webpki, key-pinning and no-verification are gone as modes, so
+%%% the three-way choice this harness used to make no longer exists.
+%%% The history is worth keeping because it explains why the option was
+%%% ever written down: 11.4.0's `start_dial/1' discarded the caller's
+%%% value and passed a literal `{verify, none}', making the option
+%%% decorative; 11.5.0 honoured it, which turned a stale `webpki' into a
+%%% real X.509 chain check that a station's self-signed leaf fails. One
+%%% mode removes that whole class of drift.
 %%%
 %%% The realm key below is the io.macula realm's PUBLIC half (the
 %%% realm_trust pin), not secret.
@@ -133,13 +135,11 @@ dial({ok, #{host := Host, expected_node_id := Pin} = Seed}, Station, Calls, Proc
     io:format("caller nodeid  ~ts~n", [hex(macula_node_keys:key_id(Key))]),
     io:format("payload        ~p (~p bytes local external_size, cap 4096)~n",
               [?PAYLOAD, erlang:external_size(?PAYLOAD)]),
-    io:format("tls            verify=none, asked for deliberately: an UNVERIFIED "
-              "dial warning follows and the node id pin is the control~n", []),
+    io:format("tls            one verification mode (macula 12): the station's "
+              "own ML-DSA-87 cert, and the node id pin is the control~n", []),
     {ok, Pool} = macula_client:connect(
                    [Seed],
                    #{node_identity => Key,
-                     %% Deliberate, not a default -- see the module doc.
-                     verify => none,
                      %% BOTH STATED, NEITHER DEFAULTED. One seed and
                      %% discovery off means the pool holds exactly one
                      %% entry link, the station named on the command
@@ -180,8 +180,9 @@ dial({ok, #{host := Host, expected_node_id := Pin} = Seed}, Station, Calls, Proc
 %% `macula:call_station(Pool, Station, Target, Realm, Procedure, Payload,
 %% TimeoutMs, Opts)': arg 2 is the dial URL, arg 3 is the Target, which
 %% is the PROVIDER's node id, and the station's pin rides in `Opts' --
-%% `call_station/8' does `maps:with([verify, expected_node_id,
-%% pin_tls_cert], Opts)' on its next line. So all three are recorded
+%% `macula:call_station/8' does `maps:with([expected_node_id], Opts)'
+%% (12 dropped `verify' and `pin_tls_cert' from what it keeps, and
+%% refuses both by name). So all three are recorded
 %% below, separately and by name, because an earlier version recorded
 %% only the Target and this module's own doc called it the station. It
 %% is not: `000e02b5...' is mcl-echo's provider id and names no station
