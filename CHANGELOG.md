@@ -10,6 +10,22 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 
 - **Ported to macula 12** (`{macula, "~> 12.0"}`).
+- **`{mcl_om, "~> 0.26.2"}`**, from `~> 0.2`, which still resolved hex
+  `mcl_om 0.4.0`: that version composes a `verify` option macula 12 refuses,
+  so the service could not start its connection pool. 0.26.2 is the floor
+  because it refuses to run on an identity key it could not save.
+- **`deploy/docker-compose.yml` mounts the identity volume**, named
+  `mcl-echo_mcl_echo_secrets` at `/etc/mcl/secrets`, which is what beam00
+  already runs. The file mounted nothing there, so a deploy from it would
+  have minted a new node id on every recreate.
+
+### Added
+
+- `mcl_echo_pool_through_mcl_om_tests`: boots mcl_om as this repository
+  resolves it and asserts the pool starts. The rest of the suite never starts
+  one, so it passed 24/24 against the mcl_om 0.4.0 + macula 12 pairing that
+  cannot connect; this test fails on that pairing with
+  `{refused, {verify, one_verification_mode}}`.
 - **`verify => none` removed from every `macula_client:connect/2` call**
   (`mcl_echo_call`, `mcl_echo_withdraw`). macula 12 refuses `verify` in any
   value, on a seed, at `connect` and in `call_station` opts — there is one
