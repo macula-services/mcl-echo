@@ -19,8 +19,8 @@ this node's D25 delegation after admission.
 
 `mcl_om_capabilities` registers the org-qualified procedure and nothing else.
 The bare `io.macula.echo` literal every 10.x quickstart hardcodes is **not**
-advertised here. It keeps working on the classical fleet (hecate-echo), which
-is a separate deployment.
+advertised here, and nothing on the fleet answers it any more: callers use the
+org-qualified `mcl-echo/echo`.
 
 Before advertising, `mcl_echo_service:capabilities/0` asserts that both values
 are configured and well formed: the realm tag is a 32-byte binary, and the org

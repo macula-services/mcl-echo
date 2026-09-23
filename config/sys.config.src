@@ -24,10 +24,11 @@
         %% and is independent of the org now (the old sha256(org)
         %% realm-name-org convention is gone).
         {org,               <<"${MCL_ORG}">>},
-        %% Informational labels the realm's operator sees on this
-        %% service's provider-authorization row (never trusted).
-        {service_name,      <<"${MCL_SERVICE_NAME}">>},
-        {box,               <<"${MCL_BOX}">>},
+        %% The labels on this service's provider-authorization row
+        %% (service_name, box) are NOT set here: mcl_om 0.27 reads
+        %% MCL_SERVICE_NAME and MCL_BOX from the environment itself and falls
+        %% back to the service's own name. An app env entry would win over
+        %% both, including as an empty string when the variable is unset.
         %% THE REALM IS AN APPLICATION ENV, NOT A SHELL VARIABLE, and this file
         %% is the only place the two meet. mcl_om_identity:realm() reads
         %% application:get_env(mcl_om, realm); exporting MCL_REALM in the

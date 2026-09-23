@@ -13,7 +13,7 @@
 #
 # This template said 27 from the beginning and nothing revisited it, so every
 # service scaffolded from it inherited 27 while development machines moved on.
-# In `hecate-biotope' that cost three commits of red CI on a crash that does not
+# In a sibling service that cost three commits of red CI on a crash that does not
 # occur on the development release at all, and because `build-push.yml' is a
 # separate workflow the image shipped to the fleet regardless.
 # ⚠ PINNED BY TAG AND DIGEST. `erlang:28-alpine' floats, and when Docker Hub

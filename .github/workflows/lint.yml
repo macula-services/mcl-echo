@@ -55,7 +55,7 @@ jobs:
       # snappy) can't actually open: `db_open' fails with "The specified
       # blob compression type Snappy is not available." Hit for real in
       # mcl_om's own CI (see its lint-and-test.yml for the incident) and
-      # again in hecate-stations, the first scaffolded service to actually
+      # again in the station directory, the first scaffolded service to actually
       # exercise read_model_id/0 in CI -- install all four, not just
       # whichever one happened to be exercised first.
       # The image carries cmake, a C toolchain and Rust; only the codec libs

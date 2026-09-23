@@ -61,7 +61,7 @@ on:
 # :latest; without this, three quick commits run three builds that finish in
 # whatever order the runners please, and :latest ends up being whichever
 # finished LAST, not whichever was pushed last -- watchtower then rolls the
-# fleet onto an older commit and flaps. hecate-rag hit exactly that live.
+# fleet onto an older commit and flaps. A sibling service hit exactly that live.
 concurrency:
   group: build-and-push-${{ github.ref }}
   cancel-in-progress: true

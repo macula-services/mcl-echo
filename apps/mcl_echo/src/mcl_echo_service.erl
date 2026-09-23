@@ -33,8 +33,8 @@ health() -> ok.
 %% after the repo -- this fleet deploys org `mcl-echo' under the
 %% io.macula realm, and the realm issues the D25 delegation for this
 %% node after admission. The bare `io.macula.echo' literal every 10.x
-%% quickstart hardcodes keeps working on the CLASSICAL fleet
-%% (hecate-echo, untouched); PQ callers use the org-qualified name.
+%% quickstart hardcodes is not advertised, and nothing on the fleet
+%% answers it any more; callers use the org-qualified name.
 %%
 %% `mcl_om_capabilities' resolves ONE realm and ONE org for the whole
 %% batch, from this node's own live identity. A realm mismatch between

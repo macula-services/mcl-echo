@@ -33,7 +33,7 @@ echoes_a_bare_text_payload_unchanged() ->
     %% Exactly the shape every SDK quickstart sends: `Value::Text("hello")'
     %% roundtrips through macula_cbor_nif as a bare Erlang binary (see
     %% macula_cbor_nif_tests's own binary_roundtrip_test/0 -- the
-    %% `{text, Bin}' tagging some other hecate-* services see is applied
+    %% `{text, Bin}' tagging some other services see is applied
     %% by THEIR OWN wire_in/1-style processing of nested map values, not
     %% by the platform for a bare top-level payload).
     Payload = <<"hello">>,

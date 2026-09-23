@@ -204,7 +204,7 @@ run_scratch() ->
     %% Boot the real application on the test realm/org. The om's env is
     %% set on the LOADED mcl_om app (set_env on an unloaded app is a
     %% silent no-op, and the health listener would bind its default
-    %% port, 8470, which this box's hecate-rag dev container owns).
+    %% port, 8470, which another service on this box may already hold).
     application:load(mcl_om),
     application:set_env(mcl_om, health_port, 0),
     application:set_env(mcl_om, identity_key_path, KeyPath),
