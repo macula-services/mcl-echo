@@ -16,7 +16,14 @@
 # In `hecate-biotope' that cost three commits of red CI on a crash that does not
 # occur on the development release at all, and because `build-push.yml' is a
 # separate workflow the image shipped to the fleet regardless.
-FROM docker.io/erlang:28-alpine AS builder
+# ⚠ PINNED BY TAG AND DIGEST. `erlang:28-alpine' floats, and when Docker Hub
+# moved it on 2026-09-22 the next deploy shipped OTP 28.5 while lint tested
+# something else. 28.4.3 is the team standard; the digest is the multi-arch
+# index, so a re-pushed tag cannot change what builds. hexpm's image, because
+# Docker's own `erlang' publishes no 28.4.3; Alpine 3.22.6, the same release as
+# the runtime stage below, whose OpenSSL 3.5 carries ML-DSA. Move both on
+# purpose, never by drift.
+FROM docker.io/hexpm/erlang:28.4.3-alpine-3.22.6@sha256:3815b99f486c2509baf556045bca0c5fc1c3ee50fb50a80590534f22cb48736c AS builder
 WORKDIR /build
 
 # macula ships a QUIC NIF. MACULA_FORCE_SOURCE_BUILD makes it build here rather

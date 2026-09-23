@@ -9,6 +9,25 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **One OTP, 28.4.3, pinned everywhere, and nothing floats.** The image built
+  FROM the floating `erlang:28-alpine`, which Docker Hub moved on 2026-09-22,
+  so the macula 12 deploy shipped OTP 28.5 while lint floated on `erlang:28`.
+  The builder is `hexpm/erlang:28.4.3-alpine-3.22.6` pinned by digest (the
+  same Alpine as the runtime stage), lint runs in
+  `macula-ci-otp:20260923-1347` pinned by digest with a first step that
+  refuses anything but 28.4.3 with mldsa87, and `.tool-versions` says 28.4.3.
+  The runtime guard in `mcl_echo_service_tests` compares full releases now,
+  not majors (it passed on 28 vs 28.5), and requires both digests.
+- `{mcl_om, "~> 0.26.3"}`: /health reports the D25 provider grant for
+  `mcl-echo/echo`, degraded when it is missing.
+
+### Fixed
+
+- **`scripts/mcl_echo_call` works on macula 12.** 12's `call/6` requires
+  `resolved_candidate` and `remember_resolved` in a given `dial_io`, and the
+  caller's map had three keys, so it crashed with `function_clause` on its
+  first live call. `mcl_echo_call_tests` hands the map to the SDK's own check.
+
 - **Ported to macula 12** (`{macula, "~> 12.0"}`).
 - **`{mcl_om, "~> 0.26.2"}`**, from `~> 0.2`, which still resolved hex
   `mcl_om 0.4.0`: that version composes a `verify` option macula 12 refuses,

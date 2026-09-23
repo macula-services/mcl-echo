@@ -1,4 +1,4 @@
-# Structural lint and unit tests. Runs on the glibc erlang image, where macula
+# Structural lint and unit tests. Runs on the glibc macula-ci-otp image, where macula
 # resolves a prebuilt QUIC NIF -- but macula_cbor_nif (and the crypto/ucan/did/
 # mri NIFs beside it) have no such fallback and ALWAYS build from source, so a
 # Rust toolchain is needed here too or `rebar3 compile' fails in the
@@ -19,10 +19,27 @@ jobs:
   check:
     runs-on: ubuntu-latest
     container:
-      # ⚠ MUST MATCH THE `Containerfile' beside it. See the note there.
-      image: erlang:28
+      # ⚠ MUST MATCH THE `Containerfile' beside it: OTP 28.4.3. This said
+      # `erlang:28', which floats, as did the Containerfile, and the deploy
+      # after Docker Hub moved them shipped 28.5. The dated macula-ci-otp tag
+      # is macula-io/macula-ci-images' build (OTP 28.4.3, an OpenSSL with
+      # ML-DSA, rebar3, Rust, cmake); the step below refuses anything else.
+      # mcl_echo_runtime_pin_tests guards both pins.
+      image: ghcr.io/macula-io/macula-ci-otp:20260923-1347@sha256:b2260d084a3d3c5e0b74932c4ee052a0cadfddddb6587d5d2214873e6bb06330
     steps:
       - uses: actions/checkout@v4
+      - name: Verify the toolchain is the one we think it is
+        run: |
+          openssl version
+          rebar3 version
+          erl -noshell -eval '
+            Otp = string:trim(element(2, file:read_file(filename:join([code:root_dir(), "releases", erlang:system_info(otp_release), "OTP_VERSION"])))),
+            Mldsa = lists:member(mldsa87, crypto:supports(public_keys)),
+            io:format("OTP ~s, mldsa87 ~p~n", [Otp, Mldsa]),
+            case {Otp, Mldsa} of
+                {<<"28.4.3">>, true} -> halt(0);
+                _                    -> halt(1)
+            end.'
       # cmake, build-essential: mcl_om pulls in rocksdb (via barrel_docdb)
       # and khepri/ra transitively, UNCONDITIONALLY -- needed even for a
       # storeless, producer-only service. libssl-dev is not listed because
@@ -41,11 +58,8 @@ jobs:
       # again in hecate-stations, the first scaffolded service to actually
       # exercise read_model_id/0 in CI -- install all four, not just
       # whichever one happened to be exercised first.
-      - run: apt-get update && apt-get install -y --no-install-recommends cmake build-essential libsnappy-dev liblz4-dev libzstd-dev libbz2-dev curl
-      - name: Install Rust toolchain
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-            | sh -s -- -y --default-toolchain stable --profile minimal
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      # The image carries cmake, a C toolchain and Rust; only the codec libs
+      # are missing.
+      - run: apt-get update && apt-get install -y --no-install-recommends libsnappy-dev liblz4-dev libzstd-dev libbz2-dev
       - run: rebar3 lint
       - run: rebar3 eunit

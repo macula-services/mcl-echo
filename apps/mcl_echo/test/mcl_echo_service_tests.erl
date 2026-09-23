@@ -202,18 +202,43 @@ supervisor_starts_and_stops_test() ->
 %% Developing on a release you do not ship makes a green suite mean less than it
 %% appears to. If you want to work on another release, move both pins and find
 %% out what breaks, which is the whole point of having them.
+%%
+%% ⚠ TO THE PATCH, AND NOTHING FLOATS. This compared majors only, so when Docker
+%% Hub moved the floating `erlang:28-alpine' on 2026-09-22 the next deploy
+%% shipped OTP 28.5 and this stayed green. It compares the full release now:
+%% the builder's (which must also carry a digest, so a re-pushed tag cannot
+%% change what builds), the release lint's toolchain step insists on (its image
+%% tag carries a date, not a version), .tool-versions, and this VM.
 the_runtime_agrees_between_the_image_the_ci_and_this_vm_test() ->
-    Image = pinned("Containerfile", "FROM docker.io/erlang:([0-9]+)"),
-    Ci = pinned(".github/workflows/lint.yml", "image: erlang:([0-9]+)"),
-    Running = list_to_binary(erlang:system_info(otp_release)),
-    %% Sorted and deduplicated, so a failure prints all three rather than the
-    %% first pair that happened to be compared.
-    ?assertEqual([Image], lists:usort([Image, Ci, Running])).
+    Image = pinned("Containerfile",
+                   "^FROM docker\\.io/(?:hexpm/)?erlang:([0-9]+\\.[0-9]+\\.[0-9]+)"
+                   "-alpine[^@\\s]*@sha256:[0-9a-f]{64} AS builder$"),
+    Ci = pinned(".github/workflows/lint.yml",
+                "\\{<<\"([0-9]+\\.[0-9]+\\.[0-9]+)\">>, true\\} -> halt\\(0\\);"),
+    Tools = pinned(".tool-versions", "^erlang ([0-9]+\\.[0-9]+\\.[0-9]+)$"),
+    %% Sorted and deduplicated, so a failure prints every version rather than
+    %% the first pair that happened to be compared.
+    ?assertEqual([Image], lists:usort([Image, Ci, Tools, running_otp()])).
+
+%% The full release, 28.4.3 and not 28: `otp_release' names only the major.
+running_otp() ->
+    {ok, Version} = file:read_file(filename:join([code:root_dir(), "releases",
+                                                  erlang:system_info(otp_release),
+                                                  "OTP_VERSION"])),
+    string:trim(Version).
+
+%% Nothing names a floating image: a lint container of `erlang:28' would pass
+%% the check above only while Docker Hub happens to agree.
+lint_runs_on_no_floating_image_test() ->
+    {ok, Lint} = file:read_file(alongside(".github/workflows/lint.yml")),
+    ?assertMatch({match, _},
+                 re:run(Lint, "image: ghcr\\.io/macula-io/macula-ci-otp:[0-9]{8}-[0-9]{4}@sha256:[0-9a-f]{64}$",
+                        [multiline])).
 
 pinned(Relative, Pattern) ->
     {ok, Text} = file:read_file(alongside(Relative)),
     {match, [Version]} = re:run(Text, Pattern,
-                                [{capture, all_but_first, binary}]),
+                                [multiline, {capture, all_but_first, binary}]),
     Version.
 
 %% Relative to the beam rather than the working directory, because eunit runs
