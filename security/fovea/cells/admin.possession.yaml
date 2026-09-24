@@ -1,14 +1,18 @@
 id: admin.possession
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Possession of the only carry-awayable asset (the identity key volume) is
+  assessed in decommission.possession; an administrator is just the most
+  convenient thief of it, and no administrative mechanism in this repo
+  changes that story — host-level access control is the operator's domain
+  (out of scope). A separate admin.possession cell would restate
+  decommission.possession with a different actor and no new defense.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see decommission.possession."

@@ -1,14 +1,37 @@
 id: external.authenticity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    An outside party presents itself on the mesh as someone it is not: a
+    caller impersonating a legitimate peer, or a provider advertising a
+    capability under a name the fleet trusts.
+  manifestations:
+    - A forged caller identity harvesting the per-caller rate-limit buckets reserved for real callers.
+    - A rogue advertisement for mcl-echo/echo resolved by a caller that trusts the wrong endpoint.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        The caller node id is wire-authenticated by the platform: the
+        station link merges the verified caller into the payload
+        (with_caller/2), so an outside party cannot pick its caller
+        identity.
+      status: by_design
+      source: README.md "A caller is only attributable when the payload is a map"; macula_station_link:with_caller/2
+    - measure: >-
+        Callers resolve org-scoped advertisements only against the realm's
+        pinned signing key — an advertisement that does not verify is
+        refused as no_trusted_advertisement.
+      status: by_design
+      source: README.md "MCL_REALM_KEY"; config/sys.config.src ({realm_key, ...})
+  countermeasures:
+    - measure: "The D16 handshake pin (expected_node_id) binds a dial to the station it names; TLS verification is deliberately not the control, the pin is."
+      status: by_design
+      source: README.md "What binds a dial to the station it names is the D16 handshake pin"
+  recovery:
+    - measure: "Re-pin the seed pair; the six-pin table carries host and node id together so a wrong endpoint is correctable by name and id."
+      status: by_design
+      source: mcl_echo_stations.erl; README.md "The 11.x dial is pinned (D5)"
+notes: >-
+  Impersonation at the caller level is structurally priced: identity comes
+  from the wire, not from a claim in the payload.

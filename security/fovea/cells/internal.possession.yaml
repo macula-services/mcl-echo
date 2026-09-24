@@ -1,14 +1,17 @@
 id: internal.possession
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  An insider carrying the identity key away is decommission.possession with
+  a friendlier attacker; the service-local mechanism (volume = identity,
+  deletion = retirement) is identical and already assessed there. No
+  internal-actor-specific defense exists in this repo to record, so the
+  cell would be a duplicate.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see decommission.possession."

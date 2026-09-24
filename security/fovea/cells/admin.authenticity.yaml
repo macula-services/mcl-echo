@@ -1,14 +1,42 @@
 id: admin.authenticity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A trust-relevant administrative change is made falsely: the node is
+    pointed at a different realm or org, a wrong station pin is installed,
+    or a key is swapped — and the node runs advertising an identity the
+    operators did not intend.
+  manifestations:
+    - "Deploy-time config drift: wrong MCL_REALM tag or MCL_REALM_KEY hex on the host."
+    - A stale seed pair that silently dials a station other than the one the org means to trust.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        The node crashes at boot rather than running drifted: both org and
+        realm values are checked for well-formedness before any
+        advertisement exists.
+      status: by_design
+      source: README.md "Both checks crash the node at boot rather than letting it drift"
+    - measure: >-
+        mcl_om refuses to boot a pool with an unpinned seed, so a station
+        pin cannot be dropped or mismatched silently (D5).
+      status: by_design
+      source: README.md "mcl_om refuses to boot a pool with an unpinned seed"
+  countermeasures:
+    - measure: >-
+        The org is a literal in config/sys.config.src, not an environment
+        variable: changing the advertised identity is a repository change,
+        reviewable, not a host setting.
+      status: by_design
+      source: config/sys.config.src ({org, <<"mcl-echo">>})
+    - measure: "Realm and realm_key are separated in config: an identifier and a trust anchor, and the node refuses to resolve org-scoped advertisements without the key."
+      status: by_design
+      source: config/sys.config.src ({realm, ...}, {realm_key, ...})
+  recovery:
+    - measure: "Fix the config and redeploy — a node that crashed never advertised a false identity, so nothing needs revocation."
+      status: by_design
+      source: README.md "Crashing is the loud version of the exact bug this service exists to stop"
+notes: >-
+  Administration here is the deploy operator's config surface; the realm-side
+  half of the D25 lifecycle is out of scope (macula-realm's own fovea).

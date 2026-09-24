@@ -1,14 +1,38 @@
 id: internal.integrity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    An insider's change — intentional or mistaken — corrupts the service's
+    behaviour: a weakened guard, a dropped profile block, a removed pin —
+    and the fleet keeps calling the node as if it were the service it used
+    to be.
+  manifestations:
+    - A merge that removes the pq_hybrid profile block, leaving the node unable to peer but still booting.
+    - A config edit that drops the realm_key and lets the node run green and unreachable.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        The info test asserts the mcl_om × macula pairing floor at runtime;
+        a change that resolves a wrong pairing fails the build.
+      status: by_design
+      source: CHANGELOG.md "mcl_echo_info_tests"; rebar.config
+    - measure: "The crypto profile block is mandatory config; without it the node does not peer (handshake closes), so a removed block is loud at connect time."
+      status: by_design
+      source: config/sys.config.src (THE PQ CRYPTO PROFILE block)
+    - measure: "mcl_om refuses to boot a pool without the realm_key — the green-and-unreachable failure mode is structurally blocked."
+      status: by_design
+      source: README.md "MCL_REALM_KEY"; config/sys.config.src
+  countermeasures:
+    - measure: "warnings_as_errors and the mcl_min elvis ruleset make structural drift a CI failure, not a review request."
+      status: by_design
+      source: rebar.config
+    - measure: "Review gate on merges is the human countermeasure."
+      status: org
+  recovery:
+    - measure: "Revert + redeploy via the semver rollback channel."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  Same residue as internal.authenticity: a reviewer who is the attacker is
+  out of this cell's reach — that is the trust-anchor register's business.

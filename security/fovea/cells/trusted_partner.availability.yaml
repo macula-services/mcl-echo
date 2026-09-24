@@ -1,14 +1,33 @@
 id: trusted_partner.availability
-status: unassessed
-owner: unassigned
+status: assumed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A partner the pipeline depends on is unavailable: the hex registry or
+    the image registry is down, and the service cannot be rebuilt or
+    redeployed when it needs to be.
+  manifestations:
+    - A hex outage blocking a rebuild while a fix is waiting to ship.
+    - A GHCR outage or package-privatization error breaking the pull on the deploy host.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "CI fails visibly at build/pull time; the failure is a red pipeline, not a silent host."
+      status: by_design
+      source: README.md "Deployment"
+  countermeasures:
+    - measure: >-
+        A running node does not need the registries: restart policy and the
+        already-pulled image keep the service up through an upstream
+        outage; only rebuild/redeploy is blocked.
+      status: by_design
+      source: "deploy/docker-compose.yml (restart: unless-stopped)"
+    - measure: "Registry mirroring or a cache is the operator's resilience posture."
+      status: org
+  recovery:
+    - measure: "Pin the previous semver tag; a rollback needs only what the host already pulled."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  Assumed: the claim that the host keeps a pullable copy is the operator's
+  to verify. The service-side property is real but narrow — it survives an
+  outage, it does not ship through one.

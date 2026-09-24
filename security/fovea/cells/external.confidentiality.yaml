@@ -1,14 +1,36 @@
 id: external.confidentiality
-status: unassessed
-owner: unassigned
+status: assumed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    An outside observer learns deployment facts by watching the public mesh:
+    which node is mcl-echo, where it runs, and which callers contact it and
+    when — the traffic-pattern half of confidentiality, distinct from
+    payload reading.
+  manifestations:
+    - Correlation of dials to the six pinned stations to locate the node's operator.
+    - Call-pattern observation that maps usage habits of the quickstart fleet.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "Observers on the wire are not detectable by the service; detection is the fleet operator's monitoring job."
+      status: org
+  countermeasures:
+    - measure: >-
+        The payload carries no secrets and the echo is public by design
+        (auth => open): the observer learns usage patterns, not content —
+        the confidentiality surface is bounded to metadata by construction.
+      status: by_design
+      source: README.md "It asks the realm for no authority beyond its own scope"
+    - measure: >-
+        Callers dial through one of six pinned stations; the pattern is
+        spread by caller choice, not concentrated at one hub the service
+        controls.
+      status: by_design
+      source: mcl_echo_stations.erl; README.md "The six-caller fan-out"
+  recovery:
+    - measure: "Rotate the seed pin set if a specific station is judged correlated; the pins are deploy config, not code."
+      status: org
+notes: >-
+  Assumed: the by_design claims rest on the service's own public-payload
+  documentation. Metadata resistance is partial by design — this cell says
+  so rather than claiming invisibility.

@@ -1,14 +1,33 @@
 id: machine_agent.availability
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    Automated mass traffic — botnets, scrapers, worms — exhausts the
+    handler's buckets and the global limit, denying the human callers
+    behind their own caller identities.
+  manifestations:
+    - A botnet holding the 300-per-10s global cap so every legitimate quickstart is refused.
+    - Scrapers cycling payloads to burn through the per-caller allowance.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "rate_limited and payload_too_large replies name the event; the caller-side banner shows which bucket was hit."
+      status: by_design
+      source: README.md "Two guards apply"; README.md "Everything the run depends on is printed"
+  countermeasures:
+    - measure: >-
+        The limiter is identity-keyed: 20/10s per wire-authenticated caller
+        node id, 300/10s global — mass traffic is bounded per identity and
+        in aggregate.
+      status: by_design
+      source: README.md "Fixed-window rate limit (mcl_echo_limiter)"; apps/mcl_echo/src/mcl_echo_limiter.erl
+    - measure: "The payload cap bounds the handler's worst-case memory per call, so amplification via oversized frames is cut at the edge."
+      status: by_design
+      source: README.md "Payload cap, 4096 bytes"
+  recovery:
+    - measure: "The window self-clears; service returns to honest callers when the flood stops."
+      status: by_design
+      source: apps/mcl_echo/src/mcl_echo_limiter.erl
+notes: >-
+  The mesh-level flood (saturating stations) is out of scope; this is the
+  service's own edge, and it is bounded by identity rather than by luck.

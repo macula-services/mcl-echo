@@ -1,14 +1,17 @@
 id: external.possession
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Possession is a physical-domain event; the actor column 'external' models
+  network adversaries. An outside party physically taking the node or its
+  volume is the decommission.possession threat with a different attacker,
+  and the service-local mechanism (volume = identity, deletion =
+  retirement) is unchanged. Duplication with no new defense.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see decommission.possession."

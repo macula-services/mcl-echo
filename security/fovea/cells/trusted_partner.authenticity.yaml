@@ -1,14 +1,36 @@
 id: trusted_partner.authenticity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A trusted dependency behaves in the running node differently from what
+    its release claims — drift between what mcl_om, macula, or the OTP
+    runtime shipped and what actually runs, in a way the vendor's own
+    manifest would not predict.
+  manifestations:
+    - A resolved version pair that runs but does not match the release the vendor published together.
+    - An OTP VM that boots but is not the pinned 28.4.3 the image was built with.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        The info test round-trips the capability through macula's codec and
+        fails unless it reports mcl_om 0.28 with macula 12.2 together — the
+        runtime pairing is asserted, not assumed.
+      status: by_design
+      source: CHANGELOG.md "mcl_echo_info_tests"; rebar.config
+    - measure: >-
+        The runtime guard compares full releases and requires both digests;
+        a swapped VM fails boot instead of drifting.
+      status: by_design
+      source: CHANGELOG.md "the runtime guard compares full releases now, not majors"
+  countermeasures:
+    - measure: "Dependency floors are declared in rebar.config and enforced by tests, so the runtime claim is pinned to a reviewed requirement."
+      status: by_design
+      source: rebar.config ({mcl_om, "~> 0.28"}, {macula, "~> 12.2"})
+  recovery:
+    - measure: "Re-pin and redeploy via the rollback channel; the failing pairing is named by the test output."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  Runtime verification is the countermeasure class acquire.authenticity
+  cannot provide: locks at build time, assertions at run time.

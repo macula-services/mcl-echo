@@ -1,14 +1,18 @@
 id: internal.confidentiality
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  An insider with host access can read the identity key, but that reading is
+  the same event as possession — the key is the only secret — and the
+  defense is host-level access control, which is out of scope (org). The
+  distinct confidentiality story for the one secret is
+  at_rest.confidentiality; an internal-actor cell would duplicate it with
+  the same mechanism and a different shirt on the attacker.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see at_rest.confidentiality."

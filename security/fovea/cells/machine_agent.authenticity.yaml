@@ -1,14 +1,36 @@
 id: machine_agent.authenticity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    Automated actors mint many throwaway caller identities to multiply
+    their rate-limit allowance or to drown attribution in churn.
+  manifestations:
+    - A bot re-minting a fresh node id per run to get six fresh 20-per-10s buckets instead of one.
+    - A scripted caller cycling identities faster than the operator can read them.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        The caller node id is wire-authenticated, not self-asserted: the
+        platform merges the verified caller, so an identity is only as
+        useful as the admission it passed.
+      status: by_design
+      source: README.md "A caller is only attributable when the payload is a map"
+  countermeasures:
+    - measure: >-
+        Identity minting has a cost: the caller node id is the rate-limit
+        key precisely because it is the one stable credential the mesh
+        verified — churn buys new buckets at the price of a new admission
+        per identity, and the global cap does not reset.
+      status: by_design
+      source: README.md "The caller node id is minted fresh every run and is the rate-limit key"
+    - measure: "The 300/10s global limit bounds the aggregate regardless of how many identities the bots mint."
+      status: by_design
+      source: README.md "20 calls per caller, 300 globally"
+  recovery:
+    - measure: "Window expiry restores honest service; no state needs cleanup."
+      status: by_design
+      source: apps/mcl_echo/src/mcl_echo_limiter.erl
+notes: >-
+  Honest limit: churn still buys a fresh per-caller bucket per new identity;
+  the global cap is the backstop, and it is the thing that holds.

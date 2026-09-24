@@ -1,14 +1,17 @@
 id: trusted_partner.possession
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Vendors never hold the one carry-awayable asset — the identity key — by
+  design: it is generated on the node into the mounted volume and never
+  leaves it. The realm signing key is public. Possession is a
+  physical/host-domain threat assessed in decommission.possession with no
+  partner-specific surface.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see decommission.possession, at_rest.confidentiality."

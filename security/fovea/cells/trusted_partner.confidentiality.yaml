@@ -1,14 +1,18 @@
 id: trusted_partner.confidentiality
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  The service holds no application data and no secrets a vendor could
+  observe; the realm key is public, the org is public, and the echo is
+  public by design. A vendor of mcl_om, macula, or the registry can observe
+  nothing about this service that an external observer cannot — the
+  confidentiality surface is bounded by external.confidentiality, with no
+  partner-specific mechanism to add.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see external.confidentiality."

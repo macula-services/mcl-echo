@@ -1,14 +1,37 @@
 id: admin.accountability
-status: unassessed
-owner: unassigned
+status: assumed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A change to how the node is configured or deployed is later
+    unattributable — nobody can say who changed the seed pin, the realm
+    value, or the deploy target, or when.
+  manifestations:
+    - A host-level env override applied outside the repo, invisible to history.
+    - A redeploy that changes behaviour with no record of who triggered it.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        Config changes are repository changes; the org/realm/realm_key all
+        live in sys.config.src and compose, so git history is the change
+        record.
+      status: by_design
+      source: config/sys.config.src; deploy/docker-compose.yml
+    - measure: >-
+        The image is labelled with the commit it was built from
+        (org.opencontainers.image.source), so the running artifact names the
+        repository state it came from.
+      status: by_design
+      source: 'CHANGELOG.md "build: the image is labelled with the commit it was built from"'
+  countermeasures:
+    - measure: "Host-level actions (who has deploy access, who edits env on the box) are the operator's audit domain — not enforceable from inside the container."
+      status: org
+  recovery:
+    - measure: "Pin the previous tag; the changelog discipline (Keep a Changelog, semantic versions) makes every behavioural change a named entry."
+      status: by_design
+      source: CHANGELOG.md header
+notes: >-
+  Assumed: the by_design claims cite the repo's structure, but no access
+  control (CODEOWNERS, protected branches) is asserted here — that is the
+  org's to prove. The service inherits attribution from git; it does not
+  add its own.

@@ -1,14 +1,16 @@
 id: machine_agent.integrity
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Automated tampering with echo traffic or advertisements is the same
+  wire-level threat as external.integrity: signed frames and realm-key
+  verification resist it identically whether the attacker is a script or a
+  person. No distinct mechanism exists to record.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see external.integrity."

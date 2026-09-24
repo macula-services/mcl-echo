@@ -1,14 +1,39 @@
 id: admin.integrity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    An administrative change corrupts what the service is configured to be:
+    a half-written realm, an unexpanded variable, or a malformed term that
+    would make the node run in a state that misrepresents the service.
+  manifestations:
+    - A ${VAR} that never resolves at relx substitution time, leaving a malformed term.
+    - The org placeholder (_) surviving into runtime because nothing set it.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        Every ${VAR} must resolve or the node will not start with a
+        malformed term — the config file is the only place shell and app env
+        meet, so a half-configured node fails loudly at boot.
+      status: by_design
+      source: config/sys.config.src header comment; README.md "MCL_REALM"
+    - measure: >-
+        capabilities/0 asserts the org is a valid wire segment and not the
+        _ placeholder before advertising; it crashes the node rather than
+        announcing an unnameable provider.
+      status: by_design
+      source: README.md "Before advertising, mcl_echo_service:capabilities/0 asserts that both values are configured and well formed"
+  countermeasures:
+    - measure: "Compose carries what the service knows about itself; placement lives elsewhere — the split stops a config table in a README drifting from the real environment."
+      status: by_design
+      source: deploy/docker-compose.yml header comment
+    - measure: "Configuration changes are repository changes (sys.config.src), reviewable in the same PR flow as code."
+      status: by_design
+      source: config/sys.config.src
+  recovery:
+    - measure: "Rollback channel: pin the previous semver image; config is shipped inside the release, so the rollback carries the known-good config."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  Crash-loudness appears again, for integrity this time: a node that boots
+  with drift never serves; a node that boots cleanly matches its repo.

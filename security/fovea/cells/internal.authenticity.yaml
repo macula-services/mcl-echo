@@ -1,14 +1,41 @@
 id: internal.authenticity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A person with legitimate inside access (a deploy operator) makes the
+    node claim an identity the organization did not approve — a different
+    org, a different realm — and the fleet attributes it as this service
+    anyway.
+  manifestations:
+    - An operator edits the org literal in config and redeploys, silently re-announcing the service under a new wire name.
+    - A rogue or erroneous deploy points the node at a foreign realm tag whose key the org does not control.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        The org is a literal in the repository, not host state: changing the
+        claimed identity is a reviewed repository change, not an
+        environment variable on a box.
+      status: by_design
+      source: config/sys.config.src ({org, <<"mcl-echo">>}); README.md "the org is a literal, not ${MCL_ORG}"
+    - measure: >-
+        The node refuses to resolve org-scoped advertisements against a
+        realm it has no key for, and mcl_om ≥ 0.3.0 refuses to start a pool
+        without the realm key — an unreachable identity cannot be claimed
+        quietly.
+      status: by_design
+      source: config/sys.config.src ({realm_key, ...}); README.md "MCL_REALM_KEY"
+  countermeasures:
+    - measure: "The realm tag is sha256 of the realm name and independent of the org; both are pinned in the same reviewed file, so a drift is a diff, not a typo in shell history."
+      status: by_design
+      source: config/sys.config.src header comment
+    - measure: "Deploy access control (who may push to main / trigger deploy) is the operator's obligation."
+      status: org
+  recovery:
+    - measure: "A node advertising a wrong identity is fixed by reverting the config change — one commit, redeploy, done; the wire name returns to mcl-echo/echo."
+      status: by_design
+      source: README.md "Calling it"
+notes: >-
+  The core defense is that identity is code, and code is reviewed. The
+  residual: an insider who can merge and deploy can do anything — that
+  collapses into trust anchor #3 (pipeline) and is recorded there, not here.

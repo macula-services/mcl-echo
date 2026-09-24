@@ -1,14 +1,34 @@
 id: admin.availability
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    An administrative action takes the service down: a mistyped realm tag, a
+    wrong seed pair, or a port collision the deploy did not notice — and the
+    outage looks like a healthy node because nothing names the cause.
+  manifestations:
+    - A half-configured realm that announces itself where nobody can attribute it, which looks exactly like a healthy node.
+    - A silent bind failure on 8461 when host networking meets an already-bound port.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "/health on 8461 is the liveness probe; a node that crashed at boot or failed its bind is red on health, not green."
+      status: by_design
+      source: README.md "MCL_HEALTH_PORT"; deploy/docker-compose.yml
+    - measure: >-
+        The compose file names host networking as required and warns that a
+        bridged container connects to nothing (IPv6-only fleet) — the silent
+        failure modes are documented, not discovered.
+      status: by_design
+      source: deploy/docker-compose.yml ("HOST NETWORKING IS NOT LAZINESS")
+  countermeasures:
+    - measure: "restart: unless-stopped restarts a dead node; a config-crash loops until fixed, which is the loud version of the bug, not the quiet one."
+      status: by_design
+      source: deploy/docker-compose.yml
+  recovery:
+    - measure: "Pin to the previous semver tag: rollback is an image pin, config included."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  The honest cost of the crash-loudness policy is priced here: misconfig
+  means down, deliberately. Availability is traded for authenticity and
+  integrity on every boot — this cell records that trade as chosen.

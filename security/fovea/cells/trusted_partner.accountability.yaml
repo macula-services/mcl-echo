@@ -1,14 +1,17 @@
 id: trusted_partner.accountability
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Attribution of third-party artifacts (what vendor, what version, what
+  provenance) is the acquire/deliver accountability terrain; this repo's
+  contribution is the build-commit label, already assessed in
+  deliver.authenticity and internal.accountability. No partner-specific
+  mechanism exists in the service itself.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see acquire.authenticity, deliver.authenticity."

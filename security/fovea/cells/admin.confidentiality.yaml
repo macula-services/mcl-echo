@@ -1,14 +1,19 @@
 id: admin.confidentiality
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  The administrative secret surface of this service is exactly one object —
+  the identity key — and its confidentiality story is assessed in
+  at_rest.confidentiality (reading it) and the possession cells (carrying it
+  away). Administration adds no distinct asset: the realm tag and realm_key
+  are public material by design, the org is public, and the service holds no
+  application data. A dedicated admin.confidentiality cell would duplicate
+  the identity-key cells without adding a distinct countermeasure set.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see at_rest.confidentiality and decommission.possession."

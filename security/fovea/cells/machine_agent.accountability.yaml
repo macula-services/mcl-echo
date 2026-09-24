@@ -1,14 +1,16 @@
 id: machine_agent.accountability
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Attribution of automated callers is the same mechanism as human callers —
+  the wire-authenticated caller node id and the limiter buckets — assessed
+  in operate.accountability. Agency does not create a second attribution
+  story.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see operate.accountability."

@@ -1,14 +1,15 @@
 id: machine_agent.possession
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Possession is a physical event; automated actors do not carry hardware
+  away. The physical-theft story is decommission.possession regardless of
+  attacker type, with no automation-specific defense to record.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see decommission.possession."

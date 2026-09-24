@@ -1,14 +1,34 @@
 id: internal.accountability
-status: unassessed
-owner: unassigned
+status: assumed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A deploy or config action by an insider leaves no usable trace: when the
+    fleet misbehaves, nobody can reconstruct who changed what and when.
+  manifestations:
+    - Host-level changes outside the repo that git never sees.
+    - Deploys triggered by rules with no record of the triggering actor.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        Config and code are one repository: every org/realm/pin change is a
+        commit with an author — the attribution record is git history.
+      status: by_design
+      source: config/sys.config.src; deploy/docker-compose.yml
+    - measure: >-
+        The running image is labelled with its build commit
+        (org.opencontainers.image.source), so the deployed artifact names
+        the exact repo state, closing the loop between box and history.
+      status: by_design
+      source: 'CHANGELOG.md "build: the image is labelled with the commit it was built from"'
+  countermeasures:
+    - measure: "Access control on deploy privileges and host login is the operator's audit domain."
+      status: org
+  recovery:
+    - measure: "Rollback to a named semver tag restores a known-attributed state."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  Assumed: git attribution is real but unenforced (no branch protection,
+  no CODEOWNERS asserted for this repo). The cell claims the record exists;
+  the org must claim the record is protected.

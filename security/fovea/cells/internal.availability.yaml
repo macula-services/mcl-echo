@@ -1,14 +1,36 @@
 id: internal.availability
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    An insider's error takes the service down — wrong config, wrong image
+    tag, wrong station — and the outage masquerades as a healthy node.
+  manifestations:
+    - A deploy with an unresolved ${MCL_REALM} that cannot boot at all.
+    - A host port already bound, making the bind failure silent on host networking.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "/health on 8461 exposes the outage; the D25 grant is reported there as degraded when the provider row is missing."
+      status: by_design
+      source: README.md "MCL_HEALTH_PORT"; CHANGELOG.md "/health reports the D25 provider grant"
+    - measure: >-
+        Crash-loud boot means the misconfiguration is named by the crash
+        rather than absorbed: the node refuses to run drifted instead of
+        running wrong.
+      status: by_design
+      source: README.md "Both checks crash the node at boot"
+  countermeasures:
+    - measure: "restart: unless-stopped recovers a dead node; the recovery loop keeps trying until the operator fixes the config."
+      status: by_design
+      source: deploy/docker-compose.yml
+    - measure: "Operational discipline: check the health port is free before changing MCL_HEALTH_PORT (documented, not discovered)."
+      status: org
+      source: README.md "MCL_HEALTH_PORT"
+  recovery:
+    - measure: "Pin the previous semver tag — a rollback is one image pin."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  Insider error and outsider flood are the same column family but different
+  failure physics: the outsider is bounded by the limiter, the insider by
+  crash-loudness plus rollback. Both are recorded, neither is hidden.

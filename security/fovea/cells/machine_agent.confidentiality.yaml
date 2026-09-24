@@ -1,14 +1,17 @@
 id: machine_agent.confidentiality
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  The confidentiality surface against an automated observer is identical to
+  the human one: payloads are public and the pattern exposure is bounded by
+  the same mechanisms assessed in external.confidentiality and
+  in_motion.confidentiality. Agency changes the volume of observation, not
+  the mechanisms that resist it.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see external.confidentiality."

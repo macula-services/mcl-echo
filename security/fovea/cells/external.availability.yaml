@@ -1,14 +1,36 @@
 id: external.availability
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    An outside party attacks the service's availability directly through its
+    own surface: flooding the echo procedure, or exhausting the node's
+    handler so that legitimate quickstart callers are denied.
+  manifestations:
+    - A burst of calls that consumes the per-caller buckets of honest callers.
+    - An oversized payload aimed at exhausting handler memory.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "Rate_limited and payload_too_large responses name the abuse in the reply, observable by the caller and the operator."
+      status: by_design
+      source: README.md "Two guards apply"; apps/mcl_echo/src/mcl_echo_limiter.erl
+  countermeasures:
+    - measure: >-
+        Fixed-window rate limit: 20 calls/10s per wire-authenticated caller,
+        300/10s globally — abuse is bounded per identity, and the global cap
+        bounds the aggregate.
+      status: by_design
+      source: README.md "Fixed-window rate limit (mcl_echo_limiter)"
+    - measure: >-
+        Payload cap at 4096 bytes by erlang:external_size/1 bounds every
+        payload shape, not only binaries.
+      status: by_design
+      source: README.md "Payload cap, 4096 bytes"
+  recovery:
+    - measure: "The limiter's window self-clears; honest callers resume when the flood passes."
+      status: by_design
+      source: apps/mcl_echo/src/mcl_echo_limiter.erl
+notes: >-
+  The transport-level DDoS (saturating the station) is the mesh's fight,
+  out of scope; this cell covers what the service itself owns — the
+  handler's bound.

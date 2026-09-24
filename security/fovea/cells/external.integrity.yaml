@@ -1,14 +1,38 @@
 id: external.integrity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    An outside party alters what the service does or what callers receive:
+    a tampered echo reply, a modified advertisement, or an injected
+    behaviour the callers cannot distinguish from the real service.
+  manifestations:
+    - On-path tampering with an echoed payload before the caller reads it.
+    - A manipulated capability advertisement that redirects callers to a hostile handler.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        Transport integrity is delegated to the macula wire: frames are
+        signed objects under the pq_hybrid profile, so tampering fails
+        verification rather than passing silently.
+      status: by_design
+      source: config/sys.config.src (crypto_profile block); README.md "THE PQ CRYPTO PROFILE"
+    - measure: >-
+        Advertisements are verified against the realm's pinned signing key;
+        a tampered advertisement does not verify and is refused.
+      status: by_design
+      source: config/sys.config.src ({realm_key, ...})
+  countermeasures:
+    - measure: >-
+        The echo returns the payload unchanged — there is no service-side
+        transformation an attacker can flip; the handler's whole behaviour
+        is a copy.
+      status: by_design
+      source: README.md "The handler replies with the payload unchanged"
+  recovery:
+    - measure: "Callers detect tampering at verify time and re-dial another of the six pinned stations."
+      status: by_design
+      source: mcl_echo_stations.erl
+notes: >-
+  The service's minimalism is its integrity defense: the less behaviour
+  there is to flip, the less there is to corrupt.

@@ -1,14 +1,17 @@
 id: trusted_partner.integrity
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  A vendor component corrupting the service's behaviour is the supply-chain
+  integrity threat, assessed in create.integrity (source tree) and
+  acquire.authenticity (build-time artifacts), with the runtime pairing
+  asserted in trusted_partner.authenticity. A separate integrity cell would
+  be the same countermeasures under a third heading.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see create.integrity, acquire.authenticity, trusted_partner.authenticity."

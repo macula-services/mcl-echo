@@ -1,14 +1,17 @@
 id: external.accountability
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Attribution of outside callers is precisely operate.accountability — the
+  caller node id, the limiter buckets, the map-payload rule. External
+  agency adds no new mechanism; the column family distinguishes who the
+  actor is, and for accountability the who is the same answer. A separate
+  cell would duplicate the same countermeasures.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see operate.accountability."
