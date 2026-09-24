@@ -22,8 +22,12 @@
         %% admission. The realm tag is sha256 of the REALM name --
         %% io.macula = abb81b5a614b63551b400b810648c0c8a78efad845442630c94b46cc95d2fcd1 --
         %% and is independent of the org now (the old sha256(org)
-        %% realm-name-org convention is gone).
-        {org,               <<"${MCL_ORG}">>},
+        %% realm-name-org convention is gone). A literal, not the MCL_ORG
+        %% environment variable: the org is a property of the service, not of
+        %% where it runs, and a host that forgot the variable ran a node whose
+        %% org was the unexpanded placeholder (mcl_om 0.27.1 refuses to boot
+        %% that).
+        {org,               <<"mcl-echo">>},
         %% The labels on this service's provider-authorization row
         %% (service_name, box) are NOT set here: mcl_om 0.27 reads
         %% MCL_SERVICE_NAME and MCL_BOX from the environment itself and falls

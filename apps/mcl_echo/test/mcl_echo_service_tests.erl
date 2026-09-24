@@ -247,6 +247,15 @@ lint_runs_on_no_floating_image_test() ->
                  re:run(Lint, "image: ghcr\\.io/macula-io/macula-ci-otp:[0-9]{8}-[0-9]{4}@sha256:[0-9a-f]{64}$",
                         [multiline])).
 
+%% ONE ORG PER SERVICE, NAMED AFTER THE REPOSITORY, fixed in the release. It
+%% came from `${MCL_ORG}', so a host that never set the variable ran a node whose
+%% org was the literal "${MCL_ORG}": since mcl_om 0.27.1 that refuses to boot,
+%% and before it the node ran green and advertised nothing. The org is a
+%% property of the service, not of where it runs.
+the_release_fixes_the_org_to_the_repository_name_test() ->
+    ?assertEqual(<<"mcl-echo">>,
+                 pinned("config/sys.config.src", "^\\s+\\{org,\\s*<<\"([^\"]*)\">>\\},")).
+
 pinned(Relative, Pattern) ->
     {ok, Text} = file:read_file(alongside(Relative)),
     {match, [Version]} = re:run(Text, Pattern,

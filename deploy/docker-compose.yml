@@ -3,8 +3,7 @@
 # Runnable as-is. It carries what the SERVICE knows about itself: its image, its
 # port, the environment variables its own code reads, and its health check.
 #
-#   MCL_ORG=mcl-echo \
-#     MCL_REALM=<sha256 of the realm name io.macula, 64-hex> \
+#   MCL_REALM=<sha256 of the realm name io.macula, 64-hex> \
 #     MCL_REALM_KEY=<hex of the io.macula realm's public signing key> \
 #     MACULA_STATION_SEEDS=station.example:4433 \
 #     MACULA_STATION_NODE_IDS=<64-hex node id of that station> \
@@ -41,8 +40,7 @@ services:
     environment:
       # No default. A service that guesses its org announces itself where
       # nobody can attribute it, and that looks exactly like a healthy node.
-      # One org per service (plan C): mcl-echo under the io.macula realm.
-      - MCL_ORG=${MCL_ORG:?set MCL_ORG to the service org (mcl-echo)}
+      # The org is fixed in config/sys.config.src (mcl-echo), not set here.
       # The realm tag is sha256 of the REALM name (io.macula), independent
       # of the org since the org-per-service cutover.
       - MCL_REALM=${MCL_REALM:?set MCL_REALM to the 64-hex realm tag}

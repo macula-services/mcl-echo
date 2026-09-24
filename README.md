@@ -200,7 +200,6 @@ a different libc.
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
-| `MCL_ORG` | required | The wire namespace: the echo advertises as `MCL_ORG/echo`. One org per service, named after the repo: `mcl-echo`. Must match `^[a-z0-9][a-z0-9._-]*$`. Independent of the realm. |
 | `MCL_REALM` | required | 64-hex realm tag: `sha256` of the **realm** name, `io.macula`. Not a hash of the org. Reaches the node as an application env, never a bare shell variable: `config/sys.config.src` is the only place the two meet. |
 | `MCL_REALM_KEY` | required | The **trust anchor**: the io.macula realm's public signing key, hex encoded. A different thing from `MCL_REALM`, which is only an identifier. Every org-namespaced advertisement is verified against this key, so without it nothing resolves, the boot claim never reaches the realm, and the service runs green and unreachable. Public material, not a secret. Requires `mcl_om >= 0.3.0`, which refuses to start a pool without it. |
 | `MACULA_STATION_SEEDS` | required | Station hosts to dial, `host[:port]`, comma-separated. No default: naming a realm costs nothing, dialling a production station from every dev clone does. |
@@ -239,10 +238,11 @@ Two things CI cannot do for you, both of which have bitten:
    the host with a bare `unauthorized` that names nothing. Check it after the
    first build. On ghcr the `org.opencontainers.image.source` label in the
    Containerfile is what links the package to the repository.
-2. The host needs `MCL_ORG`, `MCL_REALM` and the pinned station pair supplied
-   from somewhere they are not committed — and the realm's D25 chain must
-   publish a procedure delegation naming this service's node id for `MCL_ORG`
-   (the realm admin's provisioning step).
+2. The host needs `MCL_REALM` and the pinned station pair supplied from
+   somewhere they are not committed, and the realm's D25 chain must publish a
+   procedure delegation naming this service's node id for org `mcl-echo`
+   (the realm admin's provisioning step). The org itself is fixed in
+   `config/sys.config.src`: the echo advertises as `mcl-echo/echo`.
 
 ## The service contract
 
