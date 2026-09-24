@@ -63,6 +63,8 @@
 -include("mcl_echo_io_macula.hrl").
 
 -export([main/0]).
+%% Exported for mcl_echo_call_tests: the pre-12 macula guard.
+-export([macula_verdict/1, loaded_macula/0]).
 
 %% Exported so the seam's SHAPE can be checked without spending a call on
 %% the mesh. `macula_direct_dial:dial_io/2' refuses a wrong key set or a
@@ -84,8 +86,39 @@
 -define(PAYLOAD, #{<<"ping">> => <<"pong">>}).
 
 main() ->
+    ok = macula_or_halt(macula_verdict(loaded_macula())),
     Args = init:get_plain_arguments(),
     run(station_arg(Args), calls_arg(Args), ?DEFAULT_PROCEDURE).
+
+%% THE CALLER REFUSES A PRE-12 MACULA. A checkout whose gitignored rebar.lock
+%% still pins an 11.x macula builds a caller the 12 fleet refuses at the
+%% handshake, and every station then fails with seed_never_healthy: six dead
+%% stations, apparently, when the cause is one stale lock. Judged on the
+%% macula this VM actually loaded, not the one rebar.config asks for.
+macula_or_halt(ok) ->
+    ok;
+macula_or_halt({refuse, Why}) ->
+    io:format(standard_error, "~ts~n", [Why]),
+    halt(5).
+
+-spec loaded_macula() -> string().
+loaded_macula() ->
+    _ = application:load(macula),
+    {ok, Vsn} = application:get_key(macula, vsn),
+    Vsn.
+
+-spec macula_verdict(string()) -> ok | {refuse, string()}.
+macula_verdict(Vsn) ->
+    major_verdict(string:to_integer(Vsn), Vsn).
+
+major_verdict({Major, _Rest}, _Vsn) when is_integer(Major), Major >= 12 ->
+    ok;
+major_verdict(_Older, Vsn) ->
+    {refuse, lists:flatten(
+               io_lib:format("this caller loaded macula ~s, and the fleet speaks macula 12 or later: "
+                             "a pre-12 caller is refused at the handshake and every station looks "
+                             "dead. The local rebar.lock is stale; run `rebar3 upgrade --all' and "
+                             "`rebar3 compile', then try again.", [Vsn]))}.
 
 station_arg([])           -> mcl_echo_stations:default();
 station_arg([Name | _])   -> Name.

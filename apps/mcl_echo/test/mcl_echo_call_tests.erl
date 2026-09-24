@@ -34,3 +34,24 @@ recording_dial_io_is_accepted_by_the_sdk_call_test() ->
 
 top_frame([{M, F, A, _Loc} | _]) -> {M, F, A};
 top_frame(_) -> none.
+
+%% THE CALLER REFUSES A PRE-12 MACULA. A checkout whose gitignored rebar.lock
+%% still pinned macula 11.4.0 built an 11.x caller, which the 12 fleet refuses
+%% at the handshake: every station answered seed_never_healthy, which reads
+%% like six dead stations rather than one stale lock. The caller now names the
+%% macula it actually loaded and the release it needs, and stops.
+a_pre_12_macula_is_refused_naming_both_versions_test() ->
+    {refuse, Why} = mcl_echo_call:macula_verdict("11.4.0"),
+    ?assertNotEqual(nomatch, string:find(Why, "11.4.0")),
+    ?assertNotEqual(nomatch, string:find(Why, "12")),
+    ?assertNotEqual(nomatch, string:find(Why, "rebar3 upgrade")).
+
+a_12_macula_is_accepted_test_() ->
+    [?_assertEqual(ok, mcl_echo_call:macula_verdict(V)) || V <- ["12.0.0", "12.1.0", "12.2.0", "13.0.1"]].
+
+%% What the running VM loaded, not what rebar.config asks for: the two differ
+%% exactly when the lock is stale.
+the_loaded_macula_is_what_is_judged_test() ->
+    _ = application:load(macula),
+    {ok, Vsn} = application:get_key(macula, vsn),
+    ?assertEqual(Vsn, mcl_echo_call:loaded_macula()).
