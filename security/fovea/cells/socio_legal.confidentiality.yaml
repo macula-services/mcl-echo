@@ -1,14 +1,17 @@
 id: socio_legal.confidentiality
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Compulsion to disclose hits what exists: the service holds no application
+  data, no logs, and the one secret is an identity key whose disclosure is
+  the possession story. The realm key is public by design. A court order
+  against this service can compel operators, not the disclosure of data
+  the service never stored.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; statelessness is the disclosure defense, recorded here."

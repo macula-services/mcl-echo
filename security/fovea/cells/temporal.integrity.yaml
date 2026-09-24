@@ -1,14 +1,35 @@
 id: temporal.integrity
-status: unassessed
-owner: unassigned
+status: roadmap
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    Time corrupts the node's integrity posture: certificates and keys age
+    past policy, pins rot against a fleet that has moved on, and the node
+    drifts into a state nobody reviewed.
+  manifestations:
+    - A station pin whose node id was re-keyed fleet-side, silently stale.
+    - A crypto profile superseded upstream while this node keeps the old floor.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        The floor is asserted, not hoped: the info test and the runtime
+        guard fail on a pairing or VM that has drifted from the pinned
+        release.
+      status: by_design
+      source: CHANGELOG.md "mcl_echo_info_tests"; CHANGELOG.md "the runtime guard compares full releases"
+    - measure: "No scheduled re-review of the pin table, key age, or profile exists in this repo — the rot-watch gap this cell records."
+      status: roadmap
+      source: absence — the gap being recorded
+  countermeasures:
+    - measure: "Version floors are declared in rebar.config and enforced by tests, so a stale floor is a failing build, not a habit."
+      status: by_design
+      source: rebar.config ({mcl_om, "~> 0.28"}, {macula, "~> 12.2"})
+  recovery:
+    - measure: "Re-pin, rebuild, redeploy — the same path as every fix; the change is a diff, reviewable."
+      status: by_design
+      source: README.md "Deployment"
+review_by: 2027-03-31
+notes: >-
+  Roadmap: the mechanism for catching drift exists (floors asserted), the
+  cadence for re-reviewing time-sensitive material does not. This is the
+  review_by field doing its job — the date is the countermeasure.

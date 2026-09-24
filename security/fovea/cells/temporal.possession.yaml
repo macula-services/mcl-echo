@@ -1,14 +1,16 @@
 id: temporal.possession
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Possession is a custody event, not an aging event; time makes a
+  possessed key stale but does not possess it. The possession stories are
+  decommission.possession and physical_natural.possession, and the
+  stale-key consequence is temporal.authenticity. No separate cell needed.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see temporal.authenticity, decommission.possession."

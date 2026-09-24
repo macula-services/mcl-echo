@@ -1,14 +1,34 @@
 id: at_rest.integrity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    Stored material on the node — the identity key or the running config —
+    is corrupted or altered, and the node either serves with a broken
+    identity or refuses in a way nobody can diagnose.
+  manifestations:
+    - Identity key corruption on the volume, leaving the node unable to sign its advertisements.
+    - A config file altered in place on a live host, diverging from the repository.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        mcl_om returns {error, no_identity_key} and the capability is not
+        advertised when the key cannot be loaded — corruption is loud, not
+        silent.
+      status: by_design
+      source: config/sys.config.src identity_key_path comment; README.md "an ephemeral service cannot sign and is correctly not advertised"
+  countermeasures:
+    - measure: >-
+        Config lives in the image and repository, not in mutable host files:
+        the running config is a relx-substituted artifact of the release,
+        so drift is a redeploy, not an edit.
+      status: by_design
+      source: config/sys.config.src; README.md "THE REALM IS AN APPLICATION ENV"
+  recovery:
+    - measure: "Redeploy from the pinned image; the named volume carries the key and survives recreates."
+      status: by_design
+      source: deploy/docker-compose.yml
+notes: >-
+  Corruption of the key itself (bit rot on disk) is the host's backup
+  domain; the service's contribution is loud failure instead of quiet
+  mis-identity.

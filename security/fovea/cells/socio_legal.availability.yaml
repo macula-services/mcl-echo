@@ -1,14 +1,29 @@
 id: socio_legal.availability
-status: unassessed
-owner: unassigned
+status: assumed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A legal or political measure denies the service to its callers: a
+    jurisdiction blocks the IPv6 path, a takedown of a pinned station, or
+    a forced shutdown of the host.
+  manifestations:
+    - A transit block on IPv6 in a jurisdiction that leaves the node unreachable from outside.
+    - A compelled host shutdown with no alternate site.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "/health plus the provider desk surface the outage to the realm's operator."
+      status: by_design
+      source: README.md "MCL_HEALTH_PORT"; CHANGELOG.md "/health reports the D25 provider grant"
+  countermeasures:
+    - measure: "Multi-station pins and the mesh's routing are the fleet's resilience; the service contributes its six documented pins."
+      status: by_design
+      source: mcl_echo_stations.erl
+    - measure: "Legal strategy and multi-jurisdiction placement are the org's domain."
+      status: org
+  recovery:
+    - measure: "Redeploy on a host outside the blocking jurisdiction; the identity volume travels."
+      status: org
+notes: >-
+  Assumed: the service is IPv6-only and single-site, so a jurisdiction can
+  reach it; the countermeasures are partial by nature and recorded as
+  such.

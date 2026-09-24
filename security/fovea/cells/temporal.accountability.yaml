@@ -1,14 +1,17 @@
 id: temporal.accountability
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  The service keeps no logs and no retention schedule of its own; what is
+  attributable over time — changes, deploys, version history — is git and
+  the changelog, assessed in internal.accountability and
+  create.accountability. No service-local temporal attribution mechanism
+  exists to record.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see internal.accountability."

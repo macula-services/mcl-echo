@@ -1,14 +1,15 @@
 id: acquire.availability
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Availability of the acquisition channels (hex, GHCR) is the
+  trusted-partner availability story; the acquire phase adds no distinct
+  mechanism beyond it. Assessed in trusted_partner.availability.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see trusted_partner.availability."

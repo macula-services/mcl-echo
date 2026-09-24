@@ -1,14 +1,31 @@
 id: temporal.authenticity
-status: unassessed
-owner: unassigned
+status: assumed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    Identity validity decays with time: a key or certificate ages past its
+    policy, and the node keeps proving an identity that should no longer
+    be believed.
+  manifestations:
+    - A leaf or delegation expired but still honoured somewhere in the chain.
+    - An old identity key retained beyond its rotation window.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "The provider desk binds the delegation to the node id; expiry of the grant is visible as the degraded state on /health."
+      status: by_design
+      source: CHANGELOG.md "/health reports the D25 provider grant"
+  countermeasures:
+    - measure: "Rotation and renewal policy for the identity key and delegations is the operator's obligation."
+      status: org
+    - measure: "The realm's short-lived delegation model caps the useful life of a stale identity — but the service does not itself enforce a clock on it."
+      status: roadmap
+      source: README.md "The realm issues this node's D25 delegation"
+  recovery:
+    - measure: "Re-admission: a fresh identity key and a fresh D25 row re-anchor the node."
+      status: roadmap
+      source: README.md "the realm's D25 chain must publish a procedure delegation naming this service's node id"
+review_by: 2027-03-31
+notes: >-
+  Assumed: expiry enforcement is the realm's clock, renewal discipline is
+  the org's. The service's own contribution is visibility via health —
+  recorded, not exaggerated.

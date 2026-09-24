@@ -1,14 +1,16 @@
 id: create.availability
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Build-time unavailability — the pipeline, hex, or registry down when a
+  rebuild is needed — is the trusted-partner availability story, assessed
+  in trusted_partner.availability. The create phase adds no distinct
+  mechanism: a blocked build is a blocked build regardless of phase.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see trusted_partner.availability."

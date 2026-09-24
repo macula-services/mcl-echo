@@ -1,14 +1,15 @@
 id: deliver.possession
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Delivery artifacts are public images; there is nothing to possess beyond
+  what is public. Physical custody begins at the host, which is
+  decommission.possession. No deliver-phase possession surface exists.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason."

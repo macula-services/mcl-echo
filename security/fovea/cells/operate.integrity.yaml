@@ -1,14 +1,32 @@
 id: operate.integrity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    The running node's behaviour is altered in place — code or config
+    changed on the live system — so it diverges from the released
+    artifact while still answering.
+  manifestations:
+    - A hot-code load on the BEAM replacing the handler.
+    - A live config edit on the host diverging from the repository.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "The release exposes no remote shell or hot-code surface; runtime code replacement is not a service feature."
+      status: by_design
+      source: README.md "Running it" (rebar3 release); relx config
+    - measure: >-
+        Config is a relx-substituted artifact of the release; a live edit
+        is erased by the next redeploy, so drift is transient by
+        construction.
+      status: by_design
+      source: config/sys.config.src
+  countermeasures:
+    - measure: "Host access control on the BEAM is the operator's boundary."
+      status: org
+  recovery:
+    - measure: "Restart from the pinned image restores the released behaviour."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  The service's runtime integrity posture is "no live-mutation surface,
+  redeploy wins". The org must hold the host boundary.

@@ -1,14 +1,31 @@
 id: in_motion.authenticity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    The identity of the peer on a link is not what it claims: a dial that
+    is not the pinned station, or a provider answer arriving from a node
+    the realm never delegated.
+  manifestations:
+    - A seed pair mismatched so the node dials a station other than the one the org pins.
+    - An answer to mcl-echo/echo resolved from an advertisement the realm did not sign.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "The D5 pin pairs every seed host with its station node id; mcl_om refuses to boot a pool with an unpinned seed."
+      status: by_design
+      source: README.md "The 11.x dial is pinned (D5)"
+    - measure: "The D16 handshake pin (expected_node_id) is the binding control on the dial — TLS verification is deliberately not the control."
+      status: by_design
+      source: README.md "What binds a dial to the station it names is the D16 handshake pin"
+  countermeasures:
+    - measure: "Every org-scoped advertisement is verified against the realm's pinned public key before resolution."
+      status: by_design
+      source: config/sys.config.src ({realm_key, ...})
+  recovery:
+    - measure: "Re-pin and redeploy; the six-pin table carries host and node id together."
+      status: by_design
+      source: mcl_echo_stations.erl
+notes: >-
+  Peer authenticity on every link is pinned twice — station identity by
+  D5/D16, provider identity by realm signature. The data-state lens of
+  external.authenticity.

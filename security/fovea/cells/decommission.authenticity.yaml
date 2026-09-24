@@ -1,14 +1,31 @@
 id: decommission.authenticity
-status: unassessed
-owner: unassigned
+status: roadmap
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A retired node keeps claiming its identity: the delegation row lives
+    on, the old key still verifies, and the fleet keeps resolving a
+    provider that no longer exists — or worse, one that exists in
+    someone else's hands.
+  manifestations:
+    - A stale D25 row for a node id whose volume was wiped but never revoked.
+    - A retired node's key re-used by a finder and still admitted.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "The provider desk is the only place the stale row is visible; nothing in this service flags its own retirement."
+      status: org
+  countermeasures:
+    - measure: "The revocation surface is the realm's D25 delegation: revoking the row retires the identity."
+      status: roadmap
+      source: README.md "the realm's D25 chain must publish a procedure delegation naming this service's node id"
+    - measure: "No decommission runbook wires volume deletion to delegation revocation — the gap this cell records."
+      status: roadmap
+      source: absence — the gap being recorded
+  recovery:
+    - measure: "Revoke the row, delete the volume; the retired id answers no one."
+      status: roadmap
+      source: deploy/docker-compose.yml ("Deleting it retires the node id")
+review_by: 2027-03-31
+notes: >-
+  Roadmap: possession is the key walking away; authenticity is the key
+  still being believed afterwards. Both hang on the same missing runbook.

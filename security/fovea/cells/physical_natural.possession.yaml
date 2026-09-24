@@ -1,14 +1,31 @@
 id: physical_natural.possession
-status: unassessed
-owner: unassigned
+status: roadmap
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    The node is physically seized while live — power pulled, box carried
+    away, volume intact — and the taker holds a working identity that the
+    realm still trusts.
+  manifestations:
+    - A seized host whose volume keeps the identity valid and unrevoked.
+    - A live node that keeps advertising while in hostile custody.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "The node keeps advertising from its new location; the realm desk is the only place that sees the provider row move — nothing local flags seizure."
+      status: org
+  countermeasures:
+    - measure: "Physical custody (locks, site security, tamper seals) is the operator's domain."
+      status: org
+    - measure: "No remote zeroization exists: nothing in this service wipes the identity on hostile conditions — the gap this cell records."
+      status: roadmap
+      source: absence — the gap being recorded
+  recovery:
+    - measure: "Realm-side revocation of the D25 row retires the seized identity; a fresh volume mints a new one."
+      status: roadmap
+      source: README.md "the realm's D25 chain must publish a procedure delegation naming this service's node id"
+review_by: 2027-03-31
+notes: >-
+  Roadmap: the mechanism is the realm's revocation surface, the procedure
+  is a runbook, and local tamper-response does not exist. Distinct from
+  decommission.possession — here the node is taken live, there it is
+  retired and abandoned.

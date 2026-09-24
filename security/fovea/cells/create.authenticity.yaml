@@ -1,14 +1,27 @@
 id: create.authenticity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    The code the fleet runs was not written by who its history claims:
+    authorship is falsified, or a change enters the tree under an identity
+    the org cannot hold to account.
+  manifestations:
+    - A commit authored under a spoofed or compromised identity.
+    - A merge whose author and reviewer are the same account.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "Every change is a commit with an author — git history is the authorship record."
+      status: by_design
+      source: repository itself
+  countermeasures:
+    - measure: "Branch protection, required review, and account security on the hosting platform are the org's obligation."
+      status: org
+  recovery:
+    - measure: "A falsified change is reverted by the same history that exposed it."
+      status: by_design
+      source: README.md "Deployment" (rollback channel)
+notes: >-
+  The service inherits authorship from its forge; the org must enforce
+  what the forge records. Recorded at assessed strength for the record's
+  existence, not for its enforcement.

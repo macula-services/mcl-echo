@@ -1,14 +1,17 @@
 id: socio_legal.accountability
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Attribution of compelled or political actions against the service is the
+  same record the org keeps for any action: git history for config
+  changes, host logs for host actions — assessed in
+  internal.accountability. The socio-legal lens adds no new mechanism in
+  this service.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see internal.accountability."

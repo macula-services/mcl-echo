@@ -1,14 +1,17 @@
 id: at_rest.possession
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Possession of stored material — the identity volume carried away — is
+  decommission.possession with a different lifecycle phase; the mechanism
+  (volume = identity, deletion = retirement) is identical and already
+  assessed there. A separate at-rest possession cell would restate the
+  same countermeasures.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see decommission.possession."

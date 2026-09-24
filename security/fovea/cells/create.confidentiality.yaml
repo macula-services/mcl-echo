@@ -1,14 +1,35 @@
 id: create.confidentiality
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A secret enters the source tree or build — an identity key, a realm
+    key mistaken for private, a credential — and ships to everyone with
+    the repository.
+  manifestations:
+    - A committed identity.key or private signing material in the tree or image.
+    - A hardcoded credential in config instead of the env indirection.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        The only secret the service has never enters the repository or the
+        image: it is generated at runtime into the mounted volume — the
+        design makes committing it impossible rather than discouraged.
+      status: by_design
+      source: config/sys.config.src (identity_key_path); README.md "The org is fixed in config/sys.config.src"
+    - measure: >-
+        The realm key is public material and lives in compose env as such;
+        private material has no path into the tree.
+      status: by_design
+      source: deploy/docker-compose.yml ("Public material, so it belongs here")
+  countermeasures:
+    - measure: "Secret-scanning on the repository is the org's hygiene obligation."
+      status: org
+  recovery:
+    - measure: "A leaked identity key is retired by deleting the volume; a leaked realm key is public and needs no action."
+      status: by_design
+      source: deploy/docker-compose.yml ("Deleting it retires the node id")
+notes: >-
+  Assessed on the structural claim: the one secret is generated at
+  runtime, so there is nothing to leak at create time. Scanning is
+  defense in depth, not the primary control.

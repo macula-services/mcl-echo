@@ -1,14 +1,33 @@
 id: in_use.confidentiality
-status: unassessed
-owner: unassigned
+status: assumed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    Data being processed — the echo payload briefly held in BEAM memory,
+    key material in RAM — is read out of the process by an observer with
+    memory access or through crash artifacts.
+  manifestations:
+    - A crash dump written to disk containing heap fragments of a recent payload or the identity key.
+    - A host-level memory scrape of the running BEAM while the handler holds a caller's payload.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "The handler holds the payload only for the echo's duration; there is no store, no cache, no persistent copy."
+      status: by_design
+      source: README.md "The handler replies with the payload unchanged"; rebar.config comment ("starts NO reckon-db")
+  countermeasures:
+    - measure: >-
+        The payload cap (4096 bytes external_size) bounds what can ever be
+        in memory at once on this service's behalf.
+      status: by_design
+      source: README.md "Payload cap, 4096 bytes"
+    - measure: "Crash-dump hygiene (disabling dumps or securing the host dir) is the operator's memory-discipline obligation."
+      status: org
+  recovery:
+    - measure: "Restart clears BEAM memory; nothing persists to scrub."
+      status: by_design
+      source: README.md "The service contract" (no store)
+notes: >-
+  Assumed: the bounded-holding claim is architectural (stateless handler),
+  but no dump-hygiene or memory-attestation test exists in this repo. The
+  crash dumps sitting in the repo working tree are the visible reminder
+  that the org measure is real work, not ceremony.

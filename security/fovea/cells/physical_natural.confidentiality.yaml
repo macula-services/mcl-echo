@@ -1,14 +1,17 @@
 id: physical_natural.confidentiality
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  A natural event (fire, flood, power loss) can destroy or corrupt, but
+  the service holds no application data a natural event could disclose —
+  the one secret's confidentiality story is at_rest.confidentiality, and
+  nature does not read. The physical failure modes are integrity and
+  availability, assessed in their cells.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see physical_natural.integrity, physical_natural.availability."

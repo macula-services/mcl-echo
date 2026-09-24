@@ -1,14 +1,29 @@
 id: physical_natural.availability
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A physical or natural event takes the node down — power loss, host
+    failure, datacenter event — and the service stays down until a human
+    intervenes.
+  manifestations:
+    - A host reboot that does not come back because nothing restarts the container.
+    - A site outage taking the pinned stations and the node together.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "/health is the liveness probe; an operator or monitor sees the outage."
+      status: by_design
+      source: README.md "MCL_HEALTH_PORT"
+  countermeasures:
+    - measure: "restart: unless-stopped brings the container back on host reboot — the compose-level resilience the service owns."
+      status: by_design
+      source: deploy/docker-compose.yml
+    - measure: "Host redundancy, UPS, and site failover are the operator's physical-resilience domain."
+      status: org
+  recovery:
+    - measure: "Redeploy on a new host from the pinned image; the named volume travels with the identity."
+      status: by_design
+      source: deploy/docker-compose.yml volume block
+notes: >-
+  The honest split: the service survives host reboot; it does not survive
+  site loss. Both recorded, neither inflated.

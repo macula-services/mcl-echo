@@ -1,14 +1,32 @@
 id: in_use.authenticity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    The identity attached to a call while the node processes it is not the
+    identity of the party that sent it: a caller's request carrying a
+    claimed identity the wire did not verify.
+  manifestations:
+    - A payload claiming a caller id in its body that differs from the verified sender.
+    - A non-map payload slipping past attribution into the shared global bucket.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        The caller node id is merged in by the platform
+        (macula_station_link:with_caller/2) for map payloads — the service
+        never takes identity from the payload body.
+      status: by_design
+      source: README.md "A caller is only attributable when the payload is a map"
+  countermeasures:
+    - measure: >-
+        Attribution is wire-authenticated, not self-asserted: the identity
+        the limiter keys on is the one the station verified.
+      status: by_design
+      source: README.md "The wire-authenticated caller node id is merged in"
+  recovery:
+    - measure: "Unattributable (bare-text) calls fall into the shared global bucket — a deliberate degraded state, not a bypass."
+      status: by_design
+      source: README.md "a bare text payload falls into the one shared global bucket"
+notes: >-
+  The in-use identity story is a refusal: the service will not believe a
+  claim about who sent the call — only what the wire proved.

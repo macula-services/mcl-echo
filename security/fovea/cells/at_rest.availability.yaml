@@ -1,14 +1,34 @@
 id: at_rest.availability
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    The stored material the node needs is not there: the identity volume is
+    missing or empty, and the node either cannot boot or boots as a
+    stranger nobody authorized.
+  manifestations:
+    - "A recreate with no volume mounted mints a fresh anonymous volume: new node id, old delegation orphaned, service unreachable despite looking healthy."
+    - The named volume is deleted by host maintenance, retiring the identity by accident.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        /health reports the D25 provider grant degraded when the
+        delegation is missing — a node whose identity is no longer
+        authorized announces its own unreachability.
+      status: by_design
+      source: CHANGELOG.md "/health reports the D25 provider grant"
+  countermeasures:
+    - measure: >-
+        The compose file names the volume exactly
+        (mcl-echo_mcl_echo_secrets), so a recreate reuses the identity
+        instead of minting one.
+      status: by_design
+      source: deploy/docker-compose.yml volume block
+  recovery:
+    - measure: "Re-provision the volume and re-admit the node: the D25 row is the realm's re-grant step."
+      status: org
+notes: >-
+  The documented failure — anonymous volume, new identity, green node —
+  was a real fleet incident the compose naming now prevents. Assessed on
+  the strength of the documented mechanism, not on a claim of host
+  backups.

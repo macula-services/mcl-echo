@@ -1,14 +1,16 @@
 id: acquire.confidentiality
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Nothing confidential is acquired: dependencies are public, the realm key
+  is public material, and the identity key is generated locally at runtime
+  — it never passes through an acquisition channel. There is no
+  acquisition-time secret surface to protect.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see create.confidentiality."

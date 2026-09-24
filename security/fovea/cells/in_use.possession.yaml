@@ -1,14 +1,17 @@
 id: in_use.possession
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Possession of an in-memory asset — the identity key in RAM — is a
+  memory-scrape event assessed as in_use.confidentiality (reading) and the
+  custody story belongs to the physical possession cells. Parkerian
+  possession of ephemeral memory has no distinct countermeasure in this
+  service.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see in_use.confidentiality, decommission.possession."

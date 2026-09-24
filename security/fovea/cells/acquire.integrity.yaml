@@ -1,14 +1,33 @@
 id: acquire.integrity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A fetched artifact is altered between publication and build — modified
+    content that still resolves under the declared reference.
+  manifestations:
+    - A tampered rebar3 tarball served by the mirror the build fetches from.
+    - A base image mutated upstream under the same digest reference.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        rebar3 3.27.0 is installed in the image build verified by sha256 —
+        the pin is checked at install time, so a tampered tarball fails
+        the hash.
+      status: by_design
+      source: CHANGELOG.md "The image build installs rebar3 3.27.0 verified by sha256"
+    - measure: "Builder and base images are pinned by digest — a mutated upstream image does not resolve as the same digest."
+      status: by_design
+      source: CHANGELOG.md "One OTP, 28.4.3, pinned everywhere"
+  countermeasures:
+    - measure: "rebar.lock pins the dependency graph; resolution drift is a diff, not a surprise."
+      status: by_design
+      source: rebar.lock
+  recovery:
+    - measure: "Re-pin to a known-good digest and rebuild; the rollback channel carries the previous artifact."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  The integrity half of the supply-chain pair: authenticity asks "whose
+  artifact is it", integrity asks "was it altered on the way". Both
+  answered by pins, different questions.

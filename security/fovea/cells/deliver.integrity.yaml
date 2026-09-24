@@ -1,14 +1,31 @@
 id: deliver.integrity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    The artifact is altered between build and the host — registry to
+    runtime — so the box runs something the pipeline did not produce.
+  manifestations:
+    - A substituted image under the :latest tag on a compromised registry.
+    - A tampered artifact accepted because the host pulls by tag, not digest.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        The image is labelled with its build commit; drift between the
+        running artifact and repository state is checkable on the host.
+      status: by_design
+      source: 'CHANGELOG.md "build: the image is labelled with the commit it was built from"'
+    - measure: "The runtime guard fails a boot whose VM release or digests do not match the pinned build."
+      status: by_design
+      source: CHANGELOG.md "One OTP, 28.4.3, pinned everywhere"
+  countermeasures:
+    - measure: "The registry is the deploy channel; host-side image verification is the operator's discipline."
+      status: org
+  recovery:
+    - measure: "Pin the semver tag — the rollback channel, deliberately separate from :latest."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  Tag-pull hosts remain exposed to registry substitution; the service
+  detects the mismatch at runtime but cannot prevent the pull. The org
+  measure is real and recorded as such.

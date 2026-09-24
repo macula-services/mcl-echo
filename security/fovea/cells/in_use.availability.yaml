@@ -1,14 +1,34 @@
 id: in_use.availability
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    The node's processing capacity is exhausted while handling traffic —
+    memory, CPU, or scheduling — so legitimate calls time out or the node
+    dies under load.
+  manifestations:
+    - An oversized payload forcing unbounded memory in the handler.
+    - A flood of calls consuming the scheduler so health checks starve.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "payload_too_large and rate_limited replies name the exhaustion event to the caller."
+      status: by_design
+      source: README.md "Two guards apply"
+  countermeasures:
+    - measure: >-
+        The payload cap bounds every payload shape by external_size, so
+        per-call memory is bounded before the handler does anything.
+      status: by_design
+      source: README.md "Payload cap, 4096 bytes"
+    - measure: >-
+        The fixed-window limiter bounds calls per identity and globally, so
+        the scheduler sees a bounded worst case.
+      status: by_design
+      source: README.md "Fixed-window rate limit (mcl_echo_limiter)"
+  recovery:
+    - measure: "The limiter window self-clears; a crashed BEAM restarts via unless-stopped."
+      status: by_design
+      source: deploy/docker-compose.yml
+notes: >-
+  The two guards are the entire processing-availability story, and they
+  are real: bounds before behaviour, not after incident.

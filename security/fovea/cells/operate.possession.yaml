@@ -1,14 +1,15 @@
 id: operate.possession
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Possession of the running node's key material is either physical seizure
+  (physical_natural.possession) or volume theft (decommission.possession);
+  the operate phase adds no distinct custody mechanism beyond those.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see physical_natural.possession, decommission.possession."

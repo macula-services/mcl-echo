@@ -1,14 +1,30 @@
 id: temporal.availability
-status: unassessed
-owner: unassigned
+status: assumed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    Time-based expiry takes the node down: a certificate, delegation, or
+    dependency window closes, and the service stops being callable with no
+    warning anyone scheduled.
+  manifestations:
+    - A D25 delegation window expiring while the node keeps advertising.
+    - A release so old it can no longer peer with the current fleet.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "/health reports the D25 grant degraded — expiry surfaces as a health signal before it surfaces as a dead endpoint."
+      status: by_design
+      source: CHANGELOG.md "/health reports the D25 provider grant"
+  countermeasures:
+    - measure: "Expiry monitoring and renewal scheduling for certificates and delegations are the operator's obligation."
+      status: org
+    - measure: "The pinned floors make obsolescence a build-time event: an unpairable vintage fails tests rather than running green."
+      status: by_design
+      source: CHANGELOG.md "mcl_echo_info_tests"
+  recovery:
+    - measure: "Re-pin and redeploy restores the current wire."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  Assumed: expiry visibility is by_design (health), expiry prevention is
+  org (scheduling). The review_by on temporal.integrity doubles as this
+  cell's tripwire.

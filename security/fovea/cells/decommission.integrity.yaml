@@ -1,14 +1,16 @@
 id: decommission.integrity
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Integrity of retired material — a resold disk, a reused volume — is the
+  same custody story as decommission.possession: the volume's fate after
+  retirement is one event, not two. No distinct mechanism exists beyond
+  deletion-as-retirement.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see decommission.possession."

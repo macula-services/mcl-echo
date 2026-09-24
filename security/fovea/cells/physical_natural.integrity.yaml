@@ -1,14 +1,29 @@
 id: physical_natural.integrity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A physical or natural event corrupts the node's material — disk fault
+    on the volume, power cut mid-write — and the node runs with corrupted
+    identity material or refuses in a way that is hard to diagnose.
+  manifestations:
+    - Bit rot on the identity key discovered only at the next advertisement tick.
+    - A power cut leaving the volume in an inconsistent state at boot.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        mcl_om refuses to run on an identity key it could not save or load;
+        corruption surfaces as no-identity-key, and the capability is not
+        advertised — loud, not silent.
+      status: by_design
+      source: config/sys.config.src identity_key_path comment; CHANGELOG.md "refuses to run on an identity key it could not save"
+  countermeasures:
+    - measure: "The volume is a named, persistent docker volume — its lifecycle is explicit, not an anonymous artifact of the host."
+      status: by_design
+      source: deploy/docker-compose.yml
+  recovery:
+    - measure: "Redeploy from the pinned image; re-provision the volume and re-admit if the key itself is lost."
+      status: org
+notes: >-
+  The service's contribution is again refusal-over-drift; durability of
+  the volume's underlying storage is the operator's hardware domain.

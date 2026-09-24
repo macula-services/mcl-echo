@@ -1,14 +1,16 @@
 id: create.possession
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Source code is not a possessable physical asset in the Parkerian sense —
+  exfiltration of the tree is confidentiality (create.confidentiality),
+  custody of hardware is decommission.possession. No distinct mechanism
+  exists for source custody.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see create.confidentiality."

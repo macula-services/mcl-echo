@@ -1,14 +1,16 @@
 id: decommission.confidentiality
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  A retired node holds nothing confidential: the service never stored
+  application data, and the one secret's fate at retirement is the
+  possession story. Nothing leaks from a decommissioned echo node except
+  the identity key, assessed in decommission.possession.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see decommission.possession."

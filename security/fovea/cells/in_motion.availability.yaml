@@ -1,14 +1,32 @@
 id: in_motion.availability
-status: unassessed
-owner: unassigned
+status: assumed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    The links the node depends on fail or degrade — station unreachable,
+    IPv6 path gone, a seed box down — and the service cannot reach callers
+    or the mesh.
+  manifestations:
+    - A host with no IPv6 path reaching none of the fleet (documented failure mode).
+    - A single pinned station down while the pool holds only it.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "/health exposes the degraded state; a node with no healthy links is visible to the operator."
+      status: by_design
+      source: README.md "MCL_HEALTH_PORT"
+  countermeasures:
+    - measure: >-
+        The fleet is IPv6-only and host networking is required — documented
+        as a hard requirement, not discovered in an incident.
+      status: by_design
+      source: deploy/docker-compose.yml ("HOST NETWORKING IS NOT LAZINESS")
+    - measure: "Link resilience (station choice, mesh rerouting) is the mesh's property; the service's contribution is pinning, not healing."
+      status: org
+  recovery:
+    - measure: "Re-point the seed pair in deploy config and redeploy."
+      status: by_design
+      source: deploy/docker-compose.yml (MACULA_STATION_SEEDS)
+notes: >-
+  Assumed: the service's own claim is narrow — it documents its
+  requirements loudly and punts link healing to the mesh. That is honest
+  and partial.

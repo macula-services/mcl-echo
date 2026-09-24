@@ -1,14 +1,24 @@
 id: create.accountability
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A change to the source is unattributable afterwards: nobody can say
+    who introduced a line, when, or why it was accepted.
+  manifestations:
+    - An unrecorded or rewritten history hiding who changed a pin.
+    - A change with no review trail in the changelog.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "Git history is the attribution record; the changelog (Keep a Changelog, semantic versions) names every behavioural change."
+      status: by_design
+      source: CHANGELOG.md header
+  countermeasures:
+    - measure: "Protected branches and required reviews keep the history meaningfully attributed."
+      status: org
+  recovery:
+    - measure: "Revert is a named commit; the attribution chain survives the fix."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  Assessed for the record's existence; the org owns its enforcement.

@@ -1,14 +1,36 @@
 id: in_motion.integrity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    Data crossing any link — the QUIC dial to the station, capability
+    advertisements, echo payloads — is altered in flight without either
+    endpoint noticing, and the altered data is accepted as genuine.
+  manifestations:
+    - A flipped bit or injected frame in a dial that still passes the transport checks.
+    - A modified advertisement that verifies as issued because the alterer holds no key but the check is skipped.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        Frames are signed objects under the pq_hybrid profile: an
+        alteration fails signature verification at the receiving end.
+      status: by_design
+      source: config/sys.config.src (crypto_profile block); README.md "THE PQ CRYPTO PROFILE"
+    - measure: "Advertisements are verified against the pinned realm signing key; verification is not optional and cannot be skipped."
+      status: by_design
+      source: config/sys.config.src ({realm_key, ...})
+  countermeasures:
+    - measure: >-
+        The D16 handshake pin binds the dial to the named station; the
+        transport carries exactly one verification mode, the station's own
+        ML-DSA-87 certificate.
+      status: by_design
+      source: README.md "What binds a dial to the station it names is the D16 handshake pin"
+  recovery:
+    - measure: "A failed verification drops the frame and the session re-dials another pinned station."
+      status: by_design
+      source: mcl_echo_stations.erl
+notes: >-
+  The data-state lens: integrity of bytes between endpoints, as distinct
+  from external.integrity's attacker-behaviour lens. Same mechanisms,
+  different question — both recorded.

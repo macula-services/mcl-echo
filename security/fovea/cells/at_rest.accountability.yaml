@@ -1,14 +1,18 @@
 id: at_rest.accountability
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Auditing who read or modified stored material on the host is host-level
+  access logging — out of scope (org). The service holds no application
+  data whose provenance it could record; the one stored secret's lifecycle
+  is the volume contract, assessed in at_rest.authenticity and
+  decommission.possession. No service-local mechanism exists to record
+  host file access.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; host audit is org, asset lifecycle is decommission.possession."

@@ -1,14 +1,17 @@
 id: physical_natural.accountability
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  There is no actor to attribute in a natural event; post-hoc
+  reconstruction of what broke is host/system logging (org domain). The
+  service's own record of its state — health, grant status — is its
+  contribution and is assessed in the availability cells. No
+  service-local attribution mechanism exists for nature.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; host logging is org."

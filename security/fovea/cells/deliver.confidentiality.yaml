@@ -1,14 +1,16 @@
 id: deliver.confidentiality
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  The delivered image contains no secrets: the identity key is generated
+  at runtime on the host, the realm key is public, and there is no
+  application data. Delivery leaks nothing that is not already public —
+  the create.confidentiality argument applies end to end.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see create.confidentiality."

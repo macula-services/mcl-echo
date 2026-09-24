@@ -1,14 +1,16 @@
 id: deliver.availability
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Delivery-channel outage is the same trusted-partner availability story
+  as acquire — the registries are shared. Assessed in
+  trusted_partner.availability; the deliver phase adds no distinct
+  mechanism.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see trusted_partner.availability."

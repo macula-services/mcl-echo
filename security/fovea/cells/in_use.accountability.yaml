@@ -1,14 +1,16 @@
 id: in_use.accountability
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Attribution while processing is the same caller-identity mechanism as
+  operate.accountability — the wire-authenticated node id and the limiter
+  buckets. The data-state lens adds nothing new: what is attributable in
+  use is attributable because of who sent it, already assessed there.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see operate.accountability, in_use.authenticity."

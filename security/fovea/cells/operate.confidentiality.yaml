@@ -1,14 +1,18 @@
 id: operate.confidentiality
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  The service holds no application data at runtime — no store, no cache,
+  no logs — and the echo payload is public by design. The only secret at
+  runtime is the identity key, whose confidentiality is
+  at_rest.confidentiality (reading it) and in_use.confidentiality (memory
+  exposure). A separate operate-phase confidentiality cell would have no
+  surface to assess.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see at_rest.confidentiality, in_use.confidentiality."

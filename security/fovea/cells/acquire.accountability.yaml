@@ -1,14 +1,31 @@
 id: acquire.accountability
-status: unassessed
-owner: unassigned
+status: roadmap
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    The provenance of acquired artifacts is not machine-readable: when a
+    vulnerability is found in a dependency, nobody can say quickly what
+    version, from where, and in which image it shipped.
+  manifestations:
+    - A hex advisory that requires manual archaeology through rebar.lock to map to releases.
+    - No SBOM accompanies the image, so fleet-side scanners cannot inventory it.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: "rebar.lock and the pinned floors are the current provenance record — human-readable, not machine-queryable."
+      status: by_design
+      source: rebar.lock; rebar.config
+    - measure: "No SBOM or software-inventory attestation is generated in the build — the gap this cell records."
+      status: roadmap
+      source: absence — the gap being recorded
+  countermeasures:
+    - measure: "Advisory triage and inventory tooling are the org's obligation until an SBOM ships."
+      status: org
+  recovery:
+    - measure: "The changelog's named entries reconstruct what shipped when."
+      status: by_design
+      source: CHANGELOG.md
+review_by: 2027-03-31
+notes: >-
+  Roadmap: provenance exists as locks and changelogs; the machine-readable
+  half does not. This cell is the honest admission that acquisition
+  accountability is archaeology today.

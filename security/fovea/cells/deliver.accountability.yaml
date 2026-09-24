@@ -1,14 +1,34 @@
 id: deliver.accountability
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A shipped artifact cannot be traced to the repository state that
+    produced it: nobody can say which commit is running on which host.
+  manifestations:
+    - A host running an image whose provenance the operator cannot name.
+    - A deploy channel whose history does not match the changelog.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        The image carries its build commit label
+        (org.opencontainers.image.source): the running artifact names the
+        repository state it came from.
+      status: by_design
+      source: 'CHANGELOG.md "build: the image is labelled with the commit it was built from"'
+    - measure: >-
+        The two publish channels are deliberate: main→:latest is the
+        deploy channel, v*→semver is the archive — every deployed artifact
+        is a named commit or a named tag.
+      status: by_design
+      source: README.md "Deployment"
+  countermeasures:
+    - measure: "Deploy-time recording (which host runs which tag) is the operator's inventory obligation."
+      status: org
+  recovery:
+    - measure: "Rollback is pinning the previous semver tag — a named, attributable state."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  Assessed: the artifact-to-commit binding exists in the label; the
+  host-to-tag inventory is the org's half.

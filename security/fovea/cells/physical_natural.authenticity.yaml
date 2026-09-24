@@ -1,14 +1,16 @@
 id: physical_natural.authenticity
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Nature does not impersonate. A physical event can destroy the identity
+  material or the node (integrity, availability) but cannot claim an
+  identity; impersonation is an actor-domain threat and lives in the
+  actors family. No mechanism exists or is needed here.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; impersonation is external/machine_agent terrain."

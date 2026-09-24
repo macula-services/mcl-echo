@@ -1,14 +1,15 @@
 id: acquire.possession
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Acquired artifacts are public packages and images; there is nothing to
+  possess beyond what is already public. Custody of physical media is
+  decommission.possession. No acquisition-time possession surface exists.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason."

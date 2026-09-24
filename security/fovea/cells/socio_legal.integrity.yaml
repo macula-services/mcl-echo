@@ -1,14 +1,33 @@
 id: socio_legal.integrity
-status: unassessed
-owner: unassigned
+status: assumed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    A legal or political actor compels a change to how the node runs — an
+    ordered config change, a compelled re-pointing of the seed, a
+    lawful-intercept device on the uplink — altering behaviour the org did
+    not choose.
+  manifestations:
+    - A compelled deploy that re-points the org or realm.
+    - A court-ordered upstream intercept that the pin table cannot see.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        Config changes are repository changes: a compelled edit is a commit
+        with an author, visible to the org as a diff, not silent host state.
+      status: by_design
+      source: config/sys.config.src; deploy/docker-compose.yml
+  countermeasures:
+    - measure: "Refusal to run drifted: a node reconfigured inconsistently crashes at boot instead of serving the compelled state quietly."
+      status: by_design
+      source: README.md "Both checks crash the node at boot"
+    - measure: "Legal review and operator refusal rights are the org's domain."
+      status: org
+  recovery:
+    - measure: "Revert the commit; the rollback channel restores the pre-compulsion artifact."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  Assumed: the service makes compulsion visible (a diff) and loud (a
+  crash) but cannot refuse an order enforced above it. The cell records
+  visibility, not immunity.

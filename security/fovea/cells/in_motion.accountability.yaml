@@ -1,14 +1,16 @@
 id: in_motion.accountability
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Attribution of what crosses the links is the caller-identity story
+  assessed in operate.accountability — the wire-authenticated caller node
+  id and the limiter buckets. The data-state lens adds no new mechanism:
+  traffic is attributed by who sent it, and that is the same answer.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see operate.accountability."

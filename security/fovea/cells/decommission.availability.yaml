@@ -1,14 +1,17 @@
 id: decommission.availability
-status: unassessed
-owner: unassigned
+status: na
+owner: roeland@macula.io
+na_reason: >-
+  Availability during retirement — the transition window while the old
+  node is down and the new one is not yet admitted — is the same missing
+  runbook recorded in decommission.possession and
+  decommission.authenticity. A separate availability cell would restate
+  the same gap without a new mechanism.
 threat:
   definition: ""
-
   manifestations: []
 defense:
   detection: []
   countermeasures: []
   recovery: []
-review_by: null
-na_reason: null
-notes: ""
+notes: "Declared N/A with reason; see decommission.possession."

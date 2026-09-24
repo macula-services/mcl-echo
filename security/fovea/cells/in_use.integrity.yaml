@@ -1,14 +1,32 @@
 id: in_use.integrity
-status: unassessed
-owner: unassigned
+status: assessed
+owner: roeland@macula.io
 threat:
-  definition: ""
-
-  manifestations: []
+  definition: >-
+    Data or code is altered while the node is processing it: the payload is
+    modified between receipt and echo, or the running code is changed in
+    place.
+  manifestations:
+    - An altered payload echoed back so the caller receives something it never sent.
+    - Hot-code loading on a live node replacing the handler behaviour.
 defense:
-  detection: []
-  countermeasures: []
-  recovery: []
-review_by: null
-na_reason: null
-notes: ""
+  detection:
+    - measure: >-
+        The handler copies: it replies with the payload unchanged, so any
+        divergence between what was sent and what returns is immediately
+        observable by the caller.
+      status: by_design
+      source: README.md "The handler replies with the payload unchanged"
+  countermeasures:
+    - measure: "The release runs with no remote shell or hot-code surface exposed; runtime code replacement is not a service feature."
+      status: by_design
+      source: README.md "Running it" (rebar3 release, no remote shell); relx config
+    - measure: "Host access to the BEAM is the operator's boundary."
+      status: org
+  recovery:
+    - measure: "Restart from the pinned image restores the release's code."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  The copy-echo is the service's strongest integrity property: the reply IS
+  the receipt, so tampering in use is self-evident to the caller.
