@@ -24,8 +24,10 @@ jobs:
           dir: security/fovea
           command: lint
 
-      # Scorecard, machine-readable, as a job summary block.
+      # Scorecard, machine-readable, as a job summary block. Runs even when
+      # lint is red — a red run is exactly the run whose report matters.
       - name: "fovea score"
+        if: always()
         uses: macula-io/macula-fovea@main
         with:
           dir: security/fovea
