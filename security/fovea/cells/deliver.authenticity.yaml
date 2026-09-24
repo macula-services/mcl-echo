@@ -1,0 +1,41 @@
+id: deliver.authenticity
+status: assessed
+owner: roeland@macula.io
+threat:
+  definition: >-
+    The artifact that runs on the host is not the artifact this repository
+    built: a substituted, intercepted, or accidentally wrong image reaches
+    a box and runs with the service's identity.
+  manifestations:
+    - A tag push silently redeploying every watchtower box (the pre-fix :latest behaviour).
+    - An unpinned base image moving upstream between builds and changing what ships.
+    - Pulling a private registry package under the same name from an unauthenticated host.
+defense:
+  detection:
+    - measure: >-
+        The image is labelled with the commit it was built from
+        (org.opencontainers.image.source); drift between running image and
+        repo state is checkable on the host.
+      status: by_design
+      source: 'CHANGELOG.md "build: the image is labelled with the commit it was built from"'
+    - measure: "The runtime OTP/release guards (full release, digests) fail a boot whose VM was swapped."
+      status: by_design
+      source: CHANGELOG.md "One OTP, 28.4.3, pinned everywhere"
+  countermeasures:
+    - measure: >-
+        Deploy and release are different acts: main→:latest is the deploy
+        channel; a v* tag publishes a semver tag only and never moves :latest,
+        so a release cannot also deploy itself.
+      status: by_design
+      source: README.md "Deployment"
+    - measure: "Digest-pinned builder/base stages make the build reproducible across runs."
+      status: by_design
+      source: CHANGELOG.md "One OTP, 28.4.3, pinned everywhere"
+  recovery:
+    - measure: "Rollback = pin the host to the previous semver tag, then back to :latest when fixed."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  The deliberate channel split is the crown control here: the failure mode
+  that used to couple release-to-deploy was removed in the repository, not
+  in a runbook.

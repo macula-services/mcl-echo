@@ -1,0 +1,45 @@
+id: operate.authenticity
+status: assessed
+owner: roeland@macula.io
+threat:
+  definition: >-
+    The running node is not what it claims: it advertises a capability under
+    a spoofed, drifted, or unverified identity — as someone else's org, or
+    as nobody attributable at all.
+  manifestations:
+    - "Org drift: host forgets the org variable; the node runs the placeholder org and advertises a name nobody uses."
+    - "Realm mismatch: advertiser and caller disagree silently on the wire (unknown_next_peer)."
+    - A station dial not bound to the station it names.
+defense:
+  detection:
+    - measure: >-
+        Boot crashes the node rather than letting it drift: both org and
+        realm checks crash at boot when not well formed.
+      status: by_design
+      source: README.md "Both checks crash the node at boot rather than letting it drift"
+    - measure: >-
+        The org is a literal in config/sys.config.src, not an environment
+        variable — the org is a property of the service, not of where it runs.
+      status: by_design
+      source: config/sys.config.src ({org, <<"mcl-echo">>})
+  countermeasures:
+    - measure: >-
+        Every org-scoped advertisement is verified against MCL_REALM_KEY —
+        the io.macula realm's public signing key, pinned at pool start
+        (mcl_om ≥ 0.3.0 refuses to start a pool without it).
+      status: by_design
+      source: README.md "MCL_REALM_KEY"; config/sys.config.src ({realm_key, ...})
+    - measure: >-
+        The station dial is pinned: seeds pair host with node id (D5), and
+        the D16 handshake pin expected_node_id is the binding control —
+        TLS verification is not, and verify=>none is asked for deliberately.
+      status: by_design
+      source: README.md "Calling it" + verify=>none rationale; mcl_echo_stations.erl
+  recovery:
+    - measure: "Fix config, redeploy: a node that crashed at boot never advertised a wrong identity, so there is nothing to revoke."
+      status: by_design
+      source: README.md "Both checks crash the node at boot"
+notes: >-
+  Crash-loudness is this cell's strongest asset: the failure mode is stopped
+  at zero advertisements rather than cleaned up after. The limitation — a
+  crash leaves the service down — is the availability cell's territory.

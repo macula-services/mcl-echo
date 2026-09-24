@@ -1,0 +1,38 @@
+id: operate.accountability
+status: assessed
+owner: roeland@macula.io
+threat:
+  definition: >-
+    A caller abuses the echo service (scanning, flooding, probing) and
+    cannot be attributed afterwards — or, worse, one caller's abuse is
+    attributed to another.
+  manifestations:
+    - Text payloads (legacy 10.x quickstarts) falling into one shared global rate-limit bucket instead of a per-caller bucket.
+    - Rate-limited responses unreadable because the caller node id that keyed the bucket is not recorded.
+defense:
+  detection:
+    - measure: >-
+        The wire-authenticated caller node id is merged into map payloads
+        and is the rate-limit key: 20 calls/10s per caller, 300/10s global.
+      status: by_design
+      source: README.md "A caller is only attributable when the payload is a map"; apps/mcl_echo/src/mcl_echo_limiter.erl
+    - measure: >-
+        The caller script's banner prints station, station nodeid, procedure,
+        realm, caller nodeid, and payload — every field the run depends on,
+        so a rate_limited result is readable as "which bucket".
+      status: by_design
+      source: README.md "Everything the run depends on is printed"; scripts/mcl_echo_call
+  countermeasures:
+    - measure: >-
+        Fixed-window rate limiting bounds abuse per attributable identity:
+        over-limit callers get rate_limited, oversized payloads payload_too_large.
+      status: by_design
+      source: README.md "Two guards apply"; apps/mcl_echo/src/mcl_echo_limiter.erl
+  recovery:
+    - measure: "Re-key: a fresh caller node id is minted per run, so a rate-limited session ends when the harness re-mints."
+      status: by_design
+      source: README.md "The caller node id is minted fresh every run and is the rate-limit key"
+notes: >-
+  The map-only attribution caveat is a real one and is documented, not
+  hidden: bare-text callers share the global bucket. The cell's honesty
+  boundary is "attributable when the caller uses the map contract".

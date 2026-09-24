@@ -1,0 +1,14 @@
+id: internal.availability
+status: unassessed
+owner: unassigned
+threat:
+  definition: ""
+
+  manifestations: []
+defense:
+  detection: []
+  countermeasures: []
+  recovery: []
+review_by: null
+na_reason: null
+notes: ""

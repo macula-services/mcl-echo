@@ -1,0 +1,40 @@
+id: acquire.authenticity
+status: assessed
+owner: roeland@macula.io
+threat:
+  definition: >-
+    A dependency fetched at build time is not the artifact its author
+    published: a poisoned or downgraded hex package or toolchain component
+    that enters the release image.
+  manifestations:
+    - Hex resolution drifting to an incompatible/compromised version pair (mcl_om × macula).
+    - Floating OTP or rebar3 in the image build resolving to whatever the registry served that day.
+defense:
+  detection:
+    - measure: >-
+        mcl_echo_info_tests fails the build unless the runtime reports
+        mcl_om 0.28 with macula 12.2 together — the pairing floor is asserted,
+        not hoped for.
+      status: by_design
+      source: rebar.config deps comment; CHANGELOG.md "mcl_om ~> 0.28 with macula ~> 12.2, together"
+    - measure: >-
+        The lint stage refuses anything but OTP 28.4.3 with mldsa87; the
+        runtime guard compares full releases and requires both digests.
+      status: by_design
+      source: CHANGELOG.md "One OTP, 28.4.3, pinned everywhere"
+  countermeasures:
+    - measure: "rebar3 3.27.0 installed in the image build verified by sha256 — the pin is checked at install time."
+      status: by_design
+      source: CHANGELOG.md "The image build installs rebar3 3.27.0 verified by sha256"
+    - measure: >-
+        Base and builder images pinned by digest (hexpm/erlang:28.4.3-alpine-3.22.6,
+        macula-ci-otp:20260923-1347); nothing floats.
+      status: by_design
+      source: CHANGELOG.md "One OTP, 28.4.3, pinned everywhere"
+  recovery:
+    - measure: "Re-pin, rebuild, redeploy via the rollback channel (semver tags do not move :latest)."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  floor-asserting tests do the detection a lockfile cannot: rebar.lock pins,
+  the info test verifies what actually got resolved at runtime.

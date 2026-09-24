@@ -1,0 +1,36 @@
+id: at_rest.confidentiality
+status: assessed
+owner: roeland@macula.io
+threat:
+  definition: >-
+    Data at rest on the node is read by someone who should not read it —
+    chiefly the identity key, the only secret the service carries.
+  manifestations:
+    - Host operator or attacker reads /etc/mcl/secrets/identity.key and clones the node identity.
+    - "Watchtower recreate mints a fresh anonymous volume — the opposite failure: identity is lost, not leaked."
+defense:
+  detection:
+    - measure: "The service holds no application data (no reckon-db store): there is nothing else at rest to leak."
+      status: by_design
+      source: README.md "The service contract" / rebar.config comment ("starts NO reckon-db")
+  countermeasures:
+    - measure: >-
+        The identity key lives only in the mounted secrets volume, not in
+        the image or repo; the compose file names the volume exactly so a
+        recreate reuses the key instead of minting a new identity.
+      status: by_design
+      source: config/sys.config.src (identity_key_path); deploy/docker-compose.yml (volume block)
+    - measure: "Host disk encryption of the volume is the operator's obligation — not enforceable from inside the container."
+      status: org
+  recovery:
+    - measure: >-
+        Deleting the volume retires the node id; a suspected leak is
+        handled by retiring the identity and re-admitting a fresh node
+        (realm-side D25 row for the old id becomes orphaned).
+      status: roadmap
+      source: deploy/docker-compose.yml ("Deleting it retires the node id"); realm admission is out of scope
+review_by: 2027-03-31
+notes: >-
+  One secret, one volume, one documented retire path. The possession half
+  of the same asset lives in decommission.possession; confidentiality here
+  is about reading the key, not carrying it away.

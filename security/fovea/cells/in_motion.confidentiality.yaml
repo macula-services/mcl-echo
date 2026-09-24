@@ -1,0 +1,35 @@
+id: in_motion.confidentiality
+status: assumed
+owner: roeland@macula.io
+threat:
+  definition: >-
+    Traffic between the node and its stations, or between caller and
+    provider, is read or fingerprinted in transit — payload or the pattern
+    of who pings echo and when.
+  manifestations:
+    - Passive observation of the QUIC dial from the host to the pinned station.
+    - Harvest-now/decrypt-later archiving of that link (see temporal.confidentiality for the crypto half).
+defense:
+  detection:
+    - measure: "Link-level anomaly observation is the host operator's job; the service cannot see its own wire."
+      status: org
+  countermeasures:
+    - measure: >-
+        Transport confidentiality is delegated to the macula wire: QUIC
+        with the pq_hybrid crypto profile, mandatory for this node to peer
+        at all (puzzle/HELLO closes without it).
+      status: by_design
+      source: config/sys.config.src (crypto_profile block); README.md "THE PQ CRYPTO PROFILE"
+    - measure: >-
+        The echo is deliberately public (auth => open, payload echoed
+        unchanged): what an observer can learn from content is by design
+        near-zero — the payload is not a secret, and the service holds none.
+      status: by_design
+      source: README.md "It asks the realm for no authority beyond its own scope"
+  recovery:
+    - measure: "Re-key/re-dial on station change; the D5-pinned pair is reconfigurable without re-minting the node identity."
+      status: org
+notes: >-
+  Assumed, not assessed: the by_design claims cite the repo's own
+  configuration documentation, not a wire capture. A live tap test against
+  the fleet would promote this cell to assessed.

@@ -1,0 +1,40 @@
+id: operate.availability
+status: assessed
+owner: roeland@macula.io
+threat:
+  definition: >-
+    The echo service becomes unreachable or refuses service — by abuse,
+    misconfiguration, or silent failure modes that look healthy.
+  manifestations:
+    - "Host networking port collision: another process binds 8461 and the bind failure is silent."
+    - A bridged container that connects to nothing (IPv6-only fleet) and sits there green.
+    - Payload or rate abuse exhausting the handler.
+defense:
+  detection:
+    - measure: "/health on 8461 is the liveness probe; degraded D25 grant is reported there rather than hidden."
+      status: by_design
+      source: 'README.md "/health"; CHANGELOG.md "{mcl_om, ~> 0.26.3}: /health reports the D25 provider grant"'
+    - measure: "compose healthcheck + restart: unless-stopped restarts a dead node."
+      status: by_design
+      source: deploy/docker-compose.yml
+  countermeasures:
+    - measure: >-
+        Payload cap (4096 bytes by erlang:external_size/1, so it bounds every
+        payload shape) and fixed-window rate limit (20/10s per caller,
+        300/10s global) bound the handler's worst case.
+      status: by_design
+      source: README.md "Two guards apply"; apps/mcl_echo/src/mcl_echo_limiter.erl
+    - measure: >-
+        Host networking is documented as required (IPv6-only fleet), not
+        accidental: the compose file carries the warning instead of a bridge
+        that looks fine.
+      status: by_design
+      source: deploy/docker-compose.yml ("HOST NETWORKING IS NOT LAZINESS")
+  recovery:
+    - measure: "Rollback channel (semver pin) restores a known-good image in seconds."
+      status: by_design
+      source: README.md "Deployment"
+notes: >-
+  The heavy DDoS case is deliberately out of this cell's scope: transport
+  protection is the mesh/station's problem, and echo's own contribution is
+  the limiter — assessed honestly as a bound, not a shield.

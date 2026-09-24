@@ -1,0 +1,40 @@
+id: create.integrity
+status: assessed
+owner: roeland@macula.io
+threat:
+  definition: >-
+    The source tree is modified before build in a way that changes the
+    shipped behaviour — backdoor in the echo handler or guards — without
+    review or record.
+  manifestations:
+    - Unreviewed merge that weakens a guard (payload cap, rate limiter) unnoticed.
+    - Committed config drift (org, realm, identity path) that survives because no test asserts it.
+defense:
+  detection:
+    - measure: >-
+        eunit suite asserts the service behaviour attribute and the info
+        contract (mcl_echo_info_tests); a handler change that breaks the
+        contract fails CI.
+      status: by_design
+      source: rebar.config ({eunit_opts}), apps/mcl_echo/src/mcl_echo_service.erl
+    - measure: >-
+        rebar3_lint (elvis) with the org's mcl_min ruleset runs over
+        apps/*/src in CI; structural drift is a lint failure, not a review
+        request.
+      status: by_design
+      source: rebar.config ({project_plugins, [rebar3_lint]}, {elvis, ...})
+    - measure: "Compilation with warnings_as_errors: the tree refuses to build with warnings."
+      status: by_design
+      source: rebar.config ({erl_opts, [debug_info, warnings_as_errors]})
+  countermeasures:
+    - measure: "Human review is the release gate for merges to main."
+      status: org
+  recovery:
+    - measure: "Revert + rebuild: main and the semver tag channels are separate, so a bad merge is revoked by pinning the previous tag."
+      status: by_design
+      source: 'README.md ("Deployment" section: main→:latest, v*→semver)'
+notes: >-
+  Assessed as the strongest supply-chain cell: CI asserts, doesn't only check.
+  The residual gap is a malicious maintainer who writes tests that ratify
+  their own backdoor — that is the trust-anchor #3 (pipeline) problem and
+  lives there.

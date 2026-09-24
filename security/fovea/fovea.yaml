@@ -1,0 +1,50 @@
+# Fovea assessment header — macula-services/mcl-echo
+# Validated by macula-io/macula-fovea schema/assessment.schema.json (spec v0.2)
+fovea: "0.2"
+system: mcl-echo
+assessment_date: 2026-09-25
+owner: roeland@macula.io
+
+description: >-
+  Security assessment of mcl-echo: the mesh's always-on hello-world target.
+  OTP service (rebar3/relx), containerized, running on the io.macula realm as
+  org 'mcl-echo'. The service is deliberately public (no UCAN gate), holds no
+  application data, and carries exactly one secret: its identity key.
+
+scope:
+  in:
+    - "The mcl-echo node as a deployable object: image build, runtime, identity key (mounted volume), config"
+    - "The wire surface: capability advertisement, echo handler, guards (payload cap, rate limiter)"
+    - "Boot-time validation path (realm, org, realm_key, identity, crypto profile)"
+    - "Supply chain of this repo: hex deps, rebar3 pin, OTP/base image pins, CI publish channels"
+    - "The D25 provider delegation lifecycle: admission, grant, revocation surface"
+  out:
+    - "Realm infrastructure itself (macula-realm's fovea; trust anchors registered separately there)"
+    - "Station infrastructure (macula-station): echo delegates transport to it by design"
+    - "Host operators' general IT (SSH, disk encryption, physical hull): referenced as org obligations"
+    - "Sibling services (mcl-citizens, mcl-om itself beyond its release pin)"
+
+attributes:
+  core:
+    - confidentiality
+    - integrity
+    - availability
+    - authenticity
+    - accountability
+  enabled:
+    - possession
+  disabled_justifications:
+    utility: >-
+      For a stateless hello-world, 'intact but useless' is indistinguishable
+      from unavailable: an echo that cannot answer is an availability event by
+      construction, and enabling utility would only duplicate those cells.
+
+columns:
+  actors: [internal, external, trusted_partner, machine_agent]
+  lifecycle: [create, acquire, deliver, operate, admin, decommission]
+  data: [at_rest, in_motion, in_use]
+  environment: [physical_natural, socio_legal, temporal]
+
+trust_anchor_registry: trust-anchors.md
+landscape: landscape.md
+cells_dir: cells/

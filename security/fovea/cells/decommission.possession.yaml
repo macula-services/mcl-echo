@@ -1,0 +1,43 @@
+id: decommission.possession
+status: roadmap
+owner: roeland@macula.io
+threat:
+  definition: >-
+    A decommissioned or abandoned node — host handed back, disk resold,
+    volume copied — takes its identity key with it, and the finder rejoins
+    the mesh as mcl-echo/echo.
+  manifestations:
+    - Resold/reprovisioned host still mounting (or recovering) the mcl_echo_secrets volume.
+    - Backup of the volume exfiltrated; a second node boots with the same identity concurrently.
+defense:
+  detection:
+    - measure: >-
+        A duplicate identity is visible to the realm as two live providers
+        under one node id — but nothing in this repo asserts it; the desk is
+        the realm's.
+      status: org
+  countermeasures:
+    - measure: >-
+        The volume is a named, deployable object whose deletion retires the
+        node id — the retire path exists in the deploy contract.
+      status: by_design
+      source: deploy/docker-compose.yml ("Deleting it retires the node id")
+    - measure: >-
+        No documented decommission runbook: wipe-the-volume steps, D25
+        revocation request, and fleet-side confirmation are not written down
+        anywhere in this repo today.
+      status: roadmap
+      source: absence — this is the gap being recorded
+  recovery:
+    - measure: >-
+        Realm-side: the D25 delegation naming the retired node id is the
+        revocation surface — the realm admin's step, outside this repo's
+        code but in scope for the assessment.
+      status: roadmap
+      source: README.md "the realm's D25 chain must publish a procedure delegation naming this service's node id"
+review_by: 2027-03-31
+notes: >-
+  The honest shape of this cell is: the mechanism exists (volume = identity,
+  deletion = retirement), the procedure does not (no runbook, no automated
+  pre-retire check). Roadmap, not assumed — this is the cell that stays red
+  until a runbook ships.

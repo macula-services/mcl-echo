@@ -1,0 +1,40 @@
+id: temporal.confidentiality
+status: assessed
+owner: roeland@macula.io
+threat:
+  definition: >-
+    Time as the adversary: ciphertext harvested today is decrypted later
+    when the classical profile it was sent under is broken — or the node
+    silently drifts onto a weaker profile as releases age.
+  manifestations:
+    - A node that boots on the classical crypto profile while every PQ station closes its handshake (puzzle_invalid) — silent and permanent until diagnosed.
+    - "Fleet-level downgrade pressure: a config flag believed to control puzzle difficulty that nothing actually reads."
+defense:
+  detection:
+    - measure: >-
+        The pq_hybrid profile block is mandatory config; without it the node
+        does not peer — the failure is at boot/handshake, not silently later.
+      status: by_design
+      source: config/sys.config.src (THE PQ CRYPTO PROFILE block)
+    - measure: >-
+        macula 12 (D30) refuses a {macula, puzzle_difficulty, _} setting
+        outright: a node cannot believe it chose a difficulty that nothing
+        reads.
+      status: by_design
+      source: config/sys.config.src ("NO puzzle_difficulty HERE"); README.md
+  countermeasures:
+    - measure: "Every wire signature is checked under pq_hybrid; the profile is a fleet constant, not a per-node choice."
+      status: by_design
+      source: config/sys.config.src ({crypto_profile, pq_hybrid}); README.md "The 11.x client model"
+    - measure: "The OTP/macula version floor is asserted by tests and guards (full release + digests), so a drifting vintage cannot silently downgrade the wire."
+      status: by_design
+      source: CHANGELOG.md "One OTP, 28.4.3, pinned everywhere"; mcl_echo_info_tests
+  recovery:
+    - measure: "Re-pin and redeploy: profile/version drift is a build-time and boot-time failure, corrected by the pinned artifact."
+      status: by_design
+      source: CHANGELOG.md "Ported to macula 12"
+notes: >-
+  This is the cell that pays for the pq_hybrid config's existence: the
+  harvest-now/decrypt-later story is answered by the profile being the
+  floor, enforced twice (config + platform refusal of the knob that used
+  to let nodes pretend).

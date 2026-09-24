@@ -1,0 +1,32 @@
+name: security-fovea
+
+on:
+  push:
+    paths:
+      - "security/fovea/**"
+      - ".github/workflows/security-fovea.yml"
+  pull_request:
+    paths:
+      - "security/fovea/**"
+      - ".github/workflows/security-fovea.yml"
+
+jobs:
+  fovea:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Lint first: grid closure, anti-theater, copy-paste. Failures annotate
+      # the offending cell file in the PR diff.
+      - name: "fovea lint"
+        uses: macula-io/macula-fovea@main
+        with:
+          dir: security/fovea
+          command: lint
+
+      # Scorecard, machine-readable, as a job summary block.
+      - name: "fovea score"
+        uses: macula-io/macula-fovea@main
+        with:
+          dir: security/fovea
+          command: score
