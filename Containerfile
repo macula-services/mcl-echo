@@ -68,6 +68,10 @@ FROM docker.io/alpine:3.22
 # private by accident failed its first pull with a bare "unauthorized", which
 # names nothing and sends you looking in the wrong place.
 LABEL org.opencontainers.image.source="https://github.com/macula-services/mcl-echo"
+# The commit this image was built from (build-push passes github.sha), so a
+# digest pinned on a box traces back to a commit.
+ARG REVISION=unknown
+LABEL org.opencontainers.image.revision="${REVISION}"
 # zstd-libs/snappy/lz4-libs: the RUNTIME shared libraries for rocksdb's
 # compression backends, compiled against in the builder stage above via
 # their -dev packages. Missing here crashes the release outright on

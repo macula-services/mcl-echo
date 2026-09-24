@@ -256,6 +256,17 @@ the_release_fixes_the_org_to_the_repository_name_test() ->
     ?assertEqual(<<"mcl-echo">>,
                  pinned("config/sys.config.src", "^\\s+\\{org,\\s*<<\"([^\"]*)\">>\\},")).
 
+%% The image says which commit it was built from: build-push passes the sha,
+%% the runtime stage labels the image with it. A digest pinned on a box is
+%% then traceable to a commit without the registry's history.
+the_image_carries_its_revision_test() ->
+    ?assertEqual(<<"REVISION">>,
+                 pinned("Containerfile", "^ARG (REVISION)=unknown$")),
+    ?assertEqual(<<"${REVISION}">>,
+                 pinned("Containerfile", "^LABEL org\\.opencontainers\\.image\\.revision=\"([^\"]+)\"$")),
+    ?assertEqual(<<"${{ github.sha }}">>,
+                 pinned(".github/workflows/build-push.yml", "^\\s+REVISION=(.+)$")).
+
 pinned(Relative, Pattern) ->
     {ok, Text} = file:read_file(alongside(Relative)),
     {match, [Version]} = re:run(Text, Pattern,
