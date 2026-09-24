@@ -1,6 +1,6 @@
 # Fovea assessment header — macula-services/mcl-echo
 # Validated by macula-io/macula-fovea schema/assessment.schema.json (spec v0.2)
-fovea: "0.2"
+fovea: "0.3"
 system: mcl-echo
 assessment_date: 2026-09-25
 owner: roeland@macula.io

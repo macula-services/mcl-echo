@@ -30,3 +30,13 @@ jobs:
         with:
           dir: security/fovea
           command: score
+
+      # Persist the artifacts the action wrote (score.json + scorecard.md)
+      # even when lint made the run red: the report is the point of a red run.
+      - name: "Upload fovea artifacts"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fovea-artifacts
+          path: fovea-artifacts/
+          retention-days: 30
