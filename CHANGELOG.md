@@ -9,6 +9,12 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **mcl_om `~> 0.28` with macula `~> 12.2`, together.** An image built on
+  `~> 0.27` resolved mcl_om 0.27.1 with macula 12.2.0, the pairing in which a
+  failed publish announcement kills the publishing process; the fleet was not
+  re-pinned to it. The service now answers `mcl-echo/info` with no code of its
+  own, and `mcl_echo_info_tests` round-trips it through macula's codec and fails
+  unless it reports mcl_om 0.28 with macula 12.2.
 - **The image build installs rebar3 3.27.0 verified by sha256**, the same
   pin as mcl-om's scaffold, instead of whatever the S3 URL served last.
 - **One OTP, 28.4.3, pinned everywhere, and nothing floats.** The image built
