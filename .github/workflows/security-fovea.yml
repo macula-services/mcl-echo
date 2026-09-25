@@ -1,6 +1,7 @@
 name: security-fovea
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - "security/fovea/**"
