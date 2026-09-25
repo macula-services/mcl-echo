@@ -2,6 +2,9 @@ name: security-fovea
 
 on:
   workflow_dispatch:
+  schedule:
+    # Weekly: the issues sync + overdue relabel, the matrix becoming the backlog.
+    - cron: "17 6 * * 1"
   push:
     paths:
       - "security/fovea/**"
@@ -34,6 +37,17 @@ jobs:
           dir: security/fovea
           command: score
 
+      # The trap: a roadmap cell whose linked issue was closed without the
+      # cell being updated fails the build.
+      - name: "fovea issues --check"
+        uses: macula-io/macula-fovea@main
+        with:
+          dir: security/fovea
+          command: issues
+          args: --check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # Persist the artifacts the action wrote (score.json + scorecard.md)
       # even when lint made the run red: the report is the point of a red run.
       - name: "Upload fovea artifacts"
@@ -43,3 +57,22 @@ jobs:
           name: fovea-artifacts
           path: fovea-artifacts/
           retention-days: 30
+
+  fovea-issues-sync:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # Idempotent: opens roadmap cells as issues, relabels overdue, closes
+      # issues whose cells moved on. Body markers prevent duplicates.
+      - name: "fovea issues (sync)"
+        uses: macula-io/macula-fovea@main
+        with:
+          dir: security/fovea
+          command: issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
