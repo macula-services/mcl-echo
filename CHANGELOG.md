@@ -9,6 +9,12 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **macula 12.5.1 at least.** Before it a provider's request admission never
+  let an entry go, and each station's liveness ping took one every 30 s, so
+  on beam00 the four stations held 256 entries each (their whole caller
+  quota) and the echo refused the calls they relayed (macula#37). The
+  requirement is now `>= 12.5.1 and < 13.0.0`, and `mcl_echo_info_tests`
+  asserts the patch level too.
 - **mcl_om `~> 0.28` with macula `~> 12.2`, together.** An image built on
   `~> 0.27` resolved mcl_om 0.27.1 with macula 12.2.0, the pairing in which a
   failed publish announcement kills the publishing process; the fleet was not

@@ -26,11 +26,14 @@ info_round_trip_test_() ->
           ?_assertEqual([{text, C} || C <- [<<(?ORG)/binary, "/info">> | Own]],
                         maps:get(capabilities, Reply)),
           ?_assertEqual([], [V || V <- lists:flatten(maps:values(Reply)), is_binary(V)]),
-          %% Floors, not exact minors: the pairing that matters is mcl_om 0.28 or
-          %% later WITH macula 12.2 or later; a later compatible release (macula
-          %% 12.3.0 arrived the same day) must not fail this.
-          ?_assert(at_least(maps:get(mcl_om_version, Reply), [0, 28])),
-          ?_assert(at_least(maps:get(macula_version, Reply), [12, 2]))]
+          %% Floors, not exact versions: mcl_om 0.28 or later WITH macula 12.5.1 or
+          %% later. 12.5.1 is the first macula whose request admission lets its
+          %% entries go (macula#37): on anything older the stations' liveness
+          %% pings filled their caller quotas on this echo within hours, and it
+          %% refused their relayed calls. A later compatible release must not fail
+          %% this.
+          ?_assert(at_least(maps:get(mcl_om_version, Reply), [0, 28, 0])),
+          ?_assert(at_least(maps:get(macula_version, Reply), [12, 5, 1]))]
      end}.
 
 %% The service must leave `info' to mcl_om: declaring its own refuses boot.
@@ -50,10 +53,9 @@ facts() ->
       uptime_s => 1, status => ok,
       capabilities => [<<(?ORG)/binary, "/", N/binary>> || #{name := N} <- Caps]}.
 
-%% Whether a `{text, <<"X.Y.Z">>}' version is at least [Major, Minor].
+%% Whether a `{text, <<"X.Y.Z">>}' version is at least [Major, Minor, Patch].
 at_least({text, Vsn}, Floor) ->
-    [Major, Minor | _] = [binary_to_integer(P) || P <- binary:split(Vsn, <<".">>, [global])],
-    [Major, Minor] >= Floor.
+    [binary_to_integer(P) || P <- binary:split(Vsn, <<".">>, [global])] >= Floor.
 
 vsn(App) ->
     _ = application:load(App),
