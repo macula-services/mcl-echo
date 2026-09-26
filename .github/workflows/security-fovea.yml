@@ -18,12 +18,12 @@ jobs:
   fovea:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       # Lint first: grid closure, anti-theater, copy-paste. Failures annotate
       # the offending cell file in the PR diff.
       - name: "fovea lint"
-        uses: macula-io/macula-fovea@main
+        uses: macula-io/macula-fovea@b1a01ffc3c06f5bcf4ef42dffceede04ca42e9f7 # v0.1.0
         with:
           dir: security/fovea
           command: lint
@@ -32,7 +32,7 @@ jobs:
       # lint is red — a red run is exactly the run whose report matters.
       - name: "fovea score"
         if: always()
-        uses: macula-io/macula-fovea@main
+        uses: macula-io/macula-fovea@b1a01ffc3c06f5bcf4ef42dffceede04ca42e9f7 # v0.1.0
         with:
           dir: security/fovea
           command: score
@@ -40,7 +40,7 @@ jobs:
       # The trap: a roadmap cell whose linked issue was closed without the
       # cell being updated fails the build.
       - name: "fovea issues --check"
-        uses: macula-io/macula-fovea@main
+        uses: macula-io/macula-fovea@b1a01ffc3c06f5bcf4ef42dffceede04ca42e9f7 # v0.1.0
         with:
           dir: security/fovea
           command: issues
@@ -52,7 +52,7 @@ jobs:
       # even when lint made the run red: the report is the point of a red run.
       - name: "Upload fovea artifacts"
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: fovea-artifacts
           path: fovea-artifacts/
@@ -65,12 +65,12 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       # Idempotent: opens roadmap cells as issues, relabels overdue, closes
       # issues whose cells moved on. Body markers prevent duplicates.
       - name: "fovea issues (sync)"
-        uses: macula-io/macula-fovea@main
+        uses: macula-io/macula-fovea@b1a01ffc3c06f5bcf4ef42dffceede04ca42e9f7 # v0.1.0
         with:
           dir: security/fovea
           command: issues

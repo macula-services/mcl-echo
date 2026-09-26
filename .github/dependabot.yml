@@ -1,0 +1,10 @@
+# Every action in .github/workflows is pinned by full commit sha, so nothing moves under a
+# workflow by itself. Dependabot proposes the updates, one PR per action, weekly: a pin moves
+# only by a reviewed change. (Erlang deps are not listed: BEAM lockfiles are not committed and
+# rebar.config holds constraints, which change by hand with a test.)
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
