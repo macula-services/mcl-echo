@@ -26,15 +26,17 @@ info_round_trip_test_() ->
           ?_assertEqual([{text, C} || C <- [<<(?ORG)/binary, "/info">> | Own]],
                         maps:get(capabilities, Reply)),
           ?_assertEqual([], [V || V <- lists:flatten(maps:values(Reply)), is_binary(V)]),
-          %% Floors, not exact versions: mcl_om 0.31 or later WITH macula 12.7.0 or
-          %% later. 0.31 registers each capability on its serving station only,
-          %% and 12.7.0's pool renews an advertised chain before its 30-minute
-          %% delegation lapses (macula#38, D32); on anything older this echo drops
-          %% off the mesh when its delegation expires. 12.7.0 also keeps 12.5.1's
-          %% request admission fix (macula#37). A later compatible release must
-          %% not fail this.
-          ?_assert(at_least(maps:get(mcl_om_version, Reply), [0, 31, 0])),
-          ?_assert(at_least(maps:get(macula_version, Reply), [12, 7, 0]))]
+          %% Floors, not exact versions: mcl_om 0.32.1 or later WITH macula 12.11.1
+          %% or later. 12.11.1 hands a handler only the wire-verified caller: before
+          %% it, a payload's own `caller' field shadowed the verified one for every
+          %% reader but maps:get/2, so a caller could name itself anyone. mcl_om
+          %% 0.32.1 is the line that stays correct on it (an ownership proof never
+          %% signs `caller'). Both keep what earlier floors required: 0.31's
+          %% serving-station registration, 12.7.0's renewal of the 30-minute
+          %% delegation before it lapses (macula#38, D32) and 12.5.1's request
+          %% admission fix (macula#37). A later compatible release must not fail this.
+          ?_assert(at_least(maps:get(mcl_om_version, Reply), [0, 32, 1])),
+          ?_assert(at_least(maps:get(macula_version, Reply), [12, 11, 1]))]
      end}.
 
 %% The service must leave `info' to mcl_om: declaring its own refuses boot.

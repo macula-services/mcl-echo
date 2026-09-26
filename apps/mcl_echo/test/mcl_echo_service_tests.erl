@@ -205,20 +205,34 @@ supervisor_starts_and_stops_test() ->
 %%
 %% ⚠ TO THE PATCH, AND NOTHING FLOATS. This compared majors only, so when Docker
 %% Hub moved the floating `erlang:28-alpine' on 2026-09-22 the next deploy
-%% shipped OTP 28.5 and this stayed green. It compares the full release now:
-%% the builder's (which must also carry a digest, so a re-pushed tag cannot
-%% change what builds), the release lint's toolchain step insists on (its image
-%% tag carries a date, not a version), .tool-versions, and this VM.
+%% shipped OTP 28.5 and this stayed green. It compares the full release now: the
+%% one the image build insists on (its builder refuses any other), the one lint's
+%% toolchain step insists on, .tool-versions, and this VM. The two images carry
+%% dates, not versions, so the release is read from their checks, and the next
+%% test makes them the same image.
 the_runtime_agrees_between_the_image_the_ci_and_this_vm_test() ->
-    Image = pinned("Containerfile",
-                   "^FROM docker\\.io/(?:hexpm/)?erlang:([0-9]+\\.[0-9]+\\.[0-9]+)"
-                   "-alpine[^@\\s]*@sha256:[0-9a-f]{64} AS builder$"),
-    Ci = pinned(".github/workflows/lint.yml",
-                "\\{<<\"([0-9]+\\.[0-9]+\\.[0-9]+)\">>, true\\} -> halt\\(0\\);"),
+    Otp = "\\{<<\"([0-9]+\\.[0-9]+\\.[0-9]+)\">>, true\\} -> halt\\(0\\);",
+    Image = pinned("Containerfile", Otp),
+    Ci = pinned(".github/workflows/lint.yml", Otp),
     Tools = pinned(".tool-versions", "^erlang ([0-9]+\\.[0-9]+\\.[0-9]+)$"),
     %% Sorted and deduplicated, so a failure prints every version rather than
     %% the first pair that happened to be compared.
     ?assertEqual([Image], lists:usort([Image, Ci, Tools, running_otp()])).
+
+%% The image is built on exactly the toolchain CI tests on: the same
+%% macula-ci-otp reference, dated tag AND digest, in both files. The runtime
+%% stage is the matching macula-pq-runtime of the same date, also by digest.
+%% (Before 2026-09-26 the image built on hexpm alpine while CI ran macula-ci-otp,
+%% so a green lint said nothing about the libc the release would load its NIFs on.)
+the_image_builds_on_the_ci_toolchain_test() ->
+    Ci = "ghcr\\.io/macula-io/macula-ci-otp:([0-9]{8}-[0-9]{4}@sha256:[0-9a-f]{64})",
+    Builder = pinned("Containerfile", "^FROM " ++ Ci ++ " AS builder$"),
+    Lint = pinned(".github/workflows/lint.yml", "^\\s+image: " ++ Ci ++ "$"),
+    ?assertEqual(Builder, Lint),
+    Runtime = pinned("Containerfile",
+                     "^FROM ghcr\\.io/macula-io/macula-pq-runtime:([0-9]{8}-[0-9]{4})@sha256:[0-9a-f]{64}$"),
+    [Date | _] = binary:split(Builder, <<"@">>),
+    ?assertEqual(Date, Runtime).
 
 %% The full release, 28.4.3 and not 28: `otp_release' names only the major.
 running_otp() ->
@@ -227,17 +241,13 @@ running_otp() ->
                                                   "OTP_VERSION"])),
     string:trim(Version).
 
-%% rebar3 is a tool in the image build, pinned like the images: one release,
-%% verified by sha256. It was fetched from an S3 URL that serves whatever was
-%% published last.
-image_build_pins_rebar3_by_sha256_test() ->
+%% The image build downloads no tool. rebar3, Rust and the rest come with the
+%% pinned macula-ci-otp builder (rebar3 3.27.0 sha256-checked there); a RUN that
+%% fetched one would be a second, unpinned source of the toolchain. The old build
+%% fetched rebar3 and ran rustup's installer, both by URL.
+image_build_downloads_no_tool_test() ->
     {ok, Containerfile} = file:read_file(alongside("Containerfile")),
-    ?assertMatch({match, _},
-                 re:run(Containerfile, "releases/download/3\\.27\\.0/rebar3")),
-    ?assertMatch({match, _},
-                 re:run(Containerfile, "\\b[0-9a-f]{64}  /usr/local/bin/rebar3")),
-    ?assertNotEqual(nomatch, binary:match(Containerfile, <<"sha256sum -c -">>)),
-    ?assertEqual(nomatch, binary:match(Containerfile, <<"s3.amazonaws.com/rebar3">>)).
+    ?assertEqual(nomatch, re:run(Containerfile, "^RUN .*(curl|wget|rustup|https?://)", [multiline])).
 
 %% Nothing names a floating image: a lint container of `erlang:28' would pass
 %% the check above only while Docker Hub happens to agree.

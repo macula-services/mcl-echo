@@ -25,7 +25,7 @@ jobs:
       # is macula-io/macula-ci-images' build (OTP 28.4.3, an OpenSSL with
       # ML-DSA, rebar3, Rust, cmake); the step below refuses anything else.
       # mcl_echo_runtime_pin_tests guards both pins.
-      image: ghcr.io/macula-io/macula-ci-otp:20260923-1347@sha256:b2260d084a3d3c5e0b74932c4ee052a0cadfddddb6587d5d2214873e6bb06330
+      image: ghcr.io/macula-io/macula-ci-otp:20260923-1444@sha256:dd2ba6eb858a0eacedf0179300323fe5c6da46fb308d22da0ca8cfcd1f0718dc
     steps:
       - uses: actions/checkout@v4
       - name: Verify the toolchain is the one we think it is
@@ -40,26 +40,9 @@ jobs:
                 {<<"28.4.3">>, true} -> halt(0);
                 _                    -> halt(1)
             end.'
-      # cmake, build-essential: mcl_om pulls in rocksdb (via barrel_docdb)
-      # and khepri/ra transitively, UNCONDITIONALLY -- needed even for a
-      # storeless, producer-only service. libssl-dev is not listed because
-      # the debian-based erlang image already ships it; alpine (the
-      # Containerfile's runtime base) does not, which is why it's explicit
-      # there.
-      #
-      # libsnappy-dev liblz4-dev libzstd-dev libbz2-dev: rocksdb's CMakeLists
-      # auto-detects each of these via find_package() and, if one is
-      # missing, silently disables it rather than failing the build -- so
-      # the compile step goes green while producing a NIF whose runtime
-      # config (barrel_docdb defaults document-body/BlobDB compression to
-      # snappy) can't actually open: `db_open' fails with "The specified
-      # blob compression type Snappy is not available." Hit for real in
-      # mcl_om's own CI (see its lint-and-test.yml for the incident) and
-      # again in the station directory, the first scaffolded service to actually
-      # exercise read_model_id/0 in CI -- install all four, not just
-      # whichever one happened to be exercised first.
-      # The image carries cmake, a C toolchain and Rust; only the codec libs
-      # are missing.
-      - run: apt-get update && apt-get install -y --no-install-recommends libsnappy-dev liblz4-dev libzstd-dev libbz2-dev
+      # No rocksdb codec libraries: mcl_om stopped bringing barrel_docdb (and so
+      # rocksdb) in 0.27, and nothing in this release links snappy, lz4, zstd
+      # or bz2 (checked with ldd on every .so in the image, 2026-09-26).
       - run: rebar3 lint
       - run: rebar3 eunit
+      - run: rebar3 dialyzer
