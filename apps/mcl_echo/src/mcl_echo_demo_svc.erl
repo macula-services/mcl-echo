@@ -20,6 +20,8 @@
 
 -export([main/0]).
 
+%% Runs until the node is stopped: it ends in `receive after infinity'.
+-spec main() -> no_return().
 main() ->
     {ok, _} = application:ensure_all_started(macula),
 

@@ -85,6 +85,8 @@
 %% macro so the banner prints the term that is actually sent.
 -define(PAYLOAD, #{<<"ping">> => <<"pong">>}).
 
+%% A command line entry point: every path ends in halt/1.
+-spec main() -> no_return().
 main() ->
     ok = macula_or_halt(macula_verdict(loaded_macula())),
     Args = init:get_plain_arguments(),
@@ -139,6 +141,7 @@ checked_count(_NotACount, S) ->
 %% The instrument line comes FIRST, before the station is even resolved, so it
 %% prints on every path including an unknown-station typo. A run that cannot
 %% say which artifact produced it is not worth comparing against another.
+-spec run(atom() | string(), pos_integer(), binary()) -> no_return().
 run(Station, Calls, Procedure) ->
     io:format("instrument     HEAD ~s, mcl_echo_call.beam md5 ~ts~n",
               [head_label(), beam_md5()]),
@@ -623,7 +626,6 @@ pin_verdict(_Other, _Pin)    -> "= another station".
 %% The default arrives as an atom and a command line argument as a
 %% string; both print as the same plain name so six reports line up.
 station_label(Name) when is_atom(Name)   -> atom_to_binary(Name, utf8);
-station_label(Name) when is_binary(Name) -> Name;
 station_label(Name) when is_list(Name)   -> unicode:characters_to_binary(Name).
 
 hex(Bin) -> binary:encode_hex(Bin, lowercase).
