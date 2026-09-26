@@ -26,14 +26,15 @@ info_round_trip_test_() ->
           ?_assertEqual([{text, C} || C <- [<<(?ORG)/binary, "/info">> | Own]],
                         maps:get(capabilities, Reply)),
           ?_assertEqual([], [V || V <- lists:flatten(maps:values(Reply)), is_binary(V)]),
-          %% Floors, not exact versions: mcl_om 0.28 or later WITH macula 12.5.1 or
-          %% later. 12.5.1 is the first macula whose request admission lets its
-          %% entries go (macula#37): on anything older the stations' liveness
-          %% pings filled their caller quotas on this echo within hours, and it
-          %% refused their relayed calls. A later compatible release must not fail
-          %% this.
-          ?_assert(at_least(maps:get(mcl_om_version, Reply), [0, 28, 0])),
-          ?_assert(at_least(maps:get(macula_version, Reply), [12, 5, 1]))]
+          %% Floors, not exact versions: mcl_om 0.31 or later WITH macula 12.7.0 or
+          %% later. 0.31 registers each capability on its serving station only,
+          %% and 12.7.0's pool renews an advertised chain before its 30-minute
+          %% delegation lapses (macula#38, D32); on anything older this echo drops
+          %% off the mesh when its delegation expires. 12.7.0 also keeps 12.5.1's
+          %% request admission fix (macula#37). A later compatible release must
+          %% not fail this.
+          ?_assert(at_least(maps:get(mcl_om_version, Reply), [0, 31, 0])),
+          ?_assert(at_least(maps:get(macula_version, Reply), [12, 7, 0]))]
      end}.
 
 %% The service must leave `info' to mcl_om: declaring its own refuses boot.
