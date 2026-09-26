@@ -223,8 +223,14 @@ CI publishes on two channels, and they are deliberately separate:
 | to `main` | `ghcr.io/macula-services/mcl-echo:latest` | the deploy channel |
 | a `v*` tag | `ghcr.io/macula-services/mcl-echo:<semver>` only | the rollback archive |
 
-Pull `:latest` under watchtower and a merge is a deploy. A rollback is pinning
-to a semver tag, then back to `:latest` once the fix ships.
+The fleet does not follow `:latest`: macula-fleet pins the box by **digest**, and a
+new build reaches it only when that pin moves (a reviewed fleet commit). A rollback
+is a revert of that commit, back to the previous digest.
+
+**Every pushed digest is signed**, keyless, and carries an SBOM and a SLSA
+provenance attestation (the `attest` job, `macula-io/macula-ci-images`'
+`attest-image.yml`). The fleet's reconciler verifies them before it runs a digest:
+signed by that workflow, called from this repository, at the commit it names.
 
 **A tag push does not move `:latest`.** It used to, which meant cutting a
 release also deployed it, seconds later, to every box watching `:latest`

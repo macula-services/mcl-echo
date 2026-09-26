@@ -72,6 +72,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+    # The digest the push produced: the one the attest job signs.
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
 
     steps:
       - uses: actions/checkout@v4
@@ -97,6 +100,7 @@ jobs:
           fi
 
       - name: Build and push
+        id: push
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -106,3 +110,18 @@ jobs:
           # The commit the image was built from, readable from the image itself.
           build-args: |
             REVISION=${{ github.sha }}
+
+  # SIGNED BY DIGEST, SBOM AND PROVENANCE ATTESTED, keyless, so a box can refuse any
+  # mcl-echo digest that did not come from this workflow on a commit of this repository
+  # (macula-fleet's reconciler checks it before it runs the image). Pinned by full commit
+  # sha: the signing identity is that file at that ref. See macula-ci-images' README.
+  attest:
+    needs: build-and-push
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    uses: macula-io/macula-ci-images/.github/workflows/attest-image.yml@b304162c9b46b366f93af362d3a76f17ae01794f
+    with:
+      image: ghcr.io/macula-services/mcl-echo
+      digest: ${{ needs.build-and-push.outputs.digest }}
