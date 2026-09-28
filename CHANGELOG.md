@@ -7,6 +7,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-28
+
 ### Changed
 
 - **macula 13.0.1 and mcl_om 0.33 at least.** 13.0 seals a call end to end

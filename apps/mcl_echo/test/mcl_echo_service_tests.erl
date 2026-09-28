@@ -55,6 +55,17 @@ info_version_matches_the_application_test() ->
     #{version := Reported} = ?SERVICE:info(),
     ?assertEqual(list_to_binary(Vsn), Reported).
 
+%% The release the image ships carries the same version as the application: a
+%% bump that forgets rebar.config's relx line ships a v0.2.0 tag whose release
+%% directory still says 0.1.0.
+release_version_matches_the_application_test() ->
+    _ = application:load(?APP),
+    {ok, Vsn} = application:get_key(?APP, vsn),
+    {ok, Terms} = file:consult(alongside("rebar.config")),
+    Relx = proplists:get_value(relx, Terms),
+    {release, {?APP, RelVsn}, _} = lists:keyfind(release, 1, Relx),
+    ?assertEqual(Vsn, RelVsn).
+
 health_is_green_test() ->
     ?assertEqual(ok, ?SERVICE:health()).
 
