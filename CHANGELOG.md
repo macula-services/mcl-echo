@@ -9,6 +9,22 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **macula 13.0.1 and mcl_om 0.33 at least.** 13.0 seals a call end to end
+  to a provider that names a KEM key, and mcl_om 0.33 hands macula the
+  advertisement its own resolve verified. 13.0.1, not 13.0.0: 13.0.0's
+  `seed()` type left out `expected_node_id`, so this service, which dials a
+  pinned seed, broke `macula:connect/2`'s contract in its own dialyzer (33
+  warnings). `mcl_echo_info_tests` fails on anything older (seen red on
+  0.32.x / 12.x first).
+- **dialyzer in CI, and it reports nothing.** lint.yml runs `rebar3 dialyzer`
+  with the template's config; mcl-echo's own findings are fixed (`no_return()`
+  on the `halt/1` entry points, an unreachable `station_label/1` clause removed).
+- **The team's image pair.** The Containerfile builds on macula-ci-otp and runs
+  on macula-pq-runtime 20260923-1444, both pinned by tag and digest, in place of
+  hexpm/erlang alpine + alpine:3.22; the builder refuses anything but OTP
+  28.4.3 with ML-DSA. `mcl_echo_service_tests` guards the image design.
+- **Every GitHub Action is pinned by commit sha** (macula-fovea at v0.1.0, was
+  `@main`), and dependabot proposes action updates weekly.
 - **macula 12.5.1 at least.** Before it a provider's request admission never
   let an entry go, and each station's liveness ping took one every 30 s, so
   on beam00 the four stations held 256 entries each (their whole caller

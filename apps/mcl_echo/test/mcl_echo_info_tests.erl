@@ -26,17 +26,18 @@ info_round_trip_test_() ->
           ?_assertEqual([{text, C} || C <- [<<(?ORG)/binary, "/info">> | Own]],
                         maps:get(capabilities, Reply)),
           ?_assertEqual([], [V || V <- lists:flatten(maps:values(Reply)), is_binary(V)]),
-          %% Floors, not exact versions: mcl_om 0.32.1 or later WITH macula 12.11.1
-          %% or later. 12.11.1 hands a handler only the wire-verified caller: before
-          %% it, a payload's own `caller' field shadowed the verified one for every
-          %% reader but maps:get/2, so a caller could name itself anyone. mcl_om
-          %% 0.32.1 is the line that stays correct on it (an ownership proof never
-          %% signs `caller'). Both keep what earlier floors required: 0.31's
-          %% serving-station registration, 12.7.0's renewal of the 30-minute
-          %% delegation before it lapses (macula#38, D32) and 12.5.1's request
-          %% admission fix (macula#37). A later compatible release must not fail this.
-          ?_assert(at_least(maps:get(mcl_om_version, Reply), [0, 32, 1])),
-          ?_assert(at_least(maps:get(macula_version, Reply), [12, 11, 1]))]
+          %% Floors, not exact versions: mcl_om 0.33.0 or later WITH macula 13.0.1
+          %% or later. 13.0 seals a call end to end to a provider that names a KEM
+          %% key, and mcl_om 0.33 hands macula the advertisement its own resolve
+          %% verified, so a capability call is sealed to that provider. 13.0.1, not
+          %% 13.0.0: 13.0.0's seed() type leaves out expected_node_id, so a service
+          %% that dials a pinned seed (this one) broke macula:connect/2's contract in
+          %% its own dialyzer. Both keep what earlier floors required: 12.11.1's
+          %% wire-verified caller, 0.31's serving-station registration, 12.7.0's
+          %% delegation renewal (macula#38, D32) and 12.5.1's request admission fix
+          %% (macula#37). A later compatible release must not fail this.
+          ?_assert(at_least(maps:get(mcl_om_version, Reply), [0, 33, 0])),
+          ?_assert(at_least(maps:get(macula_version, Reply), [13, 0, 1]))]
      end}.
 
 %% The service must leave `info' to mcl_om: declaring its own refuses boot.
