@@ -190,9 +190,10 @@ so prefix with `mise exec --` (the caller script does this for you):
 
     scripts/health.sh                      # against a running node
 
-Building the image needs a Rust toolchain, because macula ships a QUIC NIF and
-the alpine build compiles it from source rather than fetching one linked against
-a different libc.
+Building the image needs nothing but podman or docker: macula ships a QUIC NIF,
+and the builder stage (macula-ci-otp, pinned by digest in the Containerfile)
+carries the Rust toolchain and compiles it from source, rather than fetching one
+linked against a different libc. A local `rebar3 compile` does need Rust.
 
     podman build -t mcl-echo -f Containerfile .
 
