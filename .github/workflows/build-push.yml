@@ -142,4 +142,12 @@ jobs:
         env:
           IMAGE: ghcr.io/macula-services/mcl-echo
           DIGEST: ${{ needs.build-and-push.outputs.digest }}
-        run: docker buildx imagetools create --tag "$IMAGE:latest" "$IMAGE@$DIGEST"
+        # --prefer-index=false: a CARBON COPY of the signed manifest. Without it imagetools wraps a
+        # single manifest in a new index, a digest attest never signed, and :latest would point at it.
+        run: |
+          docker buildx imagetools create --prefer-index=false --tag "$IMAGE:latest" "$IMAGE@$DIGEST"
+          got="$(docker buildx imagetools inspect "$IMAGE:latest" --format '{{.Manifest.Digest}}')"
+          if [ "$got" != "$DIGEST" ]; then
+            echo "::error:::latest resolves to $got, not the signed $DIGEST"
+            exit 1
+          fi
