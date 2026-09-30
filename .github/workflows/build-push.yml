@@ -2,7 +2,7 @@
 #
 # TWO CHANNELS, AND ONLY A RELEASE MOVES :latest.
 #
-#   push of v*   : publishes :<semver> and :latest  <- the dev fleet's deploy channel
+#   push of v*   : publishes :<semver>, then :latest once attest signed it <- the dev fleet's deploy channel
 #   push to main : publishes :main and :<sha>       <- the tip, for trying; nothing follows it
 #
 # The dev fleet (macula-fleet) runs :latest: each box's reconciler pulls it, verifies the
@@ -85,12 +85,11 @@ jobs:
       - name: Set tags
         id: tag
         run: |
-          # :latest is the dev fleet's deploy channel: it moves only on a v* tag whose build went
-          # green, and a box picks it up on its next reconcile. main publishes :main and :<sha>
-          # for trying the tip; no box follows those.
+          # A v* tag publishes its version here; :latest moves in promote-latest, only after
+          # attest has signed this digest. main publishes :main and :<sha>; no box follows those.
           img=ghcr.io/macula-services/mcl-echo
           case "${GITHUB_REF}" in
-            refs/tags/v*)    echo "tags=$img:${GITHUB_REF#refs/tags/v},$img:latest" >> "$GITHUB_OUTPUT" ;;
+            refs/tags/v*)    echo "tags=$img:${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT" ;;
             refs/heads/main) echo "tags=$img:main,$img:${GITHUB_SHA}" >> "$GITHUB_OUTPUT" ;;
             *) echo "::error::only a v* tag publishes a version and :latest, only main :main and :<sha>; refusing ${GITHUB_REF}"; exit 1 ;;
           esac
@@ -121,3 +120,26 @@ jobs:
     with:
       image: ghcr.io/macula-services/mcl-echo
       digest: ${{ needs.build-and-push.outputs.digest }}
+
+  # :latest is the dev fleet's deploy channel, so it moves LAST: only on a v* tag, and only once
+  # attest has signed and attested this digest. A box that pulls :latest in the window between
+  # push and signature would otherwise refuse the release (and remember that for an hour).
+  promote-latest:
+    needs: [build-and-push, attest]
+    if: startsWith(github.ref, 'refs/tags/v') && needs.build-and-push.outputs.digest != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Log in to the registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Point :latest at the signed digest
+        env:
+          IMAGE: ghcr.io/macula-services/mcl-echo
+          DIGEST: ${{ needs.build-and-push.outputs.digest }}
+        run: docker buildx imagetools create --tag "$IMAGE:latest" "$IMAGE@$DIGEST"
