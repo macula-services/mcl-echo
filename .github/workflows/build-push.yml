@@ -1,22 +1,14 @@
 # Build the OCI image for mcl-echo and push to the registry.
 #
-# TWO CHANNELS, AND A TAG PUSH MUST NOT TOUCH THE DEPLOY ONE.
+# TWO CHANNELS, AND ONLY A RELEASE MOVES :latest.
 #
-#   push to main : publishes :latest        <- the deploy channel
-#   push of v*   : publishes :<semver> ONLY <- the rollback archive
+#   push of v*   : publishes :<semver> and :latest  <- the dev fleet's deploy channel
+#   push to main : publishes :main and :<sha>       <- the tip, for trying; nothing follows it
 #
-# The deployed compose tracks :latest under watchtower for zero-touch deploys,
-# and the semver tags stay published so a bad release can be pinned back to a
-# known one.
-#
-# ⚠ THIS USED TO PUBLISH :latest ON A TAG PUSH AS WELL, because the :latest
-# line was hardcoded in the tags list and only the second line varied. Cutting
-# a release therefore rolled every box watching :latest, seconds later, whether
-# or not anyone meant to deploy it -- watchtower polls :latest and recreates the
-# container without asking. Worse, it made a release unpublishable during any
-# live test: tagging would have swapped the artifact under the test and we would
-# have been measuring two images. A tag now publishes its own semver and nothing
-# else, so cutting a release and deploying one are separate acts again.
+# The dev fleet (macula-fleet) runs :latest: each box's reconciler pulls it, verifies the
+# digest it resolved to (signature, SBOM, provenance) and runs that digest. So a green v* tag
+# IS the deploy, with no commit to the fleet, and a push to main deploys nothing. The semver
+# tags stay published, so a bad release can be pinned back to a known one.
 #
 # NOTE ON PUSHING THIS FILE. An HTTPS push that creates or updates anything under
 # .github/workflows/ needs a token carrying the `workflow' scope, and the error
@@ -93,11 +85,15 @@ jobs:
       - name: Set tags
         id: tag
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            echo "tags=ghcr.io/macula-services/mcl-echo:${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
-          else
-            echo "tags=ghcr.io/macula-services/mcl-echo:latest" >> "$GITHUB_OUTPUT"
-          fi
+          # :latest is the dev fleet's deploy channel: it moves only on a v* tag whose build went
+          # green, and a box picks it up on its next reconcile. main publishes :main and :<sha>
+          # for trying the tip; no box follows those.
+          img=ghcr.io/macula-services/mcl-echo
+          case "${GITHUB_REF}" in
+            refs/tags/v*)    echo "tags=$img:${GITHUB_REF#refs/tags/v},$img:latest" >> "$GITHUB_OUTPUT" ;;
+            refs/heads/main) echo "tags=$img:main,$img:${GITHUB_SHA}" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::only a v* tag publishes a version and :latest, only main :main and :<sha>; refusing ${GITHUB_REF}"; exit 1 ;;
+          esac
 
       - name: Build and push
         id: push
