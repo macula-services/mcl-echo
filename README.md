@@ -150,10 +150,11 @@ from its neighbours without saying so costs more than it reports:
 
 - **exit 3**, the tree is not compiled. Without it the `-pa` glob stays literal
   and `erl` fails deep in the boot with nothing naming the cause.
-- **exit 4**, `mise` is missing. `.tool-versions` pins the OTP these beams and
-  their NIFs were built with, and it is not the first `erl` on `PATH`, so an
-  unpinned run would quietly use a different VM from the build and from the
-  other five callers.
+- **exit 4**, `asdf` is missing (or the pinned OTP is not installed under it).
+  `.tool-versions` pins the OTP these beams and their NIFs were built with; the
+  asdf shims resolve it from the working directory, so without them an unpinned
+  run would quietly use a different VM from the build and from the other five
+  callers.
 
 The 11.x dial is pinned (D5), so a station is only reachable together with the
 node id minted for that box. That is why the name alone is not enough and the
@@ -162,12 +163,19 @@ none of them.
 
 The handler replies with the payload unchanged, minus the platform-injected
 `caller` key. Two guards apply, both implemented in the handler because the
-platform provides neither:
+platform provides neither, and both operator config (mcl-echo#11):
 
-- **Payload cap**, 4096 bytes measured by `erlang:external_size/1` so it bounds
-  every payload shape and not only binaries. Over it: `payload_too_large`.
+- **Payload cap**, 4096 bytes by default, measured with `erlang:external_size/1`
+  so it bounds every payload shape and not only binaries. Over it:
+  `payload_too_large`.
 - **Fixed-window rate limit** (`mcl_echo_limiter`): a 10 second window, 20 calls
-  per caller, 300 globally. Over it: `rate_limited`.
+  per caller, 300 globally by default. Over it: `rate_limited`.
+
+Change either at startup through this app's `limits` env (see Configuration
+below) or at runtime with `mcl_echo_limiter:set_limits/1`; values are validated,
+and changing the window length clears the counters.
+`mcl_echo_limiter:stats/0` reports the current window for a guardian: global
+fill, distinct callers, who is over their limit, and the heaviest callers.
 
 ⚠ **A caller is only attributable when the payload is a map.** The
 wire-authenticated caller node id is merged in by
@@ -181,8 +189,9 @@ deliberately public (`auth => open`), not gated by a UCAN grant.
 
 ## Running it
 
-The OTP is pinned in `.tool-versions` and is not the first `erl` on `PATH` here,
-so prefix with `mise exec --` (the caller script does this for you):
+The OTP is pinned in `.tool-versions`; this house installs it with asdf, whose
+shims resolve the pinned VM for every command run from the repo directory (the
+caller script does the same):
 
     rebar3 compile
     rebar3 eunit
@@ -209,6 +218,12 @@ linked against a different libc. A local `rebar3 compile` does need Rust.
 | `MCL_NODE_NAME` | `mcl_echo` | Erlang node name. |
 | `MCL_NODE_HOST` | `127.0.0.1` | Erlang node host. |
 | `MCL_COOKIE` | `mcl_echo` | Erlang cookie. |
+
+The inbound limits are application config, not environment variables: see the
+`mcl_echo`/`limits` block in `config/sys.config.src` (payload cap, window,
+per-caller and global maxima, defaults shown there). Boot refuses an invalid
+set; at runtime `mcl_echo_limiter:set_limits(#{...})` applies a validated
+partial change.
 
 `deploy/docker-compose.yml` runs it, and carries what the service knows about
 itself. If you deploy through something else, let that carry **placement**: which

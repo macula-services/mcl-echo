@@ -10,21 +10,24 @@
 %% own inbound-call dispatch carries no rate limiting or backpressure at
 %% any layer -- traced directly, not assumed. Two defenses are applied
 %% here, in the handler itself: a hard payload-size cap, and a
-%% request-rate limit (see `mcl_echo_limiter'). "Let it crash" is the
-%% right default for a service trusting known, cooperative callers; this
-%% is not that -- it is the one procedure on the mesh a stranger is
-%% invited to call with zero prior trust established.
+%% request-rate limit (see `mcl_echo_limiter'). Both are OPERATOR CONFIG
+%% (mcl-echo#11): the shipped defaults live in `mcl_echo_limits', a
+%% deploy overrides them in sys.config, and
+%% `mcl_echo_limiter:set_limits/1' changes them at runtime. "Let it
+%% crash" is the right default for a service trusting known, cooperative
+%% callers; this is not that -- it is the one procedure on the mesh a
+%% stranger is invited to call with zero prior trust established.
 -module(mcl_echo_mesh_rpc).
 
 -behaviour(macula_response).
 
 -export([init/1, handle_request/2]).
 
-%% Generous for a hello-world payload, tight for an amplification
-%% attempt. Measured via `erlang:external_size/1' rather than
-%% `byte_size/1' so this bounds every payload shape a caller might
-%% send (map, list, number), not only a binary.
--define(MAX_PAYLOAD_EXTERNAL_SIZE, 4096).
+%% The boundary semantics are what matter, not the number: measured via
+%% `erlang:external_size/1' rather than `byte_size/1' so the cap bounds
+%% every payload shape a caller might send (map, list, number), not only
+%% a binary. The number is operator config (mcl-echo#11); 4096 B is the
+%% shipped default in `mcl_echo_limits'.
 
 %% @doc `macula_response' callback. No per-call state: rate limiting
 %% lives in `mcl_echo_limiter''s own persistent table, not here --
@@ -52,8 +55,9 @@ reply_after_rate_check(allow, Payload, State) ->
     {reply, strip_caller(Payload), State}.
 
 size_verdict(Payload) ->
+    Max = maps:get(max_payload_external_size, mcl_echo_limits:get()),
     case erlang:external_size(Payload) of
-        Size when Size > ?MAX_PAYLOAD_EXTERNAL_SIZE -> too_large;
+        Size when Size > Max -> too_large;
         _Size -> ok
     end.
 

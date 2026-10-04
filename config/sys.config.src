@@ -81,5 +81,31 @@
     {macula, [
         {crypto_profile, pq_hybrid}
     ]},
+    %% ==========================================================================
+    %% INBOUND LIMITS (mcl-echo#11), PER DEPLOY
+    %% ==========================================================================
+    %%
+    %% The payload cap and the rate limiter's parameters were compiled-in
+    %% constants; they are operator config now. The values below are the
+    %% shipped defaults (mcl_echo_limits:defaults/0) -- edit them here, or
+    %% change them on a running node with
+    %% `mcl_echo_limiter:set_limits(#{per_caller_max => 50})'. Boot
+    %% validates and REFUSES to start on an unknown key, a non-positive
+    %% value, or per_caller_max > global_max: a service that silently
+    %% ignored a typo here would look protected and not be.
+    %%
+    %% ⚠ max_payload_external_size is measured with
+    %% `erlang:external_size/1', the term's size on the wire, not the byte
+    %% size of a binary -- it bounds every payload shape a caller sends.
+    %%
+    %% ⚠ A caller is only attributable when the payload is a map (see
+    %% mcl_echo_mesh_rpc); bare-text quickstart traffic shares the single
+    %% global_max bucket.
+    {mcl_echo, [
+        {limits, #{max_payload_external_size => 4096,
+                   window_ms                 => 10000,
+                   per_caller_max            => 20,
+                   global_max                => 300}}
+    ]},
     {kernel, [{logger_level, info}]}
 ].
