@@ -7,6 +7,15 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-10-05
+
+### Changed
+
+- **Rides mcl_om 0.37.6.** The rebuild resolves `~> 0.37` fresh: the
+  pipeline's denial counters are now windowed (a quiet window publishes
+  nothing) and `max_distinct_callers` bounds the guard table against a
+  Sybil flood. No code change; the version moves with the dependency.
+
 ## [0.2.4] - 2026-10-05
 
 ### Changed
