@@ -162,12 +162,17 @@ none of them.
 
 The handler replies with the payload unchanged, minus the platform-injected
 `caller` key. Two guards apply, both implemented in the handler because the
-platform provides neither:
+platform provides neither, and both operator config (mcl-echo#11):
 
-- **Payload cap**, 4096 bytes measured by `erlang:external_size/1` so it bounds
-  every payload shape and not only binaries. Over it: `payload_too_large`.
+- **Payload cap**, 4096 bytes by default, measured with `erlang:external_size/1`
+  so it bounds every payload shape and not only binaries. Over it:
+  `payload_too_large`.
 - **Fixed-window rate limit** (`mcl_echo_limiter`): a 10 second window, 20 calls
-  per caller, 300 globally. Over it: `rate_limited`.
+  per caller, 300 globally by default. Over it: `rate_limited`.
+
+Change either at startup through this app's `limits` env (see Configuration
+below) or at runtime with `mcl_echo_limiter:set_limits/1`; values are validated,
+and changing the window length clears the counters.
 
 ⚠ **A caller is only attributable when the payload is a map.** The
 wire-authenticated caller node id is merged in by
@@ -209,6 +214,12 @@ linked against a different libc. A local `rebar3 compile` does need Rust.
 | `MCL_NODE_NAME` | `mcl_echo` | Erlang node name. |
 | `MCL_NODE_HOST` | `127.0.0.1` | Erlang node host. |
 | `MCL_COOKIE` | `mcl_echo` | Erlang cookie. |
+
+The inbound limits are application config, not environment variables: see the
+`mcl_echo`/`limits` block in `config/sys.config.src` (payload cap, window,
+per-caller and global maxima, defaults shown there). Boot refuses an invalid
+set; at runtime `mcl_echo_limiter:set_limits(#{...})` applies a validated
+partial change.
 
 `deploy/docker-compose.yml` runs it, and carries what the service knows about
 itself. If you deploy through something else, let that carry **placement**: which

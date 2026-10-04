@@ -7,6 +7,20 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **Inbound limits are operator config (mcl-echo#11).** The payload cap
+  (4096 B external size) and the rate limiter's parameters (10 s window,
+  20 per caller, 300 global) moved out of the code into `mcl_echo_limits`,
+  defaults unchanged: a deploy overrides any subset through the `mcl_echo`
+  `limits` env in `config/sys.config.src`, and an operator changes them on
+  a running node with `mcl_echo_limiter:set_limits/1` (validated; a
+  window-length change clears the counters). Boot refuses unknown keys,
+  non-positive values and `per_caller_max > global_max`. The shared global
+  bucket for non-map payloads and its consequence are now documented in
+  the README and the handler; the caller-attribution root cause is tracked
+  in macula-io/macula#60.
+
 ## [0.2.0] - 2026-09-28
 
 ### Changed

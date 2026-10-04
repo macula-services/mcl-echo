@@ -7,6 +7,9 @@
 -include_lib("eunit/include/eunit.hrl").
 
 setup() ->
+    %% Limits live in persistent_term now (mcl-echo#11): start from the
+    %% shipped defaults whatever another suite left behind.
+    {ok, _} = mcl_echo_limits:reset(),
     {ok, Pid} = mcl_echo_limiter:start_link(),
     Pid.
 
@@ -15,7 +18,8 @@ teardown(Pid) ->
     Ref = erlang:monitor(process, Pid),
     unlink(Pid),
     exit(Pid, shutdown),
-    receive {'DOWN', Ref, process, Pid, _Reason} -> ok end.
+    receive {'DOWN', Ref, process, Pid, _Reason} -> ok end,
+    {ok, _} = mcl_echo_limits:reset().
 
 handle_request_test_() ->
     {setup, fun setup/0, fun teardown/1, fun(_Pid) ->
@@ -24,6 +28,7 @@ handle_request_test_() ->
             fun echoes_a_map_payload_unchanged/0,
             fun strips_the_platform_injected_caller_key_from_a_map_payload/0,
             fun refuses_a_payload_over_the_size_cap/0,
+            fun the_size_cap_follows_the_configured_limits/0,
             fun a_map_payload_is_rate_limited_per_caller/0,
             fun distinct_callers_are_not_limited_by_each_others_traffic/0
         ]
@@ -78,6 +83,17 @@ distinct_callers_are_not_limited_by_each_others_traffic() ->
                  mcl_echo_mesh_rpc:handle_request(PayloadFor(CallerA), undefined)),
     ?assertMatch({reply, _, undefined},
                  mcl_echo_mesh_rpc:handle_request(PayloadFor(CallerB), undefined)).
+
+the_size_cap_follows_the_configured_limits() ->
+    %% The cap is operator config now (mcl-echo#11); drive it through the
+    %% runtime path a node would use.
+    {ok, _} = mcl_echo_limiter:set_limits(#{max_payload_external_size => 64}),
+    Oversized = binary:copy(<<"y">>, 200),
+    ?assertEqual({error, payload_too_large, undefined},
+                 mcl_echo_mesh_rpc:handle_request(Oversized, undefined)),
+    ?assertEqual({reply, <<"ok">>, undefined},
+                 mcl_echo_mesh_rpc:handle_request(<<"ok">>, undefined)),
+    {ok, _} = mcl_echo_limits:reset().
 
 unique_caller() ->
     N = erlang:unique_integer([positive, monotonic]),
