@@ -7,6 +7,16 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-10-05
+
+### Changed
+
+- **Rides mcl_om 0.37.4.** The release rebuild resolves `~> 0.37` fresh,
+  so the pipeline's `denials_observed` facts now carry the window's
+  `distinct_callers` and `top_callers` (the offenders, hex-encoded) —
+  the guardian's proposals name who was flooding. No code change; the
+  version moves with the dependency.
+
 ## [0.2.2] - 2026-10-04
 
 ### Fixed
