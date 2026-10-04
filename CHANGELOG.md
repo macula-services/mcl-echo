@@ -7,6 +7,18 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-04
+
+### Fixed
+
+- **A dangling comma in the release config crashed the node before boot.**
+  The #13 edit left a trailing comma on the last `mcl_om` entry with the
+  `inbound_guard` block below it commented out; the baked `sys.config`
+  failed to parse (`syntax error before: ']'`) and 0.2.1 crash-looped on
+  beam00. Erlang has no trailing commas. A regression test now parses the
+  template with its placeholders filled, so the class of breakage fails
+  eunit instead of the fleet.
+
 ## [0.2.1] - 2026-10-04
 
 ### Changed

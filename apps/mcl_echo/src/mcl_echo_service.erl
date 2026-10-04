@@ -12,7 +12,7 @@
 
 info() ->
     #{name => <<"mcl-echo">>,
-      version => <<"0.2.1">>,
+      version => <<"0.2.2">>,
       description => <<"Always-on echo, the mesh's hello-world target every SDK quickstart calls">>}.
 
 start(_Opts) -> mcl_echo_sup:start_link().
