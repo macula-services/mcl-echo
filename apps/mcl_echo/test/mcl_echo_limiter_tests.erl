@@ -30,6 +30,7 @@ limiter_test_() ->
             fun distinct_callers_have_independent_counters/0,
             fun the_global_key_has_its_own_higher_max/0,
             fun exceeding_the_global_max_denies_further_unattributed_calls/0,
+            fun stats_show_the_window_and_who_is_over_limit/0,
             fun a_runtime_limit_change_takes_effect/0,
             fun changing_the_window_length_clears_the_counters/0,
             fun a_bad_runtime_change_is_refused_and_changes_nothing/0
@@ -97,6 +98,16 @@ a_bad_runtime_change_is_refused_and_changes_nothing() ->
     ?assertEqual({error, {unknown_key, nope}},
                  mcl_echo_limiter:set_limits(#{nope => 1})),
     ?assertEqual(Before, mcl_echo_limiter:get_limits()).
+
+stats_show_the_window_and_who_is_over_limit() ->
+    Caller = unique_caller(),
+    [mcl_echo_limiter:allow(Caller) || _ <- lists:seq(1, 20)],
+    _ = mcl_echo_limiter:allow(Caller),
+    Stats = mcl_echo_limiter:stats(),
+    ?assertEqual(20, maps:get(per_caller_max, maps:get(limits, Stats))),
+    ?assert(maps:get(callers_over_limit, Stats) >= 1),
+    ?assert(maps:get(global_count, Stats) >= 21),
+    ?assert(lists:keymember(Caller, 1, maps:get(top_callers, Stats))).
 
 unique_caller() ->
     N = erlang:unique_integer([positive, monotonic]),

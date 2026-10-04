@@ -31,7 +31,7 @@
 
 -behaviour(gen_server).
 
--export([start_link/0, allow/1, get_limits/0, set_limits/1]).
+-export([start_link/0, allow/1, get_limits/0, set_limits/1, stats/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
 
 -define(TABLE, mcl_echo_limiter_table).
@@ -101,6 +101,37 @@ clear_counters() ->
         undefined -> ok;
         _Table -> ets:delete_all_objects(?TABLE), ok
     end.
+
+%% @doc A guardian-facing view of the CURRENT window (mcl-sec-guard's
+%% first sensing surface, mcl-echo#11): the limits in effect, how full
+%% the shared bucket is, how many distinct callers there are, how many
+%% sit over their per-caller max, and the heaviest callers. Derived from
+%% the counters table, so it reports the same numbers `allow/1'
+%% increments -- no second source to drift.
+-spec stats() -> #{atom() => term()}.
+stats() ->
+    Limits = mcl_echo_limits:get(),
+    Window = current_window(Limits),
+    {GlobalCount, Callers} = current_window_counts(Window),
+    PerCallerMax = maps:get(per_caller_max, Limits),
+    OverLimit = [Caller || {Caller, Count} <- Callers, Count > PerCallerMax],
+    #{limits => Limits,
+      current_window => Window,
+      global_count => GlobalCount,
+      global_max => maps:get(global_max, Limits),
+      distinct_callers => length(Callers),
+      callers_over_limit => length(OverLimit),
+      top_callers => lists:sublist(lists:reverse(lists:keysort(2, Callers)), 10)}.
+
+current_window_counts(Window) ->
+    Fold = fun({{'$global', W}, Count}, {Global, Callers}) when W =:= Window ->
+                   {Global + Count, Callers};
+              ({{Caller, W}, Count}, {Global, Callers}) when W =:= Window ->
+                   {Global, [{Caller, Count} | Callers]};
+              (_Entry, Acc) ->
+                   Acc
+           end,
+    ets:foldl(Fold, {0, []}, ?TABLE).
 
 init([]) ->
     %% Validate and publish the configured limits BEFORE the table

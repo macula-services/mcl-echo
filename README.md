@@ -173,6 +173,8 @@ platform provides neither, and both operator config (mcl-echo#11):
 Change either at startup through this app's `limits` env (see Configuration
 below) or at runtime with `mcl_echo_limiter:set_limits/1`; values are validated,
 and changing the window length clears the counters.
+`mcl_echo_limiter:stats/0` reports the current window for a guardian: global
+fill, distinct callers, who is over their limit, and the heaviest callers.
 
 ⚠ **A caller is only attributable when the payload is a map.** The
 wire-authenticated caller node id is merged in by

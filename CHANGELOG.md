@@ -20,6 +20,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   bucket for non-map payloads and its consequence are now documented in
   the README and the handler; the caller-attribution root cause is tracked
   in macula-io/macula#60.
+- **`mcl_echo_limiter:stats/0`**, a guardian-facing view of the current window —
+  global fill, distinct callers, callers over their limit, top callers — derived
+  from the same counters `allow/1` increments (mcl-sec-guard's first sensing
+  surface).
 
 ## [0.2.0] - 2026-09-28
 
