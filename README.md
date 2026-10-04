@@ -150,10 +150,11 @@ from its neighbours without saying so costs more than it reports:
 
 - **exit 3**, the tree is not compiled. Without it the `-pa` glob stays literal
   and `erl` fails deep in the boot with nothing naming the cause.
-- **exit 4**, `mise` is missing. `.tool-versions` pins the OTP these beams and
-  their NIFs were built with, and it is not the first `erl` on `PATH`, so an
-  unpinned run would quietly use a different VM from the build and from the
-  other five callers.
+- **exit 4**, `asdf` is missing (or the pinned OTP is not installed under it).
+  `.tool-versions` pins the OTP these beams and their NIFs were built with; the
+  asdf shims resolve it from the working directory, so without them an unpinned
+  run would quietly use a different VM from the build and from the other five
+  callers.
 
 The 11.x dial is pinned (D5), so a station is only reachable together with the
 node id minted for that box. That is why the name alone is not enough and the
@@ -188,8 +189,9 @@ deliberately public (`auth => open`), not gated by a UCAN grant.
 
 ## Running it
 
-The OTP is pinned in `.tool-versions` and is not the first `erl` on `PATH` here,
-so prefix with `mise exec --` (the caller script does this for you):
+The OTP is pinned in `.tool-versions`; this house installs it with asdf, whose
+shims resolve the pinned VM for every command run from the repo directory (the
+caller script does the same):
 
     rebar3 compile
     rebar3 eunit
