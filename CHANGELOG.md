@@ -7,6 +7,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-04
+
 ### Changed
 
 - **The echo rides the platform guard (mcl-om#13, mcl_om 0.37.0).** The
