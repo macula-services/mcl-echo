@@ -89,7 +89,11 @@ capabilities_with_a_booted_identity_is_the_one_echo_capability_test_() ->
      fun stop_identity_and_restore_env/1,
      fun(_Pid) ->
          ?_assertEqual([#{name => <<"echo">>, version => 1,
-                          handler => {mcl_echo_mesh_rpc, []}, auth => open}],
+                          handler => {mcl_echo_mesh_rpc, []}, auth => open,
+                          limits => #{max_payload_external_size => 4096,
+                                      window_ms                 => 10000,
+                                      per_caller_max            => 20,
+                                      global_max                => 300}}],
                        ?SERVICE:capabilities())
      end}.
 
@@ -187,9 +191,9 @@ authority_matches_what_is_announced_test() ->
 supervisor_starts_and_stops_test() ->
     {ok, Pid} = mcl_echo_sup:start_link(),
     ?assert(is_process_alive(Pid)),
-    Children = supervisor:which_children(Pid),
-    ?assertEqual(1, length(Children)),
-    ?assert(lists:all(fun({_Id, Child, _Type, _Mods}) -> is_pid(Child) end, Children)),
+    %% The limiter is retired (mcl-om#13): the pipeline owns the
+    %% counters now, and this supervisor has no children left.
+    ?assertEqual([], supervisor:which_children(Pid)),
     unlink(Pid),
     exit(Pid, shutdown).
 

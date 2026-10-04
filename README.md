@@ -162,20 +162,21 @@ table carries both. The fleet is IPv6 only: a host with no IPv6 path reaches
 none of them.
 
 The handler replies with the payload unchanged, minus the platform-injected
-`caller` key. Two guards apply, both implemented in the handler because the
-platform provides neither, and both operator config (mcl-echo#11):
+`caller` key. The two guards are the PLATFORM'S now (mcl-om#13, mcl_om 0.37.0):
+every response capability flows through the mcl-om pipeline, and this
+capability declares its own numbers in `mcl_echo_service:capabilities/0`:
 
 - **Payload cap**, 4096 bytes by default, measured with `erlang:external_size/1`
   so it bounds every payload shape and not only binaries. Over it:
   `payload_too_large`.
-- **Fixed-window rate limit** (`mcl_echo_limiter`): a 10 second window, 20 calls
-  per caller, 300 globally by default. Over it: `rate_limited`.
+- **Fixed-window rate limit**: a 10 second window, 20 calls per caller, 300
+  globally by default. Over it: `rate_limited`.
 
-Change either at startup through this app's `limits` env (see Configuration
-below) or at runtime with `mcl_echo_limiter:set_limits/1`; values are validated,
-and changing the window length clears the counters.
-`mcl_echo_limiter:stats/0` reports the current window for a guardian: global
-fill, distinct callers, who is over their limit, and the heaviest callers.
+The pipeline counts denials and publishes one `denials_observed` fact per
+window with activity, which mcl-sec-guard subscribes to; `limits.get` reports
+the live numbers, and the guardian retunes them at runtime through the gated
+`limits.set` / `limits.set_operator` capabilities once configured (see
+Configuration below).
 
 ⚠ **A caller is only attributable when the payload is a map.** The
 wire-authenticated caller node id is merged in by
@@ -219,11 +220,12 @@ linked against a different libc. A local `rebar3 compile` does need Rust.
 | `MCL_NODE_HOST` | `127.0.0.1` | Erlang node host. |
 | `MCL_COOKIE` | `mcl_echo` | Erlang cookie. |
 
-The inbound limits are application config, not environment variables: see the
-`mcl_echo`/`limits` block in `config/sys.config.src` (payload cap, window,
-per-caller and global maxima, defaults shown there). Boot refuses an invalid
-set; at runtime `mcl_echo_limiter:set_limits(#{...})` applies a validated
-partial change.
+The inbound limits are the capability's, declared in code
+(`mcl_echo_service:capabilities/0`), not application config. To let a guardian
+tune them over the mesh, uncomment the `inbound_guard` block in
+`config/sys.config.src` (alert topic, the realm DID, and the guardian/operator
+tier names); that also advertises the gated `limits.set` /
+`limits.set_operator` capabilities.
 
 `deploy/docker-compose.yml` runs it, and carries what the service knows about
 itself. If you deploy through something else, let that carry **placement**: which

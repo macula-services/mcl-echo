@@ -1,83 +1,33 @@
-%% @doc The echo handler -- the hello-world target every Macula SDK's own
-%% quickstart README calls first. Advertised via the standard
-%% `mcl_om_capabilities' path as `Org/echo', the org (and realm) being
-%% deploy config -- see `mcl_echo_service:capabilities/0' for the
-%% consistency this module's service asserts rather than assumes. This
-%% module is only the per-call handler.
-%%
-%% THE PLATFORM GIVES THIS PROCEDURE NOTHING FOR FREE. The echo is
-%% deliberately public and unauthenticated, and `macula_station_link''s
-%% own inbound-call dispatch carries no rate limiting or backpressure at
-%% any layer -- traced directly, not assumed. Two defenses are applied
-%% here, in the handler itself: a hard payload-size cap, and a
-%% request-rate limit (see `mcl_echo_limiter'). Both are OPERATOR CONFIG
-%% (mcl-echo#11): the shipped defaults live in `mcl_echo_limits', a
-%% deploy overrides them in sys.config, and
-%% `mcl_echo_limiter:set_limits/1' changes them at runtime. "Let it
-%% crash" is the right default for a service trusting known, cooperative
-%% callers; this is not that -- it is the one procedure on the mesh a
-%% stranger is invited to call with zero prior trust established.
+%%% @doc The echo handler — the hello-world target every Macula SDK's own
+%%% quickstart README calls first. Advertised via the standard
+%%% `mcl_om_capabilities' path as `Org/echo'; this module is only the
+%%% per-call handler.
+%%%
+%%% THE GUARD IS THE PLATFORM'S NOW (mcl-om#13, mcl_om 0.37.0): the
+%%% inbound guard pipeline wraps this handler with a payload-size stage
+%%% and a fixed-window rate stage, whose limits this capability declares
+%%% in `mcl_echo_service:capabilities/0'. The pipeline counts denials
+%%% and publishes one `denials_observed' fact per window with activity.
+%%% The handler itself is a pure echo: whatever the platform passes it,
+%%% minus the platform-injected `caller'.
 -module(mcl_echo_mesh_rpc).
 
 -behaviour(macula_response).
 
 -export([init/1, handle_request/2]).
 
-%% The boundary semantics are what matter, not the number: measured via
-%% `erlang:external_size/1' rather than `byte_size/1' so the cap bounds
-%% every payload shape a caller might send (map, list, number), not only
-%% a binary. The number is operator config (mcl-echo#11); 4096 B is the
-%% shipped default in `mcl_echo_limits'.
+-spec init([]) -> {ok, undefined}.
+init([]) ->
+    {ok, undefined}.
 
-%% @doc `macula_response' callback. No per-call state: rate limiting
-%% lives in `mcl_echo_limiter''s own persistent table, not here --
-%% `macula_response' spawns a fresh, independent process per inbound
-%% call, so state threaded through THIS module's own State would reset
-%% every single call and could never actually limit anything.
-init([]) -> {ok, undefined}.
-
-%% @doc `macula_response' callback: reply with the payload unchanged,
-%% modulo the platform-injected `caller' key (see `strip_caller/1') and
-%% the two guards below.
--spec handle_request(term(), undefined) ->
-    {reply, term(), undefined} | {error, term(), undefined}.
+-spec handle_request(term(), undefined) -> {reply, term(), undefined}.
 handle_request(Payload, State) ->
-    reply_for(size_verdict(Payload), Payload, State).
-
-reply_for(too_large, _Payload, State) ->
-    {error, payload_too_large, State};
-reply_for(ok, Payload, State) ->
-    reply_after_rate_check(mcl_echo_limiter:allow(limiter_key(Payload)), Payload, State).
-
-reply_after_rate_check(deny, _Payload, State) ->
-    {error, rate_limited, State};
-reply_after_rate_check(allow, Payload, State) ->
     {reply, strip_caller(Payload), State}.
-
-size_verdict(Payload) ->
-    Max = maps:get(max_payload_external_size, mcl_echo_limits:get()),
-    case erlang:external_size(Payload) of
-        Size when Size > Max -> too_large;
-        _Size -> ok
-    end.
-
-%% The wire-authenticated caller NodeId only reaches a handler when the
-%% payload is a map (`macula_station_link:with_caller/2' merges it in
-%% only then) -- every SDK quickstart's bare-text `Value::Text("hello")'
-%% payload is NOT a map, so most real traffic here has no attributable
-%% caller at all. Falls back to one shared global counter for that
-%% traffic: a real, meaningfully weaker defense than per-caller limiting
-%% for THIS traffic shape specifically, but the honest one, not a
-%% per-caller limiter silently protecting nothing.
-limiter_key(Payload) when is_map(Payload) ->
-    maps:get(caller, Payload, '$global');
-limiter_key(_Payload) ->
-    '$global'.
 
 %% `caller' is platform metadata about the call, not something the
 %% caller themselves put in their own message (it deterministically
-%% overwrites any same-named key they supplied -- see
-%% `macula_station_link:with_caller/2''s own doc) -- an echo handler
+%% overwrites any same-named key they supplied — see
+%% `macula_station_link:with_caller/2''s own doc) — an echo handler
 %% that reflected it back would be showing a caller a field they never
 %% actually sent.
 strip_caller(Payload) when is_map(Payload) ->

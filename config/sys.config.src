@@ -58,7 +58,20 @@
         %%
         %% Public material: it is the half everyone verifies against. It
         %% does NOT belong in the secrets volume.
-        {realm_key,         <<"${MCL_REALM_KEY}">>}
+        {realm_key,         <<"${MCL_REALM_KEY}">>},
+        %% INBOUND GUARD (mcl-om#13), OPTIONAL: the echo's limits are the
+        %% capability's (4096 B payload, 10 s window, 20 per caller, 300
+        %% global; see mcl_echo_service:capabilities/0), enforced by the
+        %% mcl_om pipeline. Uncomment to rename the alert fact topic or to
+        %% gate limits.set / limits.set_operator for the guardian:
+        %% realm_did is the realm's Ed25519 DID, 32 bytes (NOT the 64-hex
+        %% RealmId identifier above).
+        %% {inbound_guard, #{
+        %%     alert_topic    => <<"denials_observed">>,
+        %%     guardian       => #{realm_did     => <<"32 bytes">>,
+        %%                         guardian_tier => <<"guardian">>,
+        %%                         operator_tier => <<"operator">>}
+        %% }}
     ]},
     %% ==========================================================================
     %% THE PQ CRYPTO PROFILE, WITHOUT WHICH THIS NODE DOES NOT PEER
@@ -80,32 +93,6 @@
     %% believe it had chosen a difficulty that nothing reads.
     {macula, [
         {crypto_profile, pq_hybrid}
-    ]},
-    %% ==========================================================================
-    %% INBOUND LIMITS (mcl-echo#11), PER DEPLOY
-    %% ==========================================================================
-    %%
-    %% The payload cap and the rate limiter's parameters were compiled-in
-    %% constants; they are operator config now. The values below are the
-    %% shipped defaults (mcl_echo_limits:defaults/0) -- edit them here, or
-    %% change them on a running node with
-    %% `mcl_echo_limiter:set_limits(#{per_caller_max => 50})'. Boot
-    %% validates and REFUSES to start on an unknown key, a non-positive
-    %% value, or per_caller_max > global_max: a service that silently
-    %% ignored a typo here would look protected and not be.
-    %%
-    %% ⚠ max_payload_external_size is measured with
-    %% `erlang:external_size/1', the term's size on the wire, not the byte
-    %% size of a binary -- it bounds every payload shape a caller sends.
-    %%
-    %% ⚠ A caller is only attributable when the payload is a map (see
-    %% mcl_echo_mesh_rpc); bare-text quickstart traffic shares the single
-    %% global_max bucket.
-    {mcl_echo, [
-        {limits, #{max_payload_external_size => 4096,
-                   window_ms                 => 10000,
-                   per_caller_max            => 20,
-                   global_max                => 300}}
     ]},
     {kernel, [{logger_level, info}]}
 ].
