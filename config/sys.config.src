@@ -58,14 +58,17 @@
         %%
         %% Public material: it is the half everyone verifies against. It
         %% does NOT belong in the secrets volume.
-        {realm_key,         <<"${MCL_REALM_KEY}">>},
+        {realm_key,         <<"${MCL_REALM_KEY}">>}
         %% INBOUND GUARD (mcl-om#13), OPTIONAL: the echo's limits are the
         %% capability's (4096 B payload, 10 s window, 20 per caller, 300
         %% global; see mcl_echo_service:capabilities/0), enforced by the
         %% mcl_om pipeline. Uncomment to rename the alert fact topic or to
         %% gate set_limits for the guardian (get_limits is always
         %% advertised): realm_did is the realm's Ed25519 DID, 32 bytes
-        %% (NOT the 64-hex RealmId identifier above).
+        %% (NOT the 64-hex RealmId identifier above). When uncommenting,
+        %% put the trailing comma back on the realm_key entry above --
+        %% Erlang has no trailing commas, and a dangling one shipped
+        %% 0.2.1 as a node that could not boot (syntax error before ']').
         %% {inbound_guard, #{
         %%     alert_topic    => <<"denials_observed">>,
         %%     guardian       => #{realm_did     => <<"32 bytes">>,
