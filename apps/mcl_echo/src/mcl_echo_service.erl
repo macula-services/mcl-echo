@@ -61,7 +61,16 @@ capabilities() ->
     [#{name => <<"echo">>,
        version => 1,
        handler => {mcl_echo_mesh_rpc, []},
-       auth => open}].
+       auth => open,
+       %% THE ECHO'S OWN NUMBERS, NOW THE PLATFORM'S TO ENFORCE
+       %% (mcl-om#13): the pipeline runs payload-size then rate before
+       %% the handler, counts denials, and publishes one
+       %% `denials_observed' fact per window with activity. These limits
+       %% are what the hand-rolled cap and limiter used to be.
+       limits => #{max_payload_external_size => 4096,
+                   window_ms                 => 10000,
+                   per_caller_max            => 20,
+                   global_max                => 300}}].
 
 assert_realm_org_configured() ->
     checked_realm(mcl_om_identity:realm(), mcl_om_identity:org()).

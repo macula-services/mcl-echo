@@ -9,6 +9,14 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **The echo rides the platform guard (mcl-om#13, mcl_om 0.37.0).** The
+  hand-rolled size cap and rate limiter are retired: the capability declares
+  its numbers (4096 B payload, 10 s window, 20 per caller, 300 global) and the
+  mcl-om pipeline enforces them, counts denials and publishes the
+  `denials_observed` facts the guardian subscribes to. `limits.get` reports the
+  live numbers; the gated `limits.set` / `limits.set_operator` capabilities
+  (optional config) replace the old `set_limits/1`.
+
 - **Inbound limits are operator config (mcl-echo#11).** The payload cap
   (4096 B external size) and the rate limiter's parameters (10 s window,
   20 per caller, 300 global) moved out of the code into `mcl_echo_limits`,
