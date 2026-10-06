@@ -7,6 +7,16 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-10-06
+
+### Changed
+
+- **The echo names its KEM key.** `{macula, [{kem_advertise, enabled}]}` in
+  the release config: the echo's advertisement carries an ML-KEM key, so a
+  caller seals its payload end to end and the stations relay ciphertext. The
+  capability stays `preferred`, so a caller that does not seal is still
+  answered. A test asserts the baked config enables it (macula-fleet#7).
+
 ## [0.2.5] - 2026-10-05
 
 ### Changed

@@ -18,6 +18,17 @@
 -define(REALM, <<"abb81b5a614b63551b400b810648c0c8a78efad845442630c94b46cc95d2fcd1">>).
 
 sys_config_template_parses_after_substitution_test() ->
+    _ = parsed_sys_config().
+
+%% The echo names its KEM key (macula-fleet#7): callers seal to it, and a clear
+%% caller is still answered (its capability is `preferred', the default). A
+%% release that dropped the line would answer every call in the clear and look
+%% healthy, so the baked config is asserted, not assumed.
+kem_advertise_enabled_test() ->
+    Macula = proplists:get_value(macula, parsed_sys_config()),
+    ?assertEqual(enabled, proplists:get_value(kem_advertise, Macula)).
+
+parsed_sys_config() ->
     {ok, Bin} = file:read_file("config/sys.config.src"),
     Substituted = lists:foldl(fun({Placeholder, Value}, Acc) ->
                                   binary:replace(Acc, Placeholder, Value, [global])
@@ -27,8 +38,8 @@ sys_config_template_parses_after_substitution_test() ->
                                {<<"${MCL_REALM_KEY}">>, ?REALM}]),
     {ok, Tokens, _} = erl_scan:string(binary_to_list(Substituted)),
     case erl_parse:parse_term(Tokens) of
-        {ok, _} ->
-            ok;
+        {ok, Config} ->
+            Config;
         {error, {Line, Mod, Msg}} ->
             erlang:error({sys_config_parse_failed, Line, Mod, lists:flatten(Msg)})
     end.

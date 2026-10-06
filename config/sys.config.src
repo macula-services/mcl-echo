@@ -94,7 +94,14 @@
     %% application start whatever the value: a node that set one would
     %% believe it had chosen a difficulty that nothing reads.
     {macula, [
-        {crypto_profile, pq_hybrid}
+        {crypto_profile, pq_hybrid},
+        %% THE ECHO NAMES ITS KEM KEY (macula-fleet#7): its advertisement carries
+        %% an ML-KEM key, so callers seal the payload end to end and a station
+        %% relays only ciphertext. A property of the service, like its org, so a
+        %% literal here and not a per-box variable. The echo capability stays
+        %% `preferred' (the default): a caller that does not seal is still
+        %% answered. Stations all run macula 13, the release floor this needs.
+        {kem_advertise, enabled}
     ]},
     {kernel, [{logger_level, info}]}
 ].
