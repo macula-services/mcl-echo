@@ -56,7 +56,7 @@ on:
 # fleet onto an older commit and flaps. A sibling service hit exactly that live.
 concurrency:
   group: build-and-push-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build-and-push:
