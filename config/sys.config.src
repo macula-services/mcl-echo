@@ -12,7 +12,9 @@
         %% mcl_om_capabilities's own moduledoc). Point it at the mounted
         %% secrets volume.
         {identity_key_path, "/etc/mcl/secrets/identity.key"},
-        {health_port,       ${MCL_HEALTH_PORT}},
+        %% /health on a Unix socket, not a port (mcl_om 0.39): the image\'s
+        %% HEALTHCHECK reaches it with curl --unix-socket.
+        {health_socket,     "/run/mcl/health.sock"},
         {capability_topic,  <<"_mesh.cap.">>},
         %% The wire namespace: `Org/echo'. DEPLOY CONFIG, not code --
         %% one org per service, named after the repo

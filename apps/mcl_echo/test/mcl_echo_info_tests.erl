@@ -26,7 +26,9 @@ info_round_trip_test_() ->
           ?_assertEqual([{text, C} || C <- [<<(?ORG)/binary, "/info">> | Own]],
                         maps:get(capabilities, Reply)),
           ?_assertEqual([], [V || V <- lists:flatten(maps:values(Reply)), is_binary(V)]),
-          %% Floors, not exact versions: mcl_om 0.33.0 or later WITH macula 13.0.1
+          %% Floors, not exact versions: mcl_om 0.39.0 (/health on a Unix socket)
+          %% with macula 14.2.1, the current SDK base (#17). Before that, the floor
+          %% was mcl_om 0.33.0 or later WITH macula 13.0.1
           %% or later. 13.0 seals a call end to end to a provider that names a KEM
           %% key, and mcl_om 0.33 hands macula the advertisement its own resolve
           %% verified, so a capability call is sealed to that provider. 13.0.1, not
@@ -36,8 +38,8 @@ info_round_trip_test_() ->
           %% wire-verified caller, 0.31's serving-station registration, 12.7.0's
           %% delegation renewal (macula#38, D32) and 12.5.1's request admission fix
           %% (macula#37). A later compatible release must not fail this.
-          ?_assert(at_least(maps:get(mcl_om_version, Reply), [0, 33, 0])),
-          ?_assert(at_least(maps:get(macula_version, Reply), [13, 0, 1]))]
+          ?_assert(at_least(maps:get(mcl_om_version, Reply), [0, 39, 0])),
+          ?_assert(at_least(maps:get(macula_version, Reply), [14, 2, 1]))]
      end}.
 
 %% The service must leave `info' to mcl_om: declaring its own refuses boot.

@@ -69,12 +69,12 @@ ENV RELX_REPLACE_OS_VARS=true
 ENV MCL_NODE_NAME=mcl_echo
 ENV MCL_NODE_HOST=127.0.0.1
 ENV MCL_COOKIE=mcl_echo
-ENV MCL_HEALTH_PORT=8461
 
 VOLUME ["/etc/mcl/secrets"]
 
-EXPOSE 8461
+# /health is a Unix socket (health_socket in sys.config.src): no port is opened
+# just to be health-checked.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD curl -fsS "http://127.0.0.1:${MCL_HEALTH_PORT}/health" || exit 1
+    CMD curl -fsS --unix-socket /run/mcl/health.sock http://localhost/health || exit 1
 
 CMD ["/app/bin/mcl_echo", "foreground"]

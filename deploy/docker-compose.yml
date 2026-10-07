@@ -63,8 +63,6 @@ services:
       - MCL_NODE_NAME=mcl_echo
       - MCL_NODE_HOST=127.0.0.1
       - MCL_COOKIE=mcl_echo
-      # Host networking means a port already bound on this host fails SILENTLY.
-      - MCL_HEALTH_PORT=8461
 
 # NAMED EXACTLY AS beam00'S EXISTING VOLUME, which is what `-p mcl-echo' made of
 # the key `mcl_echo_secrets'. Naming it here means a different `-p' reuses that

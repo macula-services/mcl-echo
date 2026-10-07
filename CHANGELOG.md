@@ -9,6 +9,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **On macula 14.2 and mcl_om 0.39, `/health` on a Unix socket (#17).** `~> 14.2` (at least 14.2.1) and `~> 0.39`, the current SDK base, so an SDK fix reaches this service with the rest. mcl_om's `health_socket`, `/run/mcl/health.sock` inside the container: no TCP health listener runs, the image's HEALTHCHECK uses `curl --unix-socket`, and nothing configures, exposes or passes a health port; `scripts/health.sh` asks the running container. The sealing posture is unchanged.
+
+### Changed
+
 - **Nothing moves `:latest` any more** (macula-fleet#15). The `promote-latest` job is gone: macula-fleet
   pins each signed `v*` release by digest itself, once it verifies it was signed on that tag.
 
