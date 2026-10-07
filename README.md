@@ -234,16 +234,13 @@ what stops a config table in a README and the real environment drifting.
 
 ## Deployment
 
-CI publishes on two channels, and they are deliberately separate:
-
-| Push | Publishes | Is |
-|------|-----------|-----|
-| to `main` | `ghcr.io/macula-services/mcl-echo:latest` | the deploy channel |
-| a `v*` tag | `ghcr.io/macula-services/mcl-echo:<semver>` only | the rollback archive |
-
-The fleet does not follow `:latest`: macula-fleet pins the box by **digest**, and a
-new build reaches it only when that pin moves (a reviewed fleet commit). A rollback
-is a revert of that commit, back to the previous digest.
+A `v*` tag publishes `ghcr.io/macula-services/mcl-echo:<version>` and nothing else, signed
+by digest with its SBOM and provenance (macula-ci-images' `attest-image.yml`). A push to
+`main` publishes `:main` and `:<sha>`, which nothing follows, and nothing moves `:latest`.
+The fleet runs a release by digest: macula-fleet's pin-releases workflow finds the signed
+release, verifies it was signed on its tag and pins `<version>@sha256:<digest>`
+(macula-fleet#14, #15), so a green `v*` tag is the deploy. To roll back, revert the pin and
+hold the image there.
 
 **Every pushed digest is signed**, keyless, and carries an SBOM and a SLSA
 provenance attestation (the `attest` job, `macula-io/macula-ci-images`'

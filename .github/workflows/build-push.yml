@@ -1,13 +1,14 @@
 # Build the OCI image for mcl-echo and push to the registry.
 #
-# TWO CHANNELS, AND ONLY A RELEASE MOVES :latest.
+# TWO CHANNELS, AND NOTHING MOVES :latest.
 #
-#   push of v*   : publishes :<semver>, then :latest once attest signed it <- the dev fleet's deploy channel
+#   push of v*   : publishes :<semver>, signed by attest      <- what the dev fleet pins
 #   push to main : publishes :main and :<sha>       <- the tip, for trying; nothing follows it
 #
-# The dev fleet (macula-fleet) runs :latest: each box's reconciler pulls it, verifies the
-# digest it resolved to (signature, SBOM, provenance) and runs that digest. So a green v* tag
-# IS the deploy, with no commit to the fleet, and a push to main deploys nothing. The semver
+# The dev fleet (macula-fleet) runs no tag: its own pin-releases workflow finds a signed
+# v* release, verifies it was signed on that tag (signature, SBOM, provenance) and pins its
+# digest, canary first (macula-fleet#14, #15). So a green v* tag IS the deploy, with no
+# credential here, and a push to main deploys nothing. The semver
 # tags stay published, so a bad release can be pinned back to a known one.
 #
 # NOTE ON PUSHING THIS FILE. An HTTPS push that creates or updates anything under
@@ -85,13 +86,13 @@ jobs:
       - name: Set tags
         id: tag
         run: |
-          # A v* tag publishes its version here; :latest moves in promote-latest, only after
-          # attest has signed this digest. main publishes :main and :<sha>; no box follows those.
+          # A v* tag publishes its version here; macula-fleet pins it once attest has signed it
+          # (nothing moves :latest). main publishes :main and :<sha>; no box follows those.
           img=ghcr.io/macula-services/mcl-echo
           case "${GITHUB_REF}" in
             refs/tags/v*)    echo "tags=$img:${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT" ;;
             refs/heads/main) echo "tags=$img:main,$img:${GITHUB_SHA}" >> "$GITHUB_OUTPUT" ;;
-            *) echo "::error::only a v* tag publishes a version and :latest, only main :main and :<sha>; refusing ${GITHUB_REF}"; exit 1 ;;
+            *) echo "::error::only a v* tag publishes a version, only main :main and :<sha>; refusing ${GITHUB_REF}"; exit 1 ;;
           esac
 
       - name: Build and push
@@ -120,34 +121,3 @@ jobs:
     with:
       image: ghcr.io/macula-services/mcl-echo
       digest: ${{ needs.build-and-push.outputs.digest }}
-
-  # :latest is the dev fleet's deploy channel, so it moves LAST: only on a v* tag, and only once
-  # attest has signed and attested this digest. A box that pulls :latest in the window between
-  # push and signature would otherwise refuse the release (and remember that for an hour).
-  promote-latest:
-    needs: [build-and-push, attest]
-    if: startsWith(github.ref, 'refs/tags/v') && needs.build-and-push.outputs.digest != ''
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Log in to the registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Point :latest at the signed digest
-        env:
-          IMAGE: ghcr.io/macula-services/mcl-echo
-          DIGEST: ${{ needs.build-and-push.outputs.digest }}
-        # --prefer-index=false: a CARBON COPY of the signed manifest. Without it imagetools wraps a
-        # single manifest in a new index, a digest attest never signed, and :latest would point at it.
-        run: |
-          docker buildx imagetools create --prefer-index=false --tag "$IMAGE:latest" "$IMAGE@$DIGEST"
-          got="$(docker buildx imagetools inspect "$IMAGE:latest" --format '{{.Manifest.Digest}}')"
-          if [ "$got" != "$DIGEST" ]; then
-            echo "::error:::latest resolves to $got, not the signed $DIGEST"
-            exit 1
-          fi
