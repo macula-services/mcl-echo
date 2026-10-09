@@ -1,6 +1,6 @@
 {application, mcl_echo, [
     {description, "Always-on echo, the mesh's hello-world target every SDK quickstart calls"},
-    {vsn, "0.3.0"},
+    {vsn, "0.3.1"},
     {registered, [mcl_echo_sup]},
     {mod, {mcl_echo_app, []}},
     {applications, [

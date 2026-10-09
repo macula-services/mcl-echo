@@ -7,6 +7,14 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-09
+
+### Changed
+
+- **Rebuilt on macula 14.7.0 (macula#89, macula#60).** Request admission frees
+  the slot when the reply is sent, and caller attribution covers every payload
+  shape.
+
 ## [0.3.0] - 2026-10-07
 
 ### Changed
