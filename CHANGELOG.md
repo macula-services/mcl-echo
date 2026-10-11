@@ -7,6 +7,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+- **Rebuilt on macula 14.8.2** (refused dials back off further each time, macula#95).
+
 ## [0.3.1] - 2026-10-09
 
 ### Changed
