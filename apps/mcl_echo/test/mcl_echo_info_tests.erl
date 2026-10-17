@@ -38,8 +38,8 @@ info_round_trip_test_() ->
           %% wire-verified caller, 0.31's serving-station registration, 12.7.0's
           %% delegation renewal (macula#38, D32) and 12.5.1's request admission fix
           %% (macula#37). A later compatible release must not fail this.
-          ?_assert(at_least(maps:get(mcl_om_version, Reply), [0, 39, 0])),
-          ?_assert(at_least(maps:get(macula_version, Reply), [14, 2, 1]))]
+          ?_assert(at_least(maps:get(mcl_om_version, Reply), [1, 0, 0])),
+          ?_assert(at_least(maps:get(macula_version, Reply), [15, 6, 0]))]
      end}.
 
 %% The service must leave `info' to mcl_om: declaring its own refuses boot.
