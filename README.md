@@ -26,7 +26,8 @@
 
 ## Status: live on the PQ fleet
 
-The service boots, joins the mesh, answers `/health` on 8461, and advertises
+The service boots, joins the mesh, answers `/health` on the Unix socket
+`/run/mcl/health.sock`, and advertises
 the echo capability through the standard `mcl_om_capabilities` path
 (`mcl_echo_service:capabilities/0`). The 11.x wire refuses a procedure
 without an org namespace, so the wire name is `Org/echo`: the org is
