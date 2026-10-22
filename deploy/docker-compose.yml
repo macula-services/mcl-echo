@@ -30,12 +30,12 @@ services:
       # points into it, and the realm's delegation is bound to the node id that
       # key proves. The image declares this path a VOLUME, and with nothing
       # mounted docker gives each new container a fresh anonymous one, so every
-      # watchtower recreate would mint a new node id while the service looks
-      # healthy.
+      # recreate by an image auto-updater would mint a new node id while the
+      # service looks healthy.
       - mcl_echo_secrets:/etc/mcl/secrets
     labels:
-      # Only meaningful if you run watchtower: it pulls a new :latest and
-      # recreates the container. Harmless otherwise.
+      # Only meaningful under an image auto-updater that recreates the
+      # container from a newer tag. Harmless otherwise.
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
       # No default. A service that guesses its org announces itself where
@@ -64,10 +64,10 @@ services:
       - MCL_NODE_HOST=127.0.0.1
       - MCL_COOKIE=mcl_echo
 
-# NAMED EXACTLY AS beam00'S EXISTING VOLUME, which is what `-p mcl-echo' made of
-# the key `mcl_echo_secrets'. Naming it here means a different `-p' reuses that
-# volume and its key instead of starting a second identity. Deleting it retires
-# the node id.
+# NAMED EXACTLY AS THE EXISTING VOLUME ON THE DEPLOYED BOX, which is what
+# `-p mcl-echo' made of the key `mcl_echo_secrets'. Naming it here means a
+# different `-p' reuses that volume and its key instead of starting a second
+# identity. Deleting it retires the node id.
 volumes:
   mcl_echo_secrets:
     name: mcl-echo_mcl_echo_secrets

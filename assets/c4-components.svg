@@ -64,7 +64,7 @@
 <text class="t-type" x="48" y="276">[mcl_om_service behaviour]</text>
 <text class="t-desc" x="48" y="300">The six callbacks mcl_om resolves by name at startup: info, start,</text>
 <text class="t-desc" x="48" y="316">stop, health, capabilities, identity_spec. capabilities/0 asserts</text>
-<text class="t-desc" x="48" y="332">the realm and org, then declares the one open echo and its limits</text>
+<text class="t-desc" x="48" y="332">the realm and org, then declares the echo and its limits</text>
 <rect class="b-cmp" x="512" y="230" width="456" height="130" rx="10"/>
 <text class="t-code" x="528" y="258">mcl_echo_sup</text>
 <text class="t-type" x="528" y="276">[supervisor, one_for_one]</text>

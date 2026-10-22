@@ -27,11 +27,14 @@
 ## Status: live on the PQ fleet
 
 The service boots, joins the mesh, answers `/health` on the Unix socket
-`/run/mcl/health.sock`, and advertises
-the echo capability through the standard `mcl_om_capabilities` path
-(`mcl_echo_service:capabilities/0`). The 11.x wire refuses a procedure
-without an org namespace, so the wire name is `Org/echo`: the org is
-**deploy config, not code**.
+`/run/mcl/health.sock`, and registers its capability through the standard
+`mcl_om_capabilities` path (`mcl_echo_service:capabilities/0`). The 11.x wire
+refuses a procedure without an org namespace, so the wire name is `Org/echo`:
+the org is **deploy config, not code**.
+
+`mcl-echo/echo` is the service's own procedure, and the only one. `mcl_om` adds
+`mcl-echo/info` and `mcl-echo/get_limits` to every service, both open.
+`capabilities/0` is the list.
 
 One org per service, named after the repo
 (`PLAN_PROVIDER_AUTHORIZATION_FLOW.md`, macula-realm). This fleet deploys org
@@ -40,7 +43,7 @@ One org per service, named after the repo
 carries its own org and they all sit in the io.macula realm. The realm issues
 this node's D25 delegation after admission.
 
-`mcl_om_capabilities` registers the org-qualified procedure and nothing else.
+`mcl_om_capabilities` registers the org-qualified procedure.
 The bare `io.macula.echo` literal every 10.x quickstart hardcodes is **not**
 advertised here, and nothing on the fleet answers it any more: callers use the
 org-qualified `mcl-echo/echo`.
@@ -281,10 +284,10 @@ Two things CI cannot do for you, both of which have bitten:
    the host with a bare `unauthorized` that names nothing. Check it after the
    first build. On ghcr the `org.opencontainers.image.source` label in the
    Containerfile is what links the package to the repository.
-2. The host needs `MCL_REALM` and the pinned station pair supplied from
-   somewhere they are not committed, and the realm's D25 chain must publish a
-   procedure delegation naming this service's node id for org `mcl-echo`
-   (the realm admin's provisioning step). The org itself is fixed in
+2. The host needs `MCL_REALM` and the station seeds with their node ids
+   supplied from somewhere they are not committed, and the realm's D25 chain
+   must publish a procedure delegation naming this service's node id for org
+   `mcl-echo` (the realm admin's provisioning step). The org itself is fixed in
    `config/sys.config.src`: the echo advertises as `mcl-echo/echo`.
 
 ## The service contract

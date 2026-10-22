@@ -3,11 +3,11 @@
 *This exists so a reader can see what mcl-echo talks to, and what it is made of,
 without reading it.*
 
-**Status: live on the PQ fleet.** One OTP release in one container. It advertises
-one open procedure, `mcl-echo/echo`, through the standard `mcl_om` capability
-path, and answers `/health` on `/run/mcl/health.sock`. The handler replies with
-the payload unchanged, minus the platform-injected `caller`. It opens no store,
-mounts no data volume and keeps no state.
+**Status: live on the PQ fleet.** One OTP release in one container, serving
+`mcl-echo/echo` through the standard `mcl_om` capability path, and answering
+`/health` on `/run/mcl/health.sock`. The handler replies with the payload
+unchanged, minus the platform-injected `caller`. It opens no store, mounts no
+data volume and keeps no state.
 
 ## Level 1: system context
 
@@ -15,9 +15,9 @@ mounts no data volume and keeps no state.
 
 | Element | Kind | Role |
 | --- | --- | --- |
-| mcl-echo | In scope | Serves `mcl-echo/echo`, the first call every SDK quickstart makes, and `/health` on the Unix socket. One `mcl_om` mesh service in one container on its own box |
+| mcl-echo | In scope | `mcl-echo/echo` is its own procedure, and the only one; `mcl_om` adds `mcl-echo/info` and `mcl-echo/get_limits` to every service, both open; `capabilities/0` is the list. It is the first call every SDK quickstart makes, and `/health` is on the Unix socket. One `mcl_om` mesh service in one container |
 | Caller | Person | An SDK quickstart, an agent, or a fan-out test. Picks one of the six public stations as its route into the mesh and calls `mcl-echo/echo` |
-| Service operator | Person | Deploys the release and supplies `MCL_REALM`, `MCL_REALM_KEY`, and the pinned station pair |
+| Service operator | Person | Deploys the release and supplies `MCL_REALM`, `MCL_REALM_KEY`, and the station seeds with their node ids |
 | macula-realm | Macula infrastructure | Endorses the node's identity key and issues the D25 delegation for org `mcl-echo`, whose procedure it names. Its public key (`MCL_REALM_KEY`) is the trust anchor for every advertisement |
 | Macula stations, mesh DHT | Macula infrastructure | The caller's route in, and the DHT that routes an org procedure. The service dials its own pinned seeds; the 11.x dial is pinned to the station's node id, and the fleet is IPv6 only |
 | mcl-sec-guard | External system | Reads the `denials_observed` facts the platform publishes, one per window with activity |
@@ -35,7 +35,7 @@ formed rather than advertising where nobody can find it.
 
 | Component | Technology | Responsibility |
 | --- | --- | --- |
-| `mcl_echo_service` | Erlang, the `mcl_om_service` behaviour | The six callbacks `mcl_om` resolves by name: `info/0`, `start/1`, `stop/1`, `health/0`, `capabilities/0`, `identity_spec/0`. `capabilities/0` asserts the realm tag and the org, then declares the one open echo with its limits. `identity_spec/0` asks for scope `mcl-echo` with no actions and no resources |
+| `mcl_echo_service` | Erlang, the `mcl_om_service` behaviour | The six callbacks `mcl_om` resolves by name: `info/0`, `start/1`, `stop/1`, `health/0`, `capabilities/0`, `identity_spec/0`. `capabilities/0` asserts the realm tag and the org, then declares the echo and its limits. `identity_spec/0` asks for scope `mcl-echo` with no actions and no resources |
 | `mcl_echo_sup` | supervisor, `one_for_one` | No children. The capability registration is mcl_om's, the inbound guard is the pipeline's, and the echo is a stateless handler, so an empty child list is the honest shape |
 | inbound guard, the platform's | the `mcl_om` pipeline, before the handler | Payload size first (`max_payload_external_size` 4096, measured with `erlang:external_size/1`), then a fixed 10 s window of 20 calls per caller and 300 globally. Over either: `payload_too_large` or `rate_limited`. It counts denials and publishes `denials_observed` once per window with activity |
 | `mcl_echo_mesh_rpc` | `macula_response` RPC provider | `handle_request/2` replies with the payload unchanged, minus the platform-injected `caller`. Stateless: no store, no clock, no side effect of its own |
@@ -73,4 +73,4 @@ run rather than overlapping the next one.
 The check that keeps them here is the `c4-model` job in
 `.github/workflows/c4-model.yml`. It is red until both files exist and are
 shown, and it stays red if either one goes missing. A diagram-only commit does
-not rebuild the image: `assets/**` is in that workflow's `paths-ignore`.
+not rebuild the image: `assets/**` is in `build-push.yml`'s `paths-ignore`.

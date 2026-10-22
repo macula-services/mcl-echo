@@ -138,9 +138,9 @@ def context():
           ["Deploys the release and supplies", "the realm, its key and the station",
            "pins"], person=True)
     d.box("b-sys", 365, 200, 270, 152, "mcl-echo", "[mcl_om mesh service, own box]",
-          ["One open procedure, mcl-echo/echo:", "it replies with the payload minus",
-           "the caller. /health is a Unix socket.", "No store, no clock, no side effect",
-           "beyond the facts the platform emits"])
+          ["mcl-echo/echo is its own procedure,", "and the only one; mcl_om adds info",
+           "and get_limits, both open;", "capabilities/0 is the list. /health is",
+           "a Unix socket; no store, no clock."])
     d.box("b-mac", 40, 430, 280, 120, "macula-realm", "[Macula infrastructure]",
           ["Endorses the node's identity key", "and issues the D25 delegation for",
            "org mcl-echo, whose procedure it names"])
@@ -180,7 +180,7 @@ def components():
     d.box("b-sys", 32, 230, 456, 130, "mcl_echo_service", "[mcl_om_service behaviour]",
           ["The six callbacks mcl_om resolves by name at startup: info, start,",
            "stop, health, capabilities, identity_spec. capabilities/0 asserts",
-           "the realm and org, then declares the one open echo and its limits"], code=True)
+           "the realm and org, then declares the echo and its limits"], code=True)
     d.box("b-cmp", 512, 230, 456, 130, "mcl_echo_sup", "[supervisor, one_for_one]",
           ["No children: the capability registration is mcl_om's, the inbound",
            "guard is the pipeline's, and the echo is a stateless handler. An",

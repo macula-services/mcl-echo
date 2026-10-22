@@ -62,11 +62,11 @@
 <rect class="b-sys" x="365" y="200" width="270" height="152" rx="10"/>
 <text class="t-name" x="381" y="228">mcl-echo</text>
 <text class="t-type" x="381" y="246">[mcl_om mesh service, own box]</text>
-<text class="t-desc" x="381" y="270">One open procedure, mcl-echo/echo:</text>
-<text class="t-desc" x="381" y="286">it replies with the payload minus</text>
-<text class="t-desc" x="381" y="302">the caller. /health is a Unix socket.</text>
-<text class="t-desc" x="381" y="318">No store, no clock, no side effect</text>
-<text class="t-desc" x="381" y="334">beyond the facts the platform emits</text>
+<text class="t-desc" x="381" y="270">mcl-echo/echo is its own procedure,</text>
+<text class="t-desc" x="381" y="286">and the only one; mcl_om adds info</text>
+<text class="t-desc" x="381" y="302">and get_limits, both open;</text>
+<text class="t-desc" x="381" y="318">capabilities/0 is the list. /health is</text>
+<text class="t-desc" x="381" y="334">a Unix socket; no store, no clock.</text>
 <rect class="b-mac" x="40" y="430" width="280" height="120" rx="10"/>
 <text class="t-name" x="56" y="458">macula-realm</text>
 <text class="t-type" x="56" y="476">[Macula infrastructure]</text>
