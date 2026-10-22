@@ -5,6 +5,10 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+- **The base library is macula 16** (macula-codebase-checks#4): the floor moves `~> 15.6` to `~> 16.0`, and `mcl_om` from `~> 1.0` to `~> 1.4`, the release whose own base is macula 16. 16.0 keeps wire 1.0, so this service still speaks to every wire 1.0 box, and the echo's call path is unchanged. What it adds is the revocation bound (macula#118): an endorsement admits its holder for at most 24 hours, and a gated overlay context must pass `member_standing`. This service gates no overlay and issues no endorsement.
+
 ## 0.4.0 - 2026-10-17
 
 - **Wire 1.0: on macula 15.6 / mcl_om 1.0.** The wire break is the point of this release: a 15 node neither reads nor handshakes with a 14 node, so this build speaks wire 1.0 only and is held off every live box until the flag day (macula-fleet#27). `advertise/*` and `subscribe/*` now return once a station acknowledges the registration (macula#12). The echo capability, its guard pipeline and its call path are otherwise unchanged.
