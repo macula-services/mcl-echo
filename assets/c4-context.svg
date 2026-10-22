@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 680" role="img" aria-label="mcl-echo system context">
+<title>mcl-echo system context</title>
+<style>
+.t-name { font-family: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 700; }
+.t-desc { font-family: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; font-size: 12.5px; }
+.t-rel { font-family: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; font-size: 11.5px; paint-order: stroke; stroke-width: 4px; stroke-linejoin: round; }
+.t-code { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 13px; font-weight: 600; }
+.t-type { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 11.5px; }
+.t-bound { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 12px; font-weight: 600; }
+.t-leg { font-family: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; font-size: 12px; }
+.edge { fill: none; stroke-width: 1.25; }
+.edge-later { fill: none; stroke-width: 1.25; stroke-dasharray: 5 4; }
+.bg { fill: #FFFFFF; }
+.b-sys { fill: #F5E9CC; stroke: #A56F0A; stroke-width: 2; }
+.b-per { fill: #E3EBF2; stroke: #3B5B7A; stroke-width: 1.25; }
+.b-mac { fill: #E6E4EE; stroke: #5E5A78; stroke-width: 1.25; }
+.b-ext { fill: #ECEFED; stroke: #8A9791; stroke-width: 1.25; }
+.b-cmp { fill: #FFFFFF; stroke: #8A9791; stroke-width: 1.25; }
+.b-later { fill: none; stroke: #8A9791; stroke-width: 1.25; stroke-dasharray: 5 4; }
+.bound { fill: none; stroke: #B3BDB8; stroke-width: 1; }
+.head { fill: #3B5B7A; }
+.t-name, .t-code { fill: #16201D; }
+.t-type, .t-bound, .t-leg { fill: #66736E; }
+.t-desc { fill: #34413C; }
+.t-rel { fill: #66736E; stroke: #FFFFFF; }
+.edge, .edge-later { stroke: #8A9791; }
+.arrowhead { fill: #8A9791; }
+@media (prefers-color-scheme: dark) {
+.bg { fill: #171F1C; }
+.b-sys { fill: #3A2E13; stroke: #E3AA3C; }
+.b-per { fill: #1D2A36; stroke: #8EB4D8; }
+.b-mac { fill: #26243A; stroke: #A9A4C8; }
+.b-ext { fill: #1C2421; stroke: #7D8B85; }
+.b-cmp { fill: #171F1C; stroke: #7D8B85; }
+.b-later { stroke: #7D8B85; }
+.bound { stroke: #4A5752; }
+.head { fill: #8EB4D8; }
+.t-name, .t-code { fill: #E6ECE9; }
+.t-type, .t-bound, .t-leg { fill: #93A09A; }
+.t-desc { fill: #C3CDC8; }
+.t-rel { fill: #93A09A; stroke: #171F1C; }
+.edge, .edge-later { stroke: #7D8B85; }
+.arrowhead { fill: #7D8B85; }
+}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrowhead" d="M0 0L10 5L0 10z"/></marker></defs>
+<rect class="bg" x="0" y="0" width="1000" height="680"/>
+<rect class="b-per" x="40" y="30" width="280" height="120" rx="10"/>
+<circle class="head" cx="66" cy="54" r="9"/>
+<text class="t-name" x="84" y="58">Caller</text>
+<text class="t-type" x="84" y="76">[Person]</text>
+<text class="t-desc" x="56" y="100">An SDK quickstart, an agent, or a</text>
+<text class="t-desc" x="56" y="116">fan-out test. Picks a station and</text>
+<text class="t-desc" x="56" y="132">calls mcl-echo/echo</text>
+<rect class="b-per" x="690" y="30" width="270" height="120" rx="10"/>
+<circle class="head" cx="716" cy="54" r="9"/>
+<text class="t-name" x="734" y="58">Service operator</text>
+<text class="t-type" x="734" y="76">[Person]</text>
+<text class="t-desc" x="706" y="100">Deploys the release and supplies</text>
+<text class="t-desc" x="706" y="116">the realm, its key and the station</text>
+<text class="t-desc" x="706" y="132">pins</text>
+<rect class="b-sys" x="365" y="200" width="270" height="152" rx="10"/>
+<text class="t-name" x="381" y="228">mcl-echo</text>
+<text class="t-type" x="381" y="246">[mcl_om mesh service, own box]</text>
+<text class="t-desc" x="381" y="270">One open procedure, mcl-echo/echo:</text>
+<text class="t-desc" x="381" y="286">it replies with the payload minus</text>
+<text class="t-desc" x="381" y="302">the caller. /health is a Unix socket.</text>
+<text class="t-desc" x="381" y="318">No store, no clock, no side effect</text>
+<text class="t-desc" x="381" y="334">beyond the facts the platform emits</text>
+<rect class="b-mac" x="40" y="430" width="280" height="120" rx="10"/>
+<text class="t-name" x="56" y="458">macula-realm</text>
+<text class="t-type" x="56" y="476">[Macula infrastructure]</text>
+<text class="t-desc" x="56" y="500">Endorses the node's identity key</text>
+<text class="t-desc" x="56" y="516">and issues the D25 delegation for</text>
+<text class="t-desc" x="56" y="532">org mcl-echo, whose procedure it names</text>
+<rect class="b-mac" x="365" y="430" width="270" height="136" rx="10"/>
+<text class="t-name" x="381" y="458">Macula stations, mesh DHT</text>
+<text class="t-type" x="381" y="476">[Macula infrastructure]</text>
+<text class="t-desc" x="381" y="500">The caller's route in, six public</text>
+<text class="t-desc" x="381" y="516">stations and the DHT route an org</text>
+<text class="t-desc" x="381" y="532">procedure. mcl-echo dials its own</text>
+<text class="t-desc" x="381" y="548">pinned seeds, IPv6 only, pin enforced</text>
+<rect class="b-ext" x="680" y="430" width="280" height="120" rx="10"/>
+<text class="t-name" x="696" y="458">mcl-sec-guard</text>
+<text class="t-type" x="696" y="476">[External system]</text>
+<text class="t-desc" x="696" y="500">Reads the denials_observed facts</text>
+<text class="t-desc" x="696" y="516">the platform publishes, one per</text>
+<text class="t-desc" x="696" y="532">window with a denial</text>
+<path class="edge" d="M180 150V180H400V200" marker-end="url(#a)"/>
+<text class="t-rel" x="200" y="160">calls mcl-echo/echo</text>
+<text class="t-rel" x="200" y="176">with any payload</text>
+<path class="edge" d="M825 150V180H620V200" marker-end="url(#a)"/>
+<text class="t-rel" x="640" y="160">deploys; supplies the realm,</text>
+<text class="t-rel" x="640" y="176">its key and the station pins</text>
+<path class="edge" d="M420 352V390H180V430" marker-end="url(#a)"/>
+<text class="t-rel" x="300" y="382">boot claim, D25 delegation</text>
+<path class="edge" d="M520 352V430" marker-end="url(#a)"/>
+<text class="t-rel" x="512" y="404" text-anchor="end">dials its pinned seeds; advertises the echo</text>
+<path class="edge" d="M600 352V390H820V430" marker-end="url(#a)"/>
+<text class="t-rel" x="620" y="384">denials_observed, when a limit denies</text>
+<text class="t-desc" x="40" y="588">The echo is a canary, not a service with state: its answers are the payload back, and its job is to be the first call every</text>
+<text class="t-desc" x="40" y="606">SDK quickstart makes. The limits and the denials are the platform's (mcl_om's inbound guard), so nothing here counts, throttles</text>
+<text class="t-desc" x="40" y="624">or stores; the realm's delegation is what makes the procedure reachable at all.</text>
+<rect class="b-sys" x="24" y="652" width="22" height="14" rx="3"/>
+<text class="t-leg" x="54" y="664">In scope</text>
+<rect class="b-per" x="110.8" y="652" width="22" height="14" rx="3"/>
+<text class="t-leg" x="140.8" y="664">Person</text>
+<rect class="b-mac" x="184.39999999999998" y="652" width="22" height="14" rx="3"/>
+<text class="t-leg" x="214.39999999999998" y="664">Macula infrastructure</text>
+<rect class="b-ext" x="357.0" y="652" width="22" height="14" rx="3"/>
+<text class="t-leg" x="387.0" y="664">External system</text>
+<rect class="b-cmp" x="490.0" y="652" width="22" height="14" rx="3"/>
+<text class="t-leg" x="520.0" y="664">Container or component</text>
+</svg>
