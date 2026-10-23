@@ -62,11 +62,11 @@
 <rect class="b-sys" x="365" y="200" width="270" height="152" rx="10"/>
 <text class="t-name" x="381" y="228">mcl-echo</text>
 <text class="t-type" x="381" y="246">[mcl_om mesh service, own box]</text>
-<text class="t-desc" x="381" y="270">mcl-echo/echo is its own procedure,</text>
-<text class="t-desc" x="381" y="286">and the only one; mcl_om adds info</text>
-<text class="t-desc" x="381" y="302">and get_limits, both open;</text>
-<text class="t-desc" x="381" y="318">capabilities/0 is the list. /health is</text>
-<text class="t-desc" x="381" y="334">a Unix socket; no store, no clock.</text>
+<text class="t-desc" x="381" y="270">mcl-echo/echo is its own procedure.</text>
+<text class="t-desc" x="381" y="286">mcl_om adds info and get_limits, both</text>
+<text class="t-desc" x="381" y="302">open. capabilities/0 is the list.</text>
+<text class="t-desc" x="381" y="318">/health is a Unix socket; no store,</text>
+<text class="t-desc" x="381" y="334">no clock.</text>
 <rect class="b-mac" x="40" y="430" width="280" height="120" rx="10"/>
 <text class="t-name" x="56" y="458">macula-realm</text>
 <text class="t-type" x="56" y="476">[Macula infrastructure]</text>
@@ -100,7 +100,7 @@
 <text class="t-rel" x="620" y="384">denials_observed, when a limit denies</text>
 <text class="t-desc" x="40" y="588">The echo is a canary, not a service with state: its answers are the payload back, and its job is to be the first call every</text>
 <text class="t-desc" x="40" y="606">SDK quickstart makes. The limits and the denials are the platform's (mcl_om's inbound guard), so nothing here counts, throttles</text>
-<text class="t-desc" x="40" y="624">or stores; the realm's delegation is what makes the procedure reachable at all.</text>
+<text class="t-desc" x="40" y="624">or stores; the realm's delegation is what makes its own procedure reachable at all.</text>
 <rect class="b-sys" x="24" y="652" width="22" height="14" rx="3"/>
 <text class="t-leg" x="54" y="664">In scope</text>
 <rect class="b-per" x="110.8" y="652" width="22" height="14" rx="3"/>

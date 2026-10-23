@@ -59,18 +59,19 @@
 <text class="t-desc" x="528" y="140">QUIC transport, signed calls, sealed payloads (kem_advertise),</text>
 <text class="t-desc" x="528" y="156">and the realm key every org-namespaced advertisement is</text>
 <text class="t-desc" x="528" y="172">verified against</text>
-<rect class="b-sys" x="32" y="230" width="456" height="130" rx="10"/>
+<rect class="b-sys" x="32" y="230" width="456" height="140" rx="10"/>
 <text class="t-code" x="48" y="258">mcl_echo_service</text>
 <text class="t-type" x="48" y="276">[mcl_om_service behaviour]</text>
-<text class="t-desc" x="48" y="300">The six callbacks mcl_om resolves by name at startup: info, start,</text>
-<text class="t-desc" x="48" y="316">stop, health, capabilities, identity_spec. capabilities/0 asserts</text>
-<text class="t-desc" x="48" y="332">the realm and org, then declares the echo and its limits</text>
+<text class="t-desc" x="48" y="300">The six mcl_om_service callbacks, resolved by</text>
+<text class="t-desc" x="48" y="316">name; mcl-om adds the open info and get_limits.</text>
+<text class="t-desc" x="48" y="332">capabilities/0 asserts the realm and org, then</text>
+<text class="t-desc" x="48" y="348">declares the echo and its limits</text>
 <rect class="b-cmp" x="512" y="230" width="456" height="130" rx="10"/>
 <text class="t-code" x="528" y="258">mcl_echo_sup</text>
 <text class="t-type" x="528" y="276">[supervisor, one_for_one]</text>
-<text class="t-desc" x="528" y="300">No children: the capability registration is mcl_om's, the inbound</text>
-<text class="t-desc" x="528" y="316">guard is the pipeline's, and the echo is a stateless handler. An</text>
-<text class="t-desc" x="528" y="332">empty child list is the honest shape, not a placeholder</text>
+<text class="t-desc" x="528" y="300">No children: mcl-om owns the registration</text>
+<text class="t-desc" x="528" y="316">of what this service advertises; the inbound</text>
+<text class="t-desc" x="528" y="332">guard is the pipeline's; the echo is stateless.</text>
 <rect class="b-cmp" x="32" y="390" width="456" height="140" rx="10"/>
 <text class="t-code" x="48" y="418">inbound guard, the platform's</text>
 <text class="t-type" x="48" y="436">[mcl_om pipeline, before the handler]</text>
@@ -100,8 +101,8 @@
 <text class="t-rel" x="268" y="384">declares the limits</text>
 <path class="edge" d="M488 460H512" marker-end="url(#a)"/>
 <text class="t-rel" x="500" y="460" text-anchor="middle" transform="rotate(-90 500 460)">then the handler</text>
-<text class="t-desc" x="40" y="700">config/sys.config.src fixes the org, mcl-echo, which prefixes the procedure, and the realm is the io.macula tag. Both are asserted at</text>
-<text class="t-desc" x="40" y="716">boot, because an org drift renames the procedure to a name no caller uses and a realm mismatch is silent on the wire.</text>
+<text class="t-desc" x="40" y="700">config/sys.config.src fixes the org, mcl-echo, whose name prefixes procedure names; the realm is the io.macula tag. Both are asserted at</text>
+<text class="t-desc" x="40" y="716">boot, because an org drift renames procedure names to ones no caller uses and a realm mismatch is silent on the wire.</text>
 <rect class="b-sys" x="24" y="752" width="22" height="14" rx="3"/>
 <text class="t-leg" x="54" y="764">In scope</text>
 <rect class="b-per" x="110.8" y="752" width="22" height="14" rx="3"/>

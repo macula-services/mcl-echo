@@ -27,7 +27,7 @@
 ## Status: live on the PQ fleet
 
 The service boots, joins the mesh, answers `/health` on the Unix socket
-`/run/mcl/health.sock`, and registers its capability through the standard
+`/run/mcl/health.sock`, and registers its own capability through the standard
 `mcl_om_capabilities` path (`mcl_echo_service:capabilities/0`). The 11.x wire
 refuses a procedure without an org namespace, so the wire name is `Org/echo`:
 the org is **deploy config, not code**.
@@ -199,9 +199,9 @@ capability declares its own numbers in `mcl_echo_service:capabilities/0`:
   globally by default. Over it: `rate_limited`.
 
 The pipeline counts denials and publishes one `denials_observed` fact per
-window with activity, which mcl-sec-guard subscribes to; `limits.get` reports
+window with activity, which mcl-sec-guard subscribes to; `get_limits` reports
 the live numbers, and the guardian retunes them at runtime through the gated
-`limits.set` / `limits.set_operator` capabilities once configured (see
+`set_limits` / `set_limits_operator` capabilities once configured (see
 Configuration below).
 
 ⚠ **A caller is only attributable when the payload is a map.** The
@@ -237,7 +237,7 @@ linked against a different libc. A local `rebar3 compile` does need Rust.
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
-| `MCL_REALM` | required | 64-hex realm tag: `sha256` of the **realm** name, `io.macula`. Not a hash of the org. Reaches the node as an application env, never a bare shell variable: `config/sys.config.src` is the only place the two meet. |
+| `MCL_REALM` | required | 64-hex realm tag: `sha256` of the **realm** name, `io.macula`. Not a hash of the org. Reaches the node as an application env, never a bare shell variable: `config/sys.config.src` is where the two meet. |
 | `MCL_REALM_KEY` | required | The **trust anchor**: the io.macula realm's public signing key, hex encoded. A different thing from `MCL_REALM`, which is only an identifier. Every org-namespaced advertisement is verified against this key, so without it nothing resolves, the boot claim never reaches the realm, and the service runs green and unreachable. Public material, not a secret. Requires `mcl_om >= 0.3.0`, which refuses to start a pool without it. |
 | `MACULA_STATION_SEEDS` | required | Station hosts to dial, `host[:port]`, comma-separated. No default: naming a realm costs nothing, dialling a production station from every dev clone does. |
 | `MACULA_STATION_NODE_IDS` | required | The matching 64-hex station node ids, comma-separated, index-paired with the seeds. The 11.x dial is pinned (D5): mcl_om refuses to boot a pool with an unpinned seed. |
@@ -249,8 +249,8 @@ The inbound limits are the capability's, declared in code
 (`mcl_echo_service:capabilities/0`), not application config. To let a guardian
 tune them over the mesh, uncomment the `inbound_guard` block in
 `config/sys.config.src` (alert topic, the realm DID, and the guardian/operator
-tier names); that also advertises the gated `limits.set` /
-`limits.set_operator` capabilities.
+tier names); that also advertises the gated `set_limits` /
+`set_limits_operator` capabilities.
 
 `deploy/docker-compose.yml` runs it, and carries what the service knows about
 itself. If you deploy through something else, let that carry **placement**: which
@@ -261,7 +261,7 @@ what stops a config table in a README and the real environment drifting.
 
 A `v*` tag publishes `ghcr.io/macula-services/mcl-echo:<version>` and nothing else, signed
 by digest with its SBOM and provenance (macula-ci-images' `attest-image.yml`). A push to
-`main` publishes `:main` and `:<sha>`, which nothing follows, and nothing moves `:latest`.
+`main` publishes `:main` and `:<sha>`; no deployment takes them, and `:latest` does not move.
 The fleet runs a release by digest: macula-fleet's pin-releases workflow finds the signed
 release, verifies it was signed on its tag and pins `<version>@sha256:<digest>`
 (macula-fleet#14, #15), so a green `v*` tag is the deploy. To roll back, revert the pin and
@@ -272,8 +272,8 @@ provenance attestation (the `attest` job, `macula-io/macula-ci-images`'
 `attest-image.yml`). The fleet's reconciler verifies them before it runs a digest:
 signed by that workflow, called from this repository, at the commit it names.
 
-**A tag push does not move `:latest`.** It used to, which meant cutting a
-release also deployed it, seconds later, to every box watching `:latest`
+**A tag push does not move the moving tag.** It used to, which meant cutting a
+release also deployed it, seconds later, to every box taking the moving tag
 whether anyone intended that or not, and made a release impossible to cut
 during a live test without swapping the artifact under it. Cutting a release
 and deploying one are separate acts.

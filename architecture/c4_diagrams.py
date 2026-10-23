@@ -138,9 +138,9 @@ def context():
           ["Deploys the release and supplies", "the realm, its key and the station",
            "pins"], person=True)
     d.box("b-sys", 365, 200, 270, 152, "mcl-echo", "[mcl_om mesh service, own box]",
-          ["mcl-echo/echo is its own procedure,", "and the only one; mcl_om adds info",
-           "and get_limits, both open;", "capabilities/0 is the list. /health is",
-           "a Unix socket; no store, no clock."])
+          ["mcl-echo/echo is its own procedure.", "mcl_om adds info and get_limits, both",
+           "open. capabilities/0 is the list.", "/health is a Unix socket; no store,",
+           "no clock."])
     d.box("b-mac", 40, 430, 280, 120, "macula-realm", "[Macula infrastructure]",
           ["Endorses the node's identity key", "and issues the D25 delegation for",
            "org mcl-echo, whose procedure it names"])
@@ -161,7 +161,7 @@ def context():
     d.edge("M600 352V390H820V430"); d.text("t-rel", 620, 384, "denials_observed, when a limit denies")
     d.text("t-desc", 40, 588, "The echo is a canary, not a service with state: its answers are the payload back, and its job is to be the first call every")
     d.text("t-desc", 40, 606, "SDK quickstart makes. The limits and the denials are the platform's (mcl_om's inbound guard), so nothing here counts, throttles")
-    d.text("t-desc", 40, 624, "or stores; the realm's delegation is what makes the procedure reachable at all.")
+    d.text("t-desc", 40, 624, "or stores; the realm's delegation is what makes its own procedure reachable at all.")
     d.legend(652, boundary=False)
     d.write()
 
@@ -177,14 +177,15 @@ def components():
           ["QUIC transport, signed calls, sealed payloads (kem_advertise),",
            "and the realm key every org-namespaced advertisement is",
            "verified against"], code=True)
-    d.box("b-sys", 32, 230, 456, 130, "mcl_echo_service", "[mcl_om_service behaviour]",
-          ["The six callbacks mcl_om resolves by name at startup: info, start,",
-           "stop, health, capabilities, identity_spec. capabilities/0 asserts",
-           "the realm and org, then declares the echo and its limits"], code=True)
+    d.box("b-sys", 32, 230, 456, 140, "mcl_echo_service", "[mcl_om_service behaviour]",
+          ["The six mcl_om_service callbacks, resolved by",
+           "name; mcl-om adds the open info and get_limits.",
+           "capabilities/0 asserts the realm and org, then",
+           "declares the echo and its limits"], code=True)
     d.box("b-cmp", 512, 230, 456, 130, "mcl_echo_sup", "[supervisor, one_for_one]",
-          ["No children: the capability registration is mcl_om's, the inbound",
-           "guard is the pipeline's, and the echo is a stateless handler. An",
-           "empty child list is the honest shape, not a placeholder"], code=True)
+          ["No children: mcl-om owns the registration",
+           "of what this service advertises; the inbound",
+           "guard is the pipeline's; the echo is stateless."], code=True)
     d.box("b-cmp", 32, 390, 456, 140, "inbound guard, the platform's", "[mcl_om pipeline, before the handler]",
           ["Payload size first (4096 bytes, erlang:external_size), then a",
            "fixed 10 s window of 20 calls per caller and 300 globally. Over",
@@ -203,8 +204,8 @@ def components():
     d.edge("M488 295H512"); d.text("t-rel", 500, 288, "starts", anchor="middle", rotate=-90)
     d.edge("M260 360V390"); d.text("t-rel", 268, 384, "declares the limits")
     d.edge("M488 460H512"); d.text("t-rel", 500, 460, "then the handler", anchor="middle", rotate=-90)
-    d.text("t-desc", 40, 700, "config/sys.config.src fixes the org, mcl-echo, which prefixes the procedure, and the realm is the io.macula tag. Both are asserted at")
-    d.text("t-desc", 40, 716, "boot, because an org drift renames the procedure to a name no caller uses and a realm mismatch is silent on the wire.")
+    d.text("t-desc", 40, 700, "config/sys.config.src fixes the org, mcl-echo, whose name prefixes procedure names; the realm is the io.macula tag. Both are asserted at")
+    d.text("t-desc", 40, 716, "boot, because an org drift renames procedure names to ones no caller uses and a realm mismatch is silent on the wire.")
     d.legend(752, boundary=False)
     d.write()
 
