@@ -23,7 +23,7 @@ jobs:
       # Lint first: grid closure, anti-theater, copy-paste. Failures annotate
       # the offending cell file in the PR diff.
       - name: "fovea lint"
-        uses: macula-io/macula-fovea@b1a01ffc3c06f5bcf4ef42dffceede04ca42e9f7 # v0.1.0
+        uses: macula-io/macula-fovea@e6cfd1a7a8acbe70903daeadc842f3821e0d67e4 # v0.3.0
         with:
           dir: security/fovea
           command: lint
@@ -32,7 +32,7 @@ jobs:
       # lint is red — a red run is exactly the run whose report matters.
       - name: "fovea score"
         if: always()
-        uses: macula-io/macula-fovea@b1a01ffc3c06f5bcf4ef42dffceede04ca42e9f7 # v0.1.0
+        uses: macula-io/macula-fovea@e6cfd1a7a8acbe70903daeadc842f3821e0d67e4 # v0.3.0
         with:
           dir: security/fovea
           command: score
@@ -40,7 +40,7 @@ jobs:
       # The trap: a roadmap cell whose linked issue was closed without the
       # cell being updated fails the build.
       - name: "fovea issues --check"
-        uses: macula-io/macula-fovea@b1a01ffc3c06f5bcf4ef42dffceede04ca42e9f7 # v0.1.0
+        uses: macula-io/macula-fovea@e6cfd1a7a8acbe70903daeadc842f3821e0d67e4 # v0.3.0
         with:
           dir: security/fovea
           command: issues
@@ -70,7 +70,7 @@ jobs:
       # Idempotent: opens roadmap cells as issues, relabels overdue, closes
       # issues whose cells moved on. Body markers prevent duplicates.
       - name: "fovea issues (sync)"
-        uses: macula-io/macula-fovea@b1a01ffc3c06f5bcf4ef42dffceede04ca42e9f7 # v0.1.0
+        uses: macula-io/macula-fovea@e6cfd1a7a8acbe70903daeadc842f3821e0d67e4 # v0.3.0
         with:
           dir: security/fovea
           command: issues
