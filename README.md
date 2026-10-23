@@ -201,8 +201,7 @@ capability declares its own numbers in `mcl_echo_service:capabilities/0`:
 The pipeline counts denials and publishes one `denials_observed` fact per
 window with activity, which mcl-sec-guard subscribes to; `get_limits` reports
 the live numbers, and the guardian retunes them at runtime through the gated
-`set_limits` / `set_limits_operator` capabilities once configured (see
-Configuration below).
+`set_limits` capability once configured (see Configuration below).
 
 ⚠ **A caller is only attributable when the payload is a map.** The
 wire-authenticated caller node id is merged in by
@@ -248,9 +247,8 @@ linked against a different libc. A local `rebar3 compile` does need Rust.
 The inbound limits are the capability's, declared in code
 (`mcl_echo_service:capabilities/0`), not application config. To let a guardian
 tune them over the mesh, uncomment the `inbound_guard` block in
-`config/sys.config.src` (alert topic, the realm DID, and the guardian/operator
-tier names); that also advertises the gated `set_limits` /
-`set_limits_operator` capabilities.
+`config/sys.config.src` (alert topic, the realm DID, and the guardian tier);
+that also advertises the gated `set_limits` capability.
 
 `deploy/docker-compose.yml` runs it, and carries what the service knows about
 itself. If you deploy through something else, let that carry **placement**: which

@@ -61,18 +61,20 @@
 <text class="t-desc" x="706" y="132">pins</text>
 <rect class="b-sys" x="365" y="200" width="270" height="152" rx="10"/>
 <text class="t-name" x="381" y="228">mcl-echo</text>
-<text class="t-type" x="381" y="246">[mcl_om mesh service, own box]</text>
+<text class="t-type" x="381" y="246">[mcl_om mesh service]</text>
 <text class="t-desc" x="381" y="270">mcl-echo/echo is its own procedure.</text>
 <text class="t-desc" x="381" y="286">mcl_om adds info and get_limits, both</text>
 <text class="t-desc" x="381" y="302">open. capabilities/0 is the list.</text>
 <text class="t-desc" x="381" y="318">/health is a Unix socket; no store,</text>
 <text class="t-desc" x="381" y="334">no clock.</text>
-<rect class="b-mac" x="40" y="430" width="280" height="120" rx="10"/>
+<rect class="b-mac" x="40" y="430" width="280" height="152" rx="10"/>
 <text class="t-name" x="56" y="458">macula-realm</text>
 <text class="t-type" x="56" y="476">[Macula infrastructure]</text>
 <text class="t-desc" x="56" y="500">Endorses the node's identity key</text>
-<text class="t-desc" x="56" y="516">and issues the D25 delegation for</text>
-<text class="t-desc" x="56" y="532">org mcl-echo, whose procedure it names</text>
+<text class="t-desc" x="56" y="516">and grants the D25 provider</text>
+<text class="t-desc" x="56" y="532">authorization for org mcl-echo, for</text>
+<text class="t-desc" x="56" y="548">its procedures, the open ones</text>
+<text class="t-desc" x="56" y="564">included</text>
 <rect class="b-mac" x="365" y="430" width="270" height="136" rx="10"/>
 <text class="t-name" x="381" y="458">Macula stations, mesh DHT</text>
 <text class="t-type" x="381" y="476">[Macula infrastructure]</text>
@@ -93,7 +95,7 @@
 <text class="t-rel" x="640" y="160">deploys; supplies the realm,</text>
 <text class="t-rel" x="640" y="176">its key and the station pins</text>
 <path class="edge" d="M420 352V390H180V430" marker-end="url(#a)"/>
-<text class="t-rel" x="300" y="382">boot claim, D25 delegation</text>
+<text class="t-rel" x="250" y="382">boot claim, D25 delegation</text>
 <path class="edge" d="M520 352V430" marker-end="url(#a)"/>
 <text class="t-rel" x="512" y="404" text-anchor="end">dials its pinned seeds; advertises the echo</text>
 <path class="edge" d="M600 352V390H820V430" marker-end="url(#a)"/>

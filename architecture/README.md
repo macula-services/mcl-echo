@@ -18,7 +18,7 @@ data volume and keeps no state.
 | mcl-echo | In scope | `mcl-echo/echo` is its own procedure, and the only one; `mcl_om` adds `mcl-echo/info` and `mcl-echo/get_limits` to every service, both open; `capabilities/0` is the list. It is the first call every SDK quickstart makes, and `/health` is on the Unix socket. One `mcl_om` mesh service in one container |
 | Caller | Person | An SDK quickstart, an agent, or a fan-out test. Picks one of the six public stations as its route into the mesh and calls `mcl-echo/echo` |
 | Service operator | Person | Deploys the release and supplies `MCL_REALM`, `MCL_REALM_KEY`, and the station seeds with their node ids |
-| macula-realm | Macula infrastructure | Endorses the node's identity key and issues the D25 delegation for org `mcl-echo`, whose procedure it names. Its public key (`MCL_REALM_KEY`) is the trust anchor for every advertisement |
+| macula-realm | Macula infrastructure | Endorses the node's identity key and grants the D25 provider authorization for org `mcl-echo`, for its procedures, the open ones included. Its public key (`MCL_REALM_KEY`) is the trust anchor for every advertisement |
 | Macula stations, mesh DHT | Macula infrastructure | The caller's route in, and the DHT that routes an org procedure. The service dials its own pinned seeds; the 11.x dial is pinned to the station's node id, and the fleet is IPv6 only |
 | mcl-sec-guard | External system | Reads the `denials_observed` facts the platform publishes, one per window with activity |
 

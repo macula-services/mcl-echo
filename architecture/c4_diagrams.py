@@ -137,13 +137,14 @@ def context():
     d.box("b-per", 690, 30, 270, 120, "Service operator", "[Person]",
           ["Deploys the release and supplies", "the realm, its key and the station",
            "pins"], person=True)
-    d.box("b-sys", 365, 200, 270, 152, "mcl-echo", "[mcl_om mesh service, own box]",
+    d.box("b-sys", 365, 200, 270, 152, "mcl-echo", "[mcl_om mesh service]",
           ["mcl-echo/echo is its own procedure.", "mcl_om adds info and get_limits, both",
            "open. capabilities/0 is the list.", "/health is a Unix socket; no store,",
            "no clock."])
-    d.box("b-mac", 40, 430, 280, 120, "macula-realm", "[Macula infrastructure]",
-          ["Endorses the node's identity key", "and issues the D25 delegation for",
-           "org mcl-echo, whose procedure it names"])
+    d.box("b-mac", 40, 430, 280, 152, "macula-realm", "[Macula infrastructure]",
+          ["Endorses the node's identity key", "and grants the D25 provider",
+           "authorization for org mcl-echo, for", "its procedures, the open ones",
+           "included"])
     d.box("b-mac", 365, 430, 270, 136, "Macula stations, mesh DHT", "[Macula infrastructure]",
           ["The caller's route in, six public", "stations and the DHT route an org",
            "procedure. mcl-echo dials its own", "pinned seeds, IPv6 only, pin enforced"])
@@ -156,7 +157,7 @@ def context():
     d.edge("M825 150V180H620V200")
     d.text("t-rel", 640, 160, "deploys; supplies the realm,")
     d.text("t-rel", 640, 176, "its key and the station pins")
-    d.edge("M420 352V390H180V430"); d.text("t-rel", 300, 382, "boot claim, D25 delegation")
+    d.edge("M420 352V390H180V430"); d.text("t-rel", 250, 382, "boot claim, D25 delegation")
     d.edge("M520 352V430"); d.text("t-rel", 512, 404, "dials its pinned seeds; advertises the echo", anchor="end")
     d.edge("M600 352V390H820V430"); d.text("t-rel", 620, 384, "denials_observed, when a limit denies")
     d.text("t-desc", 40, 588, "The echo is a canary, not a service with state: its answers are the payload back, and its job is to be the first call every")
