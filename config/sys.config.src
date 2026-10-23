@@ -54,8 +54,8 @@
         %% `{unresolved, no_trusted_advertisement}', and the boot claim
         %% never reaches the realm: no pending row on the Providers desk,
         %% no delegation, nothing callable. The node stays green and
-        %% answers /health throughout. That is exactly what happened on
-        %% beam00, and mcl_om >= 0.3.0 now refuses to start a pool without
+        %% answers /health throughout. That is exactly what happened on a
+        %% live box, and mcl_om >= 0.3.0 now refuses to start a pool without
         %% it rather than letting a service look healthy and be unreachable.
         %%
         %% Public material: it is the half everyone verifies against. It

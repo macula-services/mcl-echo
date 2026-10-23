@@ -7,7 +7,7 @@
 # toolchain), boots under org `mcl-echo' in the io.macula realm,
 # claims its delegation over the wire, and stays up until stopped —
 # a plain long-running process, no window, no budget. The desk's box
-# label is the demo's story, set by MCL_BOX (default beam02.lab).
+# label is the demo's story, set by MCL_BOX (default: the host's own name).
 #
 # Usage:
 #   scripts/mcl_echo_demo start     # claim lands; desk shows pending
@@ -23,7 +23,7 @@ set -eu
 DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PIDFILE=/tmp/mcl_echo_demo.pid
 LOGFILE=/tmp/mcl_echo_demo.log
-BOX_LABEL=${MCL_BOX:-beam02.lab}
+BOX_LABEL=${MCL_BOX:-$(hostname 2>/dev/null || echo mcl-echo-demo)}
 RUN_PATTERN="-run mcl_echo_demo_svc main"
 # The demo node's own id — stable while the identity file lives
 # (MCL_LIVE_IDENTITY, default /tmp/mcl_echo_live_realm.key).

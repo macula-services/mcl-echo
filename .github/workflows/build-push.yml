@@ -47,14 +47,15 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/**'
+      - 'assets/**'
       - 'LICENSE'
   workflow_dispatch:
 
 # ONE IMAGE BUILD IN FLIGHT PER REF. Every push to main builds and pushes
-# :latest; without this, three quick commits run three builds that finish in
-# whatever order the runners please, and :latest ends up being whichever
-# finished LAST, not whichever was pushed last -- watchtower then rolls the
-# fleet onto an older commit and flaps. A sibling service hit exactly that live.
+# :main and :<sha>; without this, three quick commits run three builds that
+# finish in whatever order the runners please, and :main ends up being
+# whichever finished LAST, not whichever was pushed last. A sibling service
+# hit exactly that live.
 concurrency:
   group: build-and-push-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}

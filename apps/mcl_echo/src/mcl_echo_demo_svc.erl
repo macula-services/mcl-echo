@@ -78,6 +78,12 @@ load_or_generate_identity(Path) ->
 %% Node column comes back empty (measured live).
 box_label() ->
     case os:getenv("MCL_BOX") of
-        false -> <<"beam02.lab">>;
+        false -> host_label();
         Value -> unicode:characters_to_binary(Value)
     end.
+
+%% With no MCL_BOX the label is the box the demo runs on, as that box
+%% reports its own name. The script does not ship a machine of its own.
+host_label() ->
+    {ok, Name} = inet:gethostname(),
+    unicode:characters_to_binary(Name).

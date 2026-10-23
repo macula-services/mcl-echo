@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 780" role="img" aria-label="mcl-echo components">
+<title>mcl-echo components</title>
+<style>
+.t-name { font-family: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 700; }
+.t-desc { font-family: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; font-size: 12.5px; }
+.t-rel { font-family: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; font-size: 11.5px; paint-order: stroke; stroke-width: 4px; stroke-linejoin: round; }
+.t-code { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 13px; font-weight: 600; }
+.t-type { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 11.5px; }
+.t-bound { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 12px; font-weight: 600; }
+.t-leg { font-family: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; font-size: 12px; }
+.edge { fill: none; stroke-width: 1.25; }
+.edge-later { fill: none; stroke-width: 1.25; stroke-dasharray: 5 4; }
+.bg { fill: #FFFFFF; }
+.b-sys { fill: #F5E9CC; stroke: #A56F0A; stroke-width: 2; }
+.b-per { fill: #E3EBF2; stroke: #3B5B7A; stroke-width: 1.25; }
+.b-mac { fill: #E6E4EE; stroke: #5E5A78; stroke-width: 1.25; }
+.b-ext { fill: #ECEFED; stroke: #8A9791; stroke-width: 1.25; }
+.b-cmp { fill: #FFFFFF; stroke: #8A9791; stroke-width: 1.25; }
+.b-later { fill: none; stroke: #8A9791; stroke-width: 1.25; stroke-dasharray: 5 4; }
+.bound { fill: none; stroke: #B3BDB8; stroke-width: 1; }
+.head { fill: #3B5B7A; }
+.t-name, .t-code { fill: #16201D; }
+.t-type, .t-bound, .t-leg { fill: #66736E; }
+.t-desc { fill: #34413C; }
+.t-rel { fill: #66736E; stroke: #FFFFFF; }
+.edge, .edge-later { stroke: #8A9791; }
+.arrowhead { fill: #8A9791; }
+@media (prefers-color-scheme: dark) {
+.bg { fill: #171F1C; }
+.b-sys { fill: #3A2E13; stroke: #E3AA3C; }
+.b-per { fill: #1D2A36; stroke: #8EB4D8; }
+.b-mac { fill: #26243A; stroke: #A9A4C8; }
+.b-ext { fill: #1C2421; stroke: #7D8B85; }
+.b-cmp { fill: #171F1C; stroke: #7D8B85; }
+.b-later { stroke: #7D8B85; }
+.bound { stroke: #4A5752; }
+.head { fill: #8EB4D8; }
+.t-name, .t-code { fill: #E6ECE9; }
+.t-type, .t-bound, .t-leg { fill: #93A09A; }
+.t-desc { fill: #C3CDC8; }
+.t-rel { fill: #93A09A; stroke: #171F1C; }
+.edge, .edge-later { stroke: #7D8B85; }
+.arrowhead { fill: #7D8B85; }
+}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrowhead" d="M0 0L10 5L0 10z"/></marker></defs>
+<rect class="bg" x="0" y="0" width="1000" height="780"/>
+<rect class="bound" x="16" y="40" width="968" height="510" rx="12"/>
+<text class="t-bound" x="32" y="62">mcl-echo [Container]</text>
+<rect class="b-mac" x="32" y="70" width="456" height="130" rx="10"/>
+<text class="t-code" x="48" y="98">mcl_om</text>
+<text class="t-type" x="48" y="116">[library, ~&gt; 1.4]</text>
+<text class="t-desc" x="48" y="140">boot/1: loads the node identity key, joins the realm, dials the</text>
+<text class="t-desc" x="48" y="156">pinned stations, registers the echo and re-advertises it on a</text>
+<text class="t-desc" x="48" y="172">tick, serves /health on the socket</text>
+<rect class="b-mac" x="512" y="70" width="456" height="130" rx="10"/>
+<text class="t-code" x="528" y="98">macula SDK</text>
+<text class="t-type" x="528" y="116">[library, ~&gt; 16.0, wire 1.0]</text>
+<text class="t-desc" x="528" y="140">QUIC transport, signed calls, sealed payloads (kem_advertise),</text>
+<text class="t-desc" x="528" y="156">and the realm key every org-namespaced advertisement is</text>
+<text class="t-desc" x="528" y="172">verified against</text>
+<rect class="b-sys" x="32" y="230" width="456" height="140" rx="10"/>
+<text class="t-code" x="48" y="258">mcl_echo_service</text>
+<text class="t-type" x="48" y="276">[mcl_om_service behaviour]</text>
+<text class="t-desc" x="48" y="300">The six mcl_om_service callbacks, resolved by</text>
+<text class="t-desc" x="48" y="316">name; mcl-om adds the open info and get_limits.</text>
+<text class="t-desc" x="48" y="332">capabilities/0 asserts the realm and org, then</text>
+<text class="t-desc" x="48" y="348">declares the echo and its limits</text>
+<rect class="b-cmp" x="512" y="230" width="456" height="130" rx="10"/>
+<text class="t-code" x="528" y="258">mcl_echo_sup</text>
+<text class="t-type" x="528" y="276">[supervisor, one_for_one]</text>
+<text class="t-desc" x="528" y="300">No children: mcl-om owns the registration</text>
+<text class="t-desc" x="528" y="316">of what this service advertises; the inbound</text>
+<text class="t-desc" x="528" y="332">guard is the pipeline's; the echo is stateless.</text>
+<rect class="b-cmp" x="32" y="390" width="456" height="140" rx="10"/>
+<text class="t-code" x="48" y="418">inbound guard, the platform's</text>
+<text class="t-type" x="48" y="436">[mcl_om pipeline, before the handler]</text>
+<text class="t-desc" x="48" y="460">Payload size first (4096 bytes, erlang:external_size), then a</text>
+<text class="t-desc" x="48" y="476">fixed 10 s window of 20 calls per caller and 300 globally. Over</text>
+<text class="t-desc" x="48" y="492">either: payload_too_large or rate_limited. Counts denials and</text>
+<text class="t-desc" x="48" y="508">publishes denials_observed once per window with activity</text>
+<rect class="b-sys" x="512" y="390" width="456" height="140" rx="10"/>
+<text class="t-code" x="528" y="418">mcl_echo_mesh_rpc</text>
+<text class="t-type" x="528" y="436">[macula_response RPC provider]</text>
+<text class="t-desc" x="528" y="460">handle_request/2 replies with the payload unchanged, minus the</text>
+<text class="t-desc" x="528" y="476">platform-injected caller, so a caller is never shown a field they</text>
+<text class="t-desc" x="528" y="492">did not send. Stateless: no store, no clock, no side effect of</text>
+<text class="t-desc" x="528" y="508">its own</text>
+<rect class="b-ext" x="32" y="570" width="936" height="104" rx="10"/>
+<text class="t-name" x="48" y="598">host environment</text>
+<text class="t-type" x="48" y="616">[environment, from the host; the identity key is the only volume]</text>
+<text class="t-desc" x="48" y="640">MCL_REALM, MCL_REALM_KEY, MACULA_STATION_SEEDS, MACULA_STATION_NODE_IDS, MCL_SERVICE_NAME, MCL_BOX. The identity key is</text>
+<text class="t-desc" x="48" y="656">mounted at /etc/mcl/secrets/identity.key. The org, mcl-echo, is a literal in sys.config, not a host variable</text>
+<path class="edge" d="M488 135H512" marker-end="url(#a)"/>
+<text class="t-rel" x="500" y="62" text-anchor="middle">calls</text>
+<path class="edge" d="M260 200V230" marker-end="url(#a)"/>
+<text class="t-rel" x="268" y="224">boots through mcl_om:boot/1</text>
+<path class="edge" d="M488 295H512" marker-end="url(#a)"/>
+<text class="t-rel" x="500" y="288" text-anchor="middle" transform="rotate(-90 500 288)">starts</text>
+<path class="edge" d="M260 360V390" marker-end="url(#a)"/>
+<text class="t-rel" x="268" y="384">declares the limits</text>
+<path class="edge" d="M488 460H512" marker-end="url(#a)"/>
+<text class="t-rel" x="500" y="460" text-anchor="middle" transform="rotate(-90 500 460)">then the handler</text>
+<text class="t-desc" x="40" y="700">config/sys.config.src fixes the org, mcl-echo, whose name prefixes procedure names; the realm is the io.macula tag. Both are asserted at</text>
+<text class="t-desc" x="40" y="716">boot, because an org drift renames procedure names to ones no caller uses and a realm mismatch is silent on the wire.</text>
+<rect class="b-sys" x="24" y="752" width="22" height="14" rx="3"/>
+<text class="t-leg" x="54" y="764">In scope</text>
+<rect class="b-per" x="110.8" y="752" width="22" height="14" rx="3"/>
+<text class="t-leg" x="140.8" y="764">Person</text>
+<rect class="b-mac" x="184.39999999999998" y="752" width="22" height="14" rx="3"/>
+<text class="t-leg" x="214.39999999999998" y="764">Macula infrastructure</text>
+<rect class="b-ext" x="357.0" y="752" width="22" height="14" rx="3"/>
+<text class="t-leg" x="387.0" y="764">External system</text>
+<rect class="b-cmp" x="490.0" y="752" width="22" height="14" rx="3"/>
+<text class="t-leg" x="520.0" y="764">Container or component</text>
+</svg>
