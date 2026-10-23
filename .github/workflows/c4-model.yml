@@ -28,4 +28,4 @@ jobs:
   c4-model:
     permissions:
       contents: read
-    uses: macula-io/macula-ci-images/.github/workflows/c4-model.yml@83a76a358456bf2f7d6c919ad5e8fe7fd2162ce3
+    uses: macula-io/macula-ci-images/.github/workflows/c4-model.yml@c91235da28889b965cf39e607b28e785862e7552
