@@ -357,10 +357,8 @@ box_label() ->
 %% With no MCL_BOX the label is the box the run happens on, as that box
 %% reports its own name.
 host_label() ->
-    case inet:gethostname() of
-        {ok, Name} -> unicode:characters_to_binary(Name);
-        _ -> <<"mcl-echo-demo">>
-    end.
+    {ok, Name} = inet:gethostname(),
+    unicode:characters_to_binary(Name).
 
 load_or_generate_identity(Path) ->
     case macula_node_keys:load(Path, identity, profile()) of

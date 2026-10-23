@@ -85,7 +85,5 @@ box_label() ->
 %% With no MCL_BOX the label is the box the demo runs on, as that box
 %% reports its own name. The script does not ship a machine of its own.
 host_label() ->
-    case inet:gethostname() of
-        {ok, Name} -> unicode:characters_to_binary(Name);
-        _ -> <<"mcl-echo-demo">>
-    end.
+    {ok, Name} = inet:gethostname(),
+    unicode:characters_to_binary(Name).
