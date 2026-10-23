@@ -311,6 +311,15 @@ node.** Export `store_id/0` and `data_dir/0`; add the `evoq` adapter block to
 volume in the compose file. A sibling service put two of three fleet nodes into a
 boot loop by doing the first and not the second.
 
+## Architecture
+
+The C4 model is in [architecture/README.md](architecture/README.md), with its
+diagrams drawn by `architecture/c4_diagrams.py` into `assets/`. Change the
+script, run it (`python3 architecture/c4_diagrams.py`), and look at the result
+before committing.
+
+![mcl-echo system context](assets/c4-context.svg)
+
 ## Licence
 
 Apache-2.0.
