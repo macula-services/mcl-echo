@@ -350,8 +350,16 @@ real_identity_path() ->
 %% text (measured: the desk's Node column came back empty). Convert.
 box_label() ->
     case os:getenv("MCL_BOX") of
-        false -> <<"beam02.lab">>;
+        false -> host_label();
         Value -> unicode:characters_to_binary(Value)
+    end.
+
+%% With no MCL_BOX the label is the box the run happens on, as that box
+%% reports its own name.
+host_label() ->
+    case inet:gethostname() of
+        {ok, Name} -> unicode:characters_to_binary(Name);
+        _ -> <<"mcl-echo-demo">>
     end.
 
 load_or_generate_identity(Path) ->
