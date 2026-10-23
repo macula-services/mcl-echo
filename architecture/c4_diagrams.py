@@ -141,10 +141,9 @@ def context():
           ["mcl-echo/echo is its own procedure.", "mcl_om adds info and get_limits, both",
            "open. capabilities/0 is the list.", "/health is a Unix socket; no store,",
            "no clock."])
-    d.box("b-mac", 40, 430, 280, 152, "macula-realm", "[Macula infrastructure]",
+    d.box("b-mac", 40, 430, 280, 136, "macula-realm", "[Macula infrastructure]",
           ["Endorses the node's identity key", "and grants the D25 provider",
-           "authorization for org mcl-echo, for", "its procedures, the open ones",
-           "included"])
+           "authorization for org mcl-echo, for", "its procedures, the open ones included"])
     d.box("b-mac", 365, 430, 270, 136, "Macula stations, mesh DHT", "[Macula infrastructure]",
           ["The caller's route in, six public", "stations and the DHT route an org",
            "procedure. mcl-echo dials its own", "pinned seeds, IPv6 only, pin enforced"])
