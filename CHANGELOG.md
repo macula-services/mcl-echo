@@ -5,9 +5,29 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.5.0 - 2026-10-30
 
-- **The base library is macula 16** (macula-codebase-checks#4): the floor moves `~> 15.6` to `~> 16.0`, and `mcl_om` from `~> 1.0` to `~> 1.4`, the release whose own base is macula 16. 16.0 keeps wire 1.0, so this service still speaks to every wire 1.0 box, and the echo's call path is unchanged. What it adds is the revocation bound (macula#118): an endorsement admits its holder for at most 24 hours, and a gated overlay context must pass `member_standing`. This service gates no overlay and issues no endorsement.
+Refs macula-services/mcl-om#42, the migration of the mcl-* services onto
+mcl_om 1.6 and macula 18.
+
+- **On mcl_om 1.6 and macula 18, and the echo writes down the one caller rule
+  it has.** `mcl_om` moves to `~> 1.6` and `macula` to `~> 18.0`; 18 still
+  speaks wire 1.0, so the echo still answers every wire 1.0 caller. What it
+  brings is two refusals at boot, not two defaults (macula-io/macula#147):
+
+  | Rule | Before | Now |
+  | --- | --- | --- |
+  | who may CALL a capability with a handler | unspecified = served open | required; `echo` declares `auth => open` |
+  | who may DELIVER to a subscription | unspecified = accepted | nothing to declare: the echo subscribes to no topic |
+
+  `auth => open` is what the procedure was before the rule existed — the link
+  ran no gate — so nobody's reach changes, and the echo is the first call in
+  every quickstart, which is the point of it. The caller is identified on the
+  link either way.
+
+- **The base library is macula 16** (macula-codebase-checks#4), landed in main
+  before this release and shipped by it; the versions below are the ones it
+  landed with, and the entry above supersedes them. The floor moves `~> 15.6` to `~> 16.0`, and `mcl_om` from `~> 1.0` to `~> 1.4`, the release whose own base is macula 16. 16.0 keeps wire 1.0, so this service still speaks to every wire 1.0 box, and the echo's call path is unchanged. What it adds is the revocation bound (macula#118): an endorsement admits its holder for at most 24 hours, and a gated overlay context must pass `member_standing`. This service gates no overlay and issues no endorsement.
 
 ## 0.4.0 - 2026-10-17
 

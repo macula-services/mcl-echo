@@ -49,13 +49,13 @@
 <text class="t-bound" x="32" y="62">mcl-echo [Container]</text>
 <rect class="b-mac" x="32" y="70" width="456" height="130" rx="10"/>
 <text class="t-code" x="48" y="98">mcl_om</text>
-<text class="t-type" x="48" y="116">[library, ~&gt; 1.4]</text>
+<text class="t-type" x="48" y="116">[library, ~&gt; 1.6]</text>
 <text class="t-desc" x="48" y="140">boot/1: loads the node identity key, joins the realm, dials the</text>
 <text class="t-desc" x="48" y="156">pinned stations, registers the echo and re-advertises it on a</text>
 <text class="t-desc" x="48" y="172">tick, serves /health on the socket</text>
 <rect class="b-mac" x="512" y="70" width="456" height="130" rx="10"/>
 <text class="t-code" x="528" y="98">macula SDK</text>
-<text class="t-type" x="528" y="116">[library, ~&gt; 16.0, wire 1.0]</text>
+<text class="t-type" x="528" y="116">[library, ~&gt; 18.0, wire 1.0]</text>
 <text class="t-desc" x="528" y="140">QUIC transport, signed calls, sealed payloads (kem_advertise),</text>
 <text class="t-desc" x="528" y="156">and the realm key every org-namespaced advertisement is</text>
 <text class="t-desc" x="528" y="172">verified against</text>
