@@ -5,9 +5,24 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.5.0] - 2026-10-30
 
-- **The base library is macula 16** (macula-codebase-checks#4): the floor moves `~> 15.6` to `~> 16.0`, and `mcl_om` from `~> 1.0` to `~> 1.4`, the release whose own base is macula 16. 16.0 keeps wire 1.0, so this service still speaks to every wire 1.0 box, and the echo's call path is unchanged. What it adds is the revocation bound (macula#118): an endorsement admits its holder for at most 24 hours, and a gated overlay context must pass `member_standing`. This service gates no overlay and issues no endorsement.
+### Changed
+
+- **macula 18 and mcl_om 1.6** (macula-services/mcl-om#42). The floors move to
+  `mcl_om ~> 1.6` and `macula ~> 18.0`. macula arrives through mcl_om, but a
+  top-level pin wins in rebar3, so both move together. The macula 16 step rides
+  in the same jump: 18 keeps wire 1.0 and everything 16 added — the revocation
+  bound (macula#118), an endorsement admitting its holder for at most 24 hours,
+  a gated overlay context passing `member_standing` — and no 0.4.1 was tagged on
+  16 in between.
+- **No service code moved.** The echo's one capability already states
+  `auth => open` (macula 18, macula-io/macula#147: a procedure that names no
+  call class is refused, and mcl_om 1.6 refuses the boot first), and this
+  service declares no subscription, so the sources rule has nothing to apply
+  to. The echo remains the canary: it is the first call in every PQ quickstart,
+  so a caller of any SDK stack still reaches it exactly as before.
+- Minor rather than patch: this release runs only on a box carrying mcl_om 1.6.
 
 ## 0.4.0 - 2026-10-17
 

@@ -39,8 +39,8 @@ formed rather than advertising where nobody can find it.
 | `mcl_echo_sup` | supervisor, `one_for_one` | No children. mcl-om owns the registration of what this service advertises, the inbound guard is the pipeline's, and the echo is a stateless handler, so an empty child list is the honest shape |
 | inbound guard, the platform's | the `mcl_om` pipeline, before the handler | Payload size first (`max_payload_external_size` 4096, measured with `erlang:external_size/1`), then a fixed 10 s window of 20 calls per caller and 300 globally. Over either: `payload_too_large` or `rate_limited`. It counts denials and publishes `denials_observed` once per window with activity |
 | `mcl_echo_mesh_rpc` | `macula_response` RPC provider | `handle_request/2` replies with the payload unchanged, minus the platform-injected `caller`. Stateless: no store, no clock, no side effect of its own |
-| `mcl_om` | library, `~> 1.4` | `boot/1`: loads the node identity key, joins the realm, dials the pinned stations, registers the echo and re-advertises it on a tick, and serves `/health` |
-| macula SDK | library, `~> 16.0`, wire 1.0 | QUIC transport, signed calls, sealed payloads (`kem_advertise`), and the realm key every org-namespaced advertisement is verified against |
+| `mcl_om` | library, `~> 1.6` | `boot/1`: loads the node identity key, joins the realm, dials the pinned stations, registers the echo and re-advertises it on a tick, and serves `/health` |
+| macula SDK | library, `~> 18.0`, wire 1.0 | QUIC transport, signed calls, sealed payloads (`kem_advertise`), and the realm key every org-namespaced advertisement is verified against |
 | host environment | from the host | `MCL_REALM`, `MCL_REALM_KEY`, `MACULA_STATION_SEEDS`, `MACULA_STATION_NODE_IDS`, `MCL_SERVICE_NAME`, `MCL_BOX`, and the node identity key at `/etc/mcl/secrets/identity.key`, the only volume |
 
 `config/sys.config.src` fixes the org, `mcl-echo`, whose name prefixes procedure names,
