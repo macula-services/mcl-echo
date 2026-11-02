@@ -28,6 +28,39 @@ kem_advertise_enabled_test() ->
     Macula = proplists:get_value(macula, parsed_sys_config()),
     ?assertEqual(enabled, proplists:get_value(kem_advertise, Macula)).
 
+%% mcl-echo#11: the echo's numbers come from config, per environment. Filled
+%% from the image's own defaults (Containerfile ENV), the entry equals what the
+%% capability declares, so a box that overrides nothing runs exactly the code's
+%% numbers; and the guard's boot check accepts it.
+image_default_limits_equal_the_capabilitys_test() ->
+    MclOm = proplists:get_value(mcl_om, parsed_sys_config()),
+    #{procedures := #{<<"mcl-echo/echo">> := Configured}} =
+        proplists:get_value(inbound_guard, MclOm),
+    [#{limits := Declared}] = mcl_echo_service_limits(),
+    ?assertEqual(Declared, Configured),
+    _ = application:load(mcl_om),
+    ok = application:set_env(mcl_om, inbound_guard, proplists:get_value(inbound_guard, MclOm)),
+    try ?assertEqual(ok, mcl_om_guard_limits:validate_config())
+    after application:unset_env(mcl_om, inbound_guard)
+    end.
+
+%% capabilities/0 asserts the live realm and org first; the limits are a
+%% literal in it, read here without a booted identity.
+mcl_echo_service_limits() ->
+    {ok, Forms} = epp:parse_file("apps/mcl_echo/src/mcl_echo_service.erl", []),
+    [Clause] = [C || {function, _, capabilities, 0, [C]} <- Forms],
+    {clause, _, [], [], Body} = Clause,
+    {value, Caps, _} = erl_eval:exprs([lists:last(Body)], []),
+    Caps.
+
+%% The image's ENV defaults, KEY=VALUE per line.
+image_env() ->
+    {ok, Bin} = file:read_file("Containerfile"),
+    [{iolist_to_binary(["${", K, "}"]), V}
+     || Line <- binary:split(Bin, <<"\n">>, [global]),
+        {match, [K, V]} <- [re:run(Line, "^ENV (MCL_ECHO_[A-Z_]+)=([0-9]+)$",
+                                   [{capture, all_but_first, binary}])]].
+
 parsed_sys_config() ->
     {ok, Bin} = file:read_file("config/sys.config.src"),
     Substituted = lists:foldl(fun({Placeholder, Value}, Acc) ->
@@ -35,7 +68,7 @@ parsed_sys_config() ->
                               end, Bin,
                               [{<<"${MCL_HEALTH_PORT}">>, <<"8461">>},
                                {<<"${MCL_REALM}">>, ?REALM},
-                               {<<"${MCL_REALM_KEY}">>, ?REALM}]),
+                               {<<"${MCL_REALM_KEY}">>, ?REALM} | image_env()]),
     {ok, Tokens, _} = erl_scan:string(binary_to_list(Substituted)),
     case erl_parse:parse_term(Tokens) of
         {ok, Config} ->

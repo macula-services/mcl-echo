@@ -190,7 +190,8 @@ none of them.
 The handler replies with the payload unchanged, minus the platform-injected
 `caller` key. The two guards are the PLATFORM'S now (mcl-om#13, mcl_om 0.37.0):
 every response capability flows through the mcl-om pipeline, and this
-capability declares its own numbers in `mcl_echo_service:capabilities/0`:
+capability declares its own numbers in `mcl_echo_service:capabilities/0`,
+which each environment can override (see Configuration below):
 
 - **Payload cap**, 4096 bytes by default, measured with `erlang:external_size/1`
   so it bounds every payload shape and not only binaries. Over it:
@@ -243,12 +244,20 @@ linked against a different libc. A local `rebar3 compile` does need Rust.
 | `MCL_NODE_NAME` | `mcl_echo` | Erlang node name. |
 | `MCL_NODE_HOST` | `127.0.0.1` | Erlang node host. |
 | `MCL_COOKIE` | `mcl_echo` | Erlang cookie. |
+| `MCL_ECHO_MAX_PAYLOAD_BYTES` | `4096` | Largest inbound payload, bytes (`erlang:external_size/1`). |
+| `MCL_ECHO_WINDOW_MS` | `10000` | The rate limit's fixed window, milliseconds. |
+| `MCL_ECHO_PER_CALLER_MAX` | `20` | Calls per caller per window. Must not exceed `MCL_ECHO_GLOBAL_MAX`. |
+| `MCL_ECHO_GLOBAL_MAX` | `300` | Calls from everyone per window. |
 
-The inbound limits are the capability's, declared in code
-(`mcl_echo_service:capabilities/0`), not application config. To let a guardian
-tune them over the mesh, uncomment the `inbound_guard` block in
-`config/sys.config.src` (alert topic, the realm DID, and the guardian tier);
-that also advertises the gated `set_limits` capability.
+The four `MCL_ECHO_*` limits reach the guard through the `inbound_guard` block
+in `config/sys.config.src` (mcl_om 1.8, mcl-echo#11), so one environment can run
+other numbers without a rebuild. The image sets each to the number
+`mcl_echo_service:capabilities/0` declares, and a test keeps the two equal. A
+value that is not a positive integer stops the node at boot, as does a
+per-caller budget above the global one. Runtime `set_limits` still wins over
+them. To let a guardian tune them over the mesh, add `guardian` (the realm DID
+and the guardian tier) to that block; that also advertises the gated
+`set_limits` capability.
 
 `deploy/docker-compose.yml` runs it, and carries what the service knows about
 itself. If you deploy through something else, let that carry **placement**: which

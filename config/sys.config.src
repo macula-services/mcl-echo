@@ -60,22 +60,27 @@
         %%
         %% Public material: it is the half everyone verifies against. It
         %% does NOT belong in the secrets volume.
-        {realm_key,         <<"${MCL_REALM_KEY}">>}
-        %% INBOUND GUARD (mcl-om#13), OPTIONAL: the echo's limits are the
-        %% capability's (4096 B payload, 10 s window, 20 per caller, 300
-        %% global; see mcl_echo_service:capabilities/0), enforced by the
-        %% mcl_om pipeline. Uncomment to rename the alert fact topic or to
-        %% gate set_limits for the guardian (get_limits is always
-        %% advertised): realm_did is the realm's Ed25519 DID, 32 bytes
-        %% (NOT the 64-hex RealmId identifier above). When uncommenting,
-        %% put the trailing comma back on the realm_key entry above --
-        %% Erlang has no trailing commas, and a dangling one shipped
-        %% 0.2.1 as a node that could not boot (syntax error before ']').
-        %% {inbound_guard, #{
-        %%     alert_topic    => <<"denials_observed">>,
-        %%     guardian       => #{realm_did     => <<"32 bytes">>,
-        %%                         guardian_tier => <<"guardian">>}
-        %% }}
+        {realm_key,         <<"${MCL_REALM_KEY}">>},
+        %% INBOUND GUARD (mcl-om#13, mcl_om 1.8): the echo's numbers, per
+        %% environment and without a rebuild (mcl-echo#11). The capability
+        %% declares the same numbers in mcl_echo_service:capabilities/0; this
+        %% entry is merged over them, and runtime set_limits still wins. The
+        %% image sets each variable to the capability's number (Containerfile
+        %% ENV), so a box that sets none runs exactly what the code declares,
+        %% and mcl_echo_sys_config_tests fails if the two drift apart. A value
+        %% that is not a positive integer stops the node at boot.
+        %% To let a guardian retune them over the mesh, add `guardian =>
+        %% #{realm_did => <<"32 bytes">>, guardian_tier => <<"guardian">>}'
+        %% (realm_did is the realm's Ed25519 DID, NOT the 64-hex RealmId
+        %% above); that also advertises set_limits. `alert_topic' renames the
+        %% denials fact.
+        {inbound_guard, #{
+            procedures => #{<<"mcl-echo/echo">> =>
+                                #{max_payload_external_size => ${MCL_ECHO_MAX_PAYLOAD_BYTES},
+                                  window_ms                 => ${MCL_ECHO_WINDOW_MS},
+                                  per_caller_max            => ${MCL_ECHO_PER_CALLER_MAX},
+                                  global_max                => ${MCL_ECHO_GLOBAL_MAX}}}
+        }}
     ]},
     %% ==========================================================================
     %% THE PQ CRYPTO PROFILE, WITHOUT WHICH THIS NODE DOES NOT PEER
