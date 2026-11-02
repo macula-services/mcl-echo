@@ -40,6 +40,8 @@ RUN rebar3 get-deps
 
 COPY config ./config
 COPY apps ./apps
+# The pre_start hook relx copies into bin/hooks (rebar.config overlay).
+COPY rel ./rel
 RUN rebar3 as prod release
 
 FROM ghcr.io/macula-io/macula-pq-runtime:20260923-1444@sha256:15a5501b7277804c5a62c93121d157773d1401d238a1bf630ef4b50fc2f1df09

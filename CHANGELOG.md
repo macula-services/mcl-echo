@@ -7,6 +7,19 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Unreleased
 
+- **A mistyped limit is refused by name at boot** (mcl-echo#31). An
+  `MCL_ECHO_*` limit that is empty, unset, or not a positive integer used to
+  bake a `sys.config` that did not parse, and the node died on a syntax error
+  that named no variable. A relx pre_start hook (`rel/hooks/check_echo_limits`)
+  now runs before the VM and stops the start with
+  `MCL_ECHO_WINDOW_MS must be a positive integer, got ''`. Tests source the hook
+  the way the start script does, and assert that rebar.config and the image
+  install it (the start script skips a missing hook without a word).
+- **The limits' `procedures` key is checked against the capability.** mcl_om
+  ignores a key that names no procedure, so a renamed org or capability would
+  silently drop the configured limits; `mcl_echo_sys_config_tests` now fails
+  unless every key is the configured org, a slash, and a capability name.
+
 - **The echo's limits are per-environment config** (mcl-echo#11, mcl_om 1.8,
   mcl-om#19). `MCL_ECHO_MAX_PAYLOAD_BYTES`, `MCL_ECHO_WINDOW_MS`,
   `MCL_ECHO_PER_CALLER_MAX` and `MCL_ECHO_GLOBAL_MAX` set the echo procedure's

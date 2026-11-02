@@ -253,8 +253,11 @@ The four `MCL_ECHO_*` limits reach the guard through the `inbound_guard` block
 in `config/sys.config.src` (mcl_om 1.8, mcl-echo#11), so one environment can run
 other numbers without a rebuild. The image sets each to the number
 `mcl_echo_service:capabilities/0` declares, and a test keeps the two equal. A
-value that is not a positive integer stops the node at boot, as does a
-per-caller budget above the global one. Runtime `set_limits` still wins over
+value that is empty, unset or not a positive integer stops the start before the
+VM runs, with a line that names the variable (`MCL_ECHO_WINDOW_MS must be a
+positive integer, got ''`, from the release's pre_start hook,
+`rel/hooks/check_echo_limits`); a per-caller budget above the global one stops
+the node at boot. Runtime `set_limits` still wins over
 them. To let a guardian tune them over the mesh, add `guardian` (the realm DID
 and the guardian tier) to that block; that also advertises the gated
 `set_limits` capability.

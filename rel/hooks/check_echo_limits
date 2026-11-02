@@ -1,0 +1,29 @@
+# shellcheck shell=sh
+# relx pre_start hook (rebar.config, extended_start_script_hooks): the release's
+# start script sources this before the VM starts, so an `exit' here stops the
+# node with a sentence that names the variable (mcl-echo#31).
+#
+# Why: config/sys.config.src substitutes each MCL_ECHO_* limit as a bare
+# Erlang integer. An empty or non-numeric value bakes a sys.config that does
+# not parse (`max_payload_external_size => ,'), and the VM dies on a syntax
+# error that never says which variable was wrong. mcl_om's own boot check
+# (validate_config/0) only runs once the file parses.
+#
+# A limit is a positive integer written without a sign or leading zero, the
+# same set mcl_om accepts. The image sets every one (Containerfile ENV).
+mcl_echo_check_limit() {
+    mcl_echo_limit_value=""
+    eval "mcl_echo_limit_value=\${$1-}"
+    case "$mcl_echo_limit_value" in
+        '' | *[!0-9]* | 0*)
+            echo "mcl-echo: refusing to start: $1 must be a positive integer, got '$mcl_echo_limit_value'" >&2
+            exit 1
+            ;;
+    esac
+}
+
+for mcl_echo_limit_var in MCL_ECHO_MAX_PAYLOAD_BYTES MCL_ECHO_WINDOW_MS \
+                          MCL_ECHO_PER_CALLER_MAX MCL_ECHO_GLOBAL_MAX; do
+    mcl_echo_check_limit "$mcl_echo_limit_var"
+done
+unset mcl_echo_limit_var mcl_echo_limit_value

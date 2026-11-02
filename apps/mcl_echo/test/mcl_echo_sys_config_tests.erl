@@ -44,6 +44,18 @@ image_default_limits_equal_the_capabilitys_test() ->
     after application:unset_env(mcl_om, inbound_guard)
     end.
 
+%% mcl-echo#31: mcl_om applies a procedures entry only to the procedure its key
+%% names, and ignores a key that names none, so a renamed org or capability
+%% would silently drop the echo's configured limits. Every key must be the
+%% configured org, a slash, and one of this service's capability names.
+procedures_keys_name_this_services_capabilities_test() ->
+    MclOm = proplists:get_value(mcl_om, parsed_sys_config()),
+    Org = proplists:get_value(org, MclOm),
+    #{procedures := Procedures} = proplists:get_value(inbound_guard, MclOm),
+    Names = [<<Org/binary, "/", Name/binary>> || #{name := Name} <- mcl_echo_service_limits()],
+    ?assertNotEqual([], maps:keys(Procedures)),
+    ?assertEqual([], maps:keys(Procedures) -- Names).
+
 %% capabilities/0 asserts the live realm and org first; the limits are a
 %% literal in it, read here without a booted identity.
 mcl_echo_service_limits() ->
