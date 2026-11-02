@@ -26,7 +26,9 @@ info_round_trip_test_() ->
           ?_assertEqual([{text, C} || C <- [<<(?ORG)/binary, "/info">> | Own]],
                         maps:get(capabilities, Reply)),
           ?_assertEqual([], [V || V <- lists:flatten(maps:values(Reply)), is_binary(V)]),
-          %% Floors, not exact versions: mcl_om 1.6.0 (macula 18, where a
+          %% Floors, not exact versions: mcl_om 1.8.0 (per-procedure inbound
+          %% limits from config, mcl-echo#11) with macula 18.0. Before that,
+          %% mcl_om 1.6.0 (macula 18, where a
           %% capability must name who may call it and a subscription who may
           %% deliver to it, macula#147) with macula 18.0. Before that it was
           %% mcl_om 0.39.0 (/health on a Unix socket) with macula 14.2.1, the SDK
@@ -41,7 +43,7 @@ info_round_trip_test_() ->
           %% wire-verified caller, 0.31's serving-station registration, 12.7.0's
           %% delegation renewal (macula#38, D32) and 12.5.1's request admission fix
           %% (macula#37). A later compatible release must not fail this.
-          ?_assert(at_least(maps:get(mcl_om_version, Reply), [1, 6, 0])),
+          ?_assert(at_least(maps:get(mcl_om_version, Reply), [1, 8, 0])),
           ?_assert(at_least(maps:get(macula_version, Reply), [18, 0, 0]))]
      end}.
 
