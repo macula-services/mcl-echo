@@ -5,6 +5,17 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+- **The echo's limits are per-environment config** (mcl-echo#11, mcl_om 1.8,
+  mcl-om#19). `MCL_ECHO_MAX_PAYLOAD_BYTES`, `MCL_ECHO_WINDOW_MS`,
+  `MCL_ECHO_PER_CALLER_MAX` and `MCL_ECHO_GLOBAL_MAX` set the echo procedure's
+  inbound limits at boot without a rebuild, through `inbound_guard.procedures`
+  in `config/sys.config.src`. The image defaults are the capability's own
+  numbers (4096 bytes, 10 s, 20 per caller, 300 global), so a box that sets
+  none behaves as before; `mcl_echo_sys_config_tests` fails if they drift. A
+  bad value stops the node at boot. The floor moves to `mcl_om ~> 1.8`.
+
 ## 0.5.0 - 2026-10-30
 
 Refs macula-services/mcl-om#42, the migration of the mcl-* services onto

@@ -70,6 +70,15 @@ ENV MCL_NODE_NAME=mcl_echo
 ENV MCL_NODE_HOST=127.0.0.1
 ENV MCL_COOKIE=mcl_echo
 
+# The echo's inbound limits (config/sys.config.src, inbound_guard): the same
+# numbers mcl_echo_service:capabilities/0 declares. A box overrides any of
+# them in its environment (mcl-echo#11); mcl_echo_sys_config_tests keeps these
+# equal to the code's.
+ENV MCL_ECHO_MAX_PAYLOAD_BYTES=4096
+ENV MCL_ECHO_WINDOW_MS=10000
+ENV MCL_ECHO_PER_CALLER_MAX=20
+ENV MCL_ECHO_GLOBAL_MAX=300
+
 VOLUME ["/etc/mcl/secrets"]
 
 # /health is a Unix socket (health_socket in sys.config.src): no port is opened
