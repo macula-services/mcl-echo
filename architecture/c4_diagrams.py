@@ -169,7 +169,7 @@ def context():
 def components():
     d = Diagram("c4-components.svg", "mcl-echo components", 1000, 780)
     d.bound(16, 40, 968, 510, "mcl-echo [Container]")
-    d.box("b-mac", 32, 70, 456, 130, "mcl_om", "[library, ~> 1.6]",
+    d.box("b-mac", 32, 70, 456, 130, "mcl_om", "[library, ~> 1.8]",
           ["boot/1: loads the node identity key, joins the realm, dials the",
            "pinned stations, registers the echo and re-advertises it on a",
            "tick, serves /health on the socket"], code=True)

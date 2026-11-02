@@ -20,6 +20,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   silently drop the configured limits; `mcl_echo_sys_config_tests` now fails
   unless every key is the configured org, a slash, and a capability name.
 
+## 0.6.0 - 2026-11-02
+
 - **The echo's limits are per-environment config** (mcl-echo#11, mcl_om 1.8,
   mcl-om#19). `MCL_ECHO_MAX_PAYLOAD_BYTES`, `MCL_ECHO_WINDOW_MS`,
   `MCL_ECHO_PER_CALLER_MAX` and `MCL_ECHO_GLOBAL_MAX` set the echo procedure's
@@ -28,6 +30,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   numbers (4096 bytes, 10 s, 20 per caller, 300 global), so a box that sets
   none behaves as before; `mcl_echo_sys_config_tests` fails if they drift. A
   bad value stops the node at boot. The floor moves to `mcl_om ~> 1.8`.
+  `mcl_echo_info_tests`' floor, `architecture/README.md` and the C4 component
+  label move to 1.8 with it.
 
 ## 0.5.0 - 2026-10-30
 
